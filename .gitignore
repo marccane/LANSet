@@ -1,4 +1,5 @@
 gen/
 out/
+.idea/
 **/.idea/workspace.xml
 **/.idea/tasks.xml
