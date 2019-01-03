@@ -12,9 +12,9 @@ public class LANSet {
 			System.exit(0);
 		}
 		
-		jlcLexer lexer = new jlcLexer(new ANTLRFileStream(args[0]));
+		LANSetLexer lexer = new LANSetLexer(new ANTLRFileStream(args[0]));
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
-		jlcParser p = new jlcParser(tokens);
+		LANSetParser p = new LANSetParser(tokens);
 		if(args.length == 2){
 			String classfile = args[1];
 			if(!classfile.endsWith(".class"))
