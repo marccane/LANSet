@@ -4,7 +4,12 @@
 
 grammar LANSet;
 
+@header{
+
+}
+
 @parser::members{
+    SymTable<Registre> TS = new SymTable<Registre>(1000);
 	boolean errorSintactic=false;
 	//Override
 	public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException e)

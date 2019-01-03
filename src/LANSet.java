@@ -3,7 +3,7 @@ import java.io.*;
 import org.antlr.v4.runtime.*;
 
 
-//Jordi LANS Compiler. Exemple de classe i metode main
+// LANSet Compiler.
 public class LANSet {
 
 	public static void main(String args[]) throws Exception{
@@ -11,7 +11,7 @@ public class LANSet {
 			System.out.println("Es requereix un fitxer LANS");
 			System.exit(0);
 		}
-		
+
 		LANSetLexer lexer = new LANSetLexer(new ANTLRFileStream(args[0]));
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		LANSetParser p = new LANSetParser(tokens);
@@ -19,9 +19,9 @@ public class LANSet {
 			String classfile = args[1];
 			if(!classfile.endsWith(".class"))
 			   classfile = classfile + ".class";
-			p.setLANSClassFile(classfile);
+			//p.setLANSClassFile(classfile);
 		}
-		p.root();
+		p.start();
 	}
 
 }
