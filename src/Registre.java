@@ -13,24 +13,25 @@ public Registre() {
 	lexema="";
 	tipus='I';
 	adreca=0;
-	}
-
+}
 
 public Registre(String l) {
 	lexema=l;
 	tipus='I';
 	adreca=0;
-	}
+}
+
 public Registre(String l, char t) {
 	lexema=l;
 	tipus=t;
 	adreca=0;
-	}
+}
+
 public Registre(String l, char t, int a) {
 	lexema=l;
 	tipus=t;
 	adreca=a;
-	}
+}
 
 
 public String getLexema() {
