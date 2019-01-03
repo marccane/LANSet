@@ -4,6 +4,18 @@
 
 grammar LANSet;
 
+@parser::members{
+	boolean errorSintactic=false;
+	//Override
+	public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException e)
+	{
+		//Si volem conservar el comportament inicial
+		super.notifyErrorListeners(offendingToken,msg,e);
+		//Codi personalitzat
+		errorSintactic=true;
+	}
+}
+
 //////////////////// FRAGMENTS ////////////////////
 
 fragment DIGIT: '0'..'9';
@@ -72,7 +84,7 @@ TK_INTEGER: '1'..'9' DIGIT* | '0' ;
 TK_CHARACTER: '\'' SINGLE_CHAR '\'' ;
 TK_BOOLEAN: 'true' | 'false';
 TK_REAL: DECIMAL | DECIMAL 'E' ('-')? DIGIT+ ;
-TK_STRING: '\"' SINGLE_CHAR* '\"';
+TK_STRING: '"' SINGLE_CHAR* '"';
 //TK_VECTOR: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)?; //Made in Parser
 
 TK_ASSIGNMENT: ':=';
