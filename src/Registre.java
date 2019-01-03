@@ -1,6 +1,6 @@
 // Josep Suy abril 2007
 
-
+public class Registry
 
 public class Registre  {
 
