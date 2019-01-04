@@ -22,14 +22,20 @@ public void notifyErrorListeners(Token offendingToken, String msg, RecognitionEx
     errorSintactic=true;
 }
 
-public void checkIdentifier(Token t){
-    if(!TS.existeix(t.getText())){
+public boolean checkAndLogIdentifier(Token t){
+    if(!identifierInUse(t.getText())){
         TS.inserir(t.getText(),new Registre(t.getText(),t.getType(),t.getLine(),t.getCharPositionInLine()));
+        return false;
+    } else return true;
+}
+
+public boolean identifierInUse(String id){
+    if(TS.existeix(id)){
+        //errorSemantic = true;
+        System.out.println("Semantic error: The identifier " + id + " is already in use.");
+        return true;
     }
-    else {
-        errorSemantic = true;
-        System.out.println("Semantic error: The identifier " + t.getText() + " is already in use.");
-    }
+    else return false;
 }
 
 }
@@ -186,7 +192,10 @@ function_declaration: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RP
 
 formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)*;
 
-type: TK_BASETYPE | TK_IDENTIFIER; //Be careful with this
+type returns [int t, String text]
+    :
+    typ = (TK_BASETYPE | TK_IDENTIFIER) {$t = $typ.type; $text = $typ.text;}
+    ; //Be careful with this
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -215,8 +224,8 @@ var_declaration_block: KW_VARIABLEBLOCK
 
 var_declaration returns []
     :
-    t = type
-    id = TK_IDENTIFIER {checkIdentifier($id);}
+    t = type{ if($type.t == TK_IDENTIFIER) identifierInUse($type.text); }
+    id = TK_IDENTIFIER {errorSemantic = checkAndLogIdentifier($id);}
     ;
 
 ///////////////////////////////////////////////////////////////////////////////
