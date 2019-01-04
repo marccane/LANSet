@@ -193,14 +193,16 @@ type: TK_BASETYPE | TK_IDENTIFIER; //Be careful with this
 
 ///////////////////////// CONSTANT DECLARATION BLOCK //////////////////////////
 
-const_declaration_block: KW_CONSTBLOCK
-                         (c = const_declaration TK_SEMICOLON {if }
-                         )*
-                         KW_ENDCONSTBLOCK;
+const_declaration_block: KW_CONSTBLOCK (const_declaration TK_SEMICOLON)* KW_ENDCONSTBLOCK;
 
-const_declaration: TK_BASETYPE TK_IDENTIFIER TK_ASSIGNMENT basetype_value;
+const_declaration: bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT value=basetype_value {
+                    System.out.println("He vist l'identificador " + $id.text);
+                    System.out.println("Tipus: " + $bt.type + " " + $value.t + " " + TK_REAL);
 
-basetype_value: TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL;
+                    checkIdentifier($id);
+                    };
+
+basetype_value returns [int t]: tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL) {$t=$tk.type;};
 
 ///////////////////////////////////////////////////////////////////////////////
   

@@ -22,6 +22,7 @@ public class LANSet {
 			//p.setLANSClassFile(classfile);
 		}
 		p.start();
+		//Integer.parseInt()
 	}
 
 }
