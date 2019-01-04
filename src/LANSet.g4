@@ -11,7 +11,8 @@ grammar LANSet;
 @parser::members{
 
 SymTable<Registre> TS = new SymTable<Registre>(1000);
-boolean errorSintactic=false;
+boolean errorSintactic = false;
+boolean errorSemantic = false;
 //Override
 public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException e)
 {
@@ -19,6 +20,16 @@ public void notifyErrorListeners(Token offendingToken, String msg, RecognitionEx
     super.notifyErrorListeners(offendingToken,msg,e);
     //Codi personalitzat
     errorSintactic=true;
+}
+
+public void checkIdentifier(Token t){
+    if(!TS.existeix(t.getText())){
+        TS.inserir(t.getText(),new Registre(t.getText(),t.getType(),t.getLine(),t.getCharPositionInLine()));
+    }
+    else {
+        errorSemantic = true;
+        System.out.println("Semantic error: The identifier " + t.getText() + " is already in use.");
+    }
 }
 
 }
@@ -200,7 +211,11 @@ var_declaration_block: KW_VARIABLEBLOCK
                        (var_declaration TK_SEMICOLON)*
                        KW_ENDVARIABLEBLOCK;
 
-var_declaration: type TK_IDENTIFIER;
+var_declaration returns []
+    :
+    t = type
+    id = TK_IDENTIFIER {checkIdentifier($id);}
+    ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -318,3 +333,14 @@ term4: (negation_operators term4) | | term5;
 negation_operators: KW_NO | TK_INVERT;
 
 term5: direct_evaluation_expr | TK_LPAR expr TK_RPAR | ;*/
+
+dummyrule
+@init{System.out.println("recognising dummyrule");}
+@after{System.out.println("unrecognising dummyrule");}
+    :
+    a=dummyrule2 {System.out.println("mako");}
+    s=TK_ASSIGNMENT {System.out.println("lateumare");}
+    b=dummyrule2 {System.out.println($b.text);}
+    ;
+
+dummyrule2 returns [String text] : t = (TK_AND | TK_OR) {$text = $t.text;};
