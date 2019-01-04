@@ -9,16 +9,18 @@ grammar LANSet;
 }
 
 @parser::members{
-    SymTable<Registre> TS = new SymTable<Registre>(1000);
-	boolean errorSintactic=false;
-	//Override
-	public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException e)
-	{
-		//Si volem conservar el comportament inicial
-		super.notifyErrorListeners(offendingToken,msg,e);
-		//Codi personalitzat
-		errorSintactic=true;
-	}
+
+SymTable<Registre> TS = new SymTable<Registre>(1000);
+boolean errorSintactic=false;
+//Override
+public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException e)
+{
+    //Si volem conservar el comportament inicial
+    super.notifyErrorListeners(offendingToken,msg,e);
+    //Codi personalitzat
+    errorSintactic=true;
+}
+
 }
 
 //////////////////// FRAGMENTS ////////////////////
