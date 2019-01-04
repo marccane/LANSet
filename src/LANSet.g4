@@ -1,5 +1,5 @@
 /*  LANS Lexer and Parser
-*   MADE BY: Marc Cane Salamia and Enric Rodríguez Galan
+*   MADE BY: Marc Cane Salamia and Enric Rodrï¿½guez Galan
 */
 
 grammar LANSet;
@@ -183,7 +183,8 @@ type: TK_BASETYPE | TK_IDENTIFIER; //Be careful with this
 ///////////////////////// CONSTANT DECLARATION BLOCK //////////////////////////
 
 const_declaration_block: KW_CONSTBLOCK
-                         (const_declaration TK_SEMICOLON)*
+                         (c = const_declaration TK_SEMICOLON {if }
+                         )*
                          KW_ENDCONSTBLOCK;
 
 const_declaration: TK_BASETYPE TK_IDENTIFIER TK_ASSIGNMENT basetype_value;
