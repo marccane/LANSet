@@ -22,20 +22,20 @@ public void notifyErrorListeners(Token offendingToken, String msg, RecognitionEx
     errorSintactic=true;
 }
 
-public boolean checkAndLogIdentifier(Token t){
-    if(!identifierInUse(t.getText())){
-        TS.inserir(t.getText(),new Registre(t.getText(),t.getType(),t.getLine(),t.getCharPositionInLine()));
-        return false;
-    } else return true;
+public void registerIdentifier(Token t){
+    TS.inserir(t.getText(),new Registre(t.getText(),t.getType(),t.getLine(),t.getCharPositionInLine()));
 }
 
 public boolean identifierInUse(String id){
-    if(TS.existeix(id)){
-        //errorSemantic = true;
-        System.out.println("Semantic error: The identifier " + id + " is already in use.");
-        return true;
-    }
-    else return false;
+    return TS.existeix(id);
+}
+
+public void repeatedIdentifierError(String id){
+    System.out.println("Semantic error: the identifier " + id + " is already in use.");
+}
+
+public void undefinedTypeError(String t){
+    System.out.println("Semantic error: type " + t + " is not defined.");
 }
 
 }
@@ -219,10 +219,26 @@ var_declaration_block: KW_VARIABLEBLOCK
                        (var_declaration TK_SEMICOLON)*
                        KW_ENDVARIABLEBLOCK;
 
-var_declaration returns []
+var_declaration
     :
-    t = type{ if($type.t == TK_IDENTIFIER) identifierInUse($type.text); }
-    id = TK_IDENTIFIER {errorSemantic = checkAndLogIdentifier($id);}
+    t = type{
+            if($type.t == TK_IDENTIFIER) {
+                //TS.inserir($type.text, new Registre($type.text));
+                if(!identifierInUse($type.text)){
+                    errorSemantic = true;
+                    undefinedTypeError($type.text);
+                }
+            }
+        }
+    id = TK_IDENTIFIER {
+            if(identifierInUse($id.text)){
+                errorSemantic = true;
+                repeatedIdentifierError($id.text);
+            }
+            else {
+                registerIdentifier($id); //aixo s'haura de canviar fijo
+            }
+        }
     ;
 
 ///////////////////////////////////////////////////////////////////////////////

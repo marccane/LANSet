@@ -3,8 +3,18 @@ import java.io.*;
 import org.antlr.v4.runtime.*;
 
 
+
 // LANSet Compiler.
 public class LANSet {
+	static SymTable<Registre> TS = new SymTable<Registre>(1000);
+	static boolean errorSintactic = false;
+	static boolean errorSemantic = false;
+
+
+
+	public static void nothing(){
+
+	}
 
 	public static void main(String args[]) throws Exception{
 		if(args.length == 0){
@@ -21,7 +31,7 @@ public class LANSet {
 			   classfile = classfile + ".class";
 			//p.setLANSClassFile(classfile);
 		}
-		p.start();
+		p.var_declaration_block();
 	}
 
 }
