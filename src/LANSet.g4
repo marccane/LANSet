@@ -102,6 +102,7 @@ KW_OUTPUTLN: 'escriureln';
 ////////////////// GENERAL TOKENS /////////////////
 
 TK_BASETYPE: 'car' | 'enter' | 'real' | 'boolea'; //If it's a custom type, it will be an TK_IDENTIFIER (careful)
+
 TK_IDENTIFIER: LETTER ('_' | LETTER | DIGIT)*;
 
 TK_INTEGER: '1'..'9' DIGIT* | '0' ;
@@ -208,7 +209,18 @@ const_declaration: bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT value=basetype_
                     System.out.println("He vist l'identificador " + $id.text);
                     System.out.println("Tipus: " + $bt.type + " " + $value.t + " " + TK_REAL);
 
-                    checkIdentifier($id);
+                    if ($bt.text == "enter" && $value.t == TK_INTEGER){}
+                    else if ($bt.text == "boolea" && $value.t == TK_INTEGER){}
+                    else if ($bt.text == "car" && $value.t == TK_INTEGER){}
+                    else if ($bt.text == "real" && $value.t == TK_INTEGER){}
+                    else if ($bt.text == "real" && $value.t == TK_INTEGER){}
+                    else{
+                        errorSintactic=true;
+                    }
+
+                    if(!identifierInUse($id.text)){
+                        checkAndLogIdentifier($id);
+                    }
                     };
 
 basetype_value returns [int t]: tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL) {$t=$tk.type;};
