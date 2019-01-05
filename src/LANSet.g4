@@ -54,6 +54,13 @@ public void registerBasetypeVariable(String type, Token id){
     TS.inserir(id.getText(), new Registre(id.getText(), Registre.VARIABLE_SUPERTYPE, type, id.getLine(), id.getCharPositionInLine()));
 }
 
+public void registerAlias(Token id, Token type){
+    String bType = processBaseType(type.getText());
+    Registre r = new Registre(id.getText(), Registre.ALIAS_SUPERTYPE, Registre.INVALID_TYPE, id.getLine(), id.getCharPositionInLine());
+    r.putSubtype(bType);
+    TS.inserir(id.getText(), r);
+}
+
 public boolean identifierInUse(String id){
     return TS.existeix(id);
 }
@@ -196,15 +203,28 @@ type_declaration_block: KW_TYPEBLOCK
                         (type_declaration TK_SEMICOLON)*
                         KW_ENDTYPEBLOCK;
 
-type_declaration: TK_IDENTIFIER TK_COLON TK_BASETYPE        |
-                  TK_IDENTIFIER TK_COLON vector_definition  |
-                  TK_IDENTIFIER TK_COLON tuple_definition;
+type_declaration
+    :
+    id=TK_IDENTIFIER TK_COLON btype=TK_BASETYPE {
+        if(!identifierInUse($id.text)) registerAlias($id, $btype);
+        else {
+            errorSemantic = true;
+            repeatedIdentifierError($id.text, $id.line);
+        }
+    }
+    |
+    id=TK_IDENTIFIER TK_COLON vector_definition {System.out.println($id.text);}
+    |
+    id=TK_IDENTIFIER TK_COLON tuple_definition {System.out.println($id.text);}
+    ;
 
 vector_definition: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)?;
 
-tuple_definition: KW_TUPLE
-                  (TK_BASETYPE TK_IDENTIFIER TK_SEMICOLON)+
-                  KW_ENDTUPLE;
+tuple_definition
+    :
+    KW_TUPLE
+    (TK_BASETYPE TK_IDENTIFIER TK_SEMICOLON)+
+    KW_ENDTUPLE;
 
 ///////////////////////////////////////////////////////////////////////////////
 
