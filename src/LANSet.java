@@ -11,11 +11,6 @@ public class LANSet {
 	static boolean errorSemantic = false;
 
 
-
-	public static void nothing(){
-
-	}
-
 	public static void main(String args[]) throws Exception{
 		if(args.length == 0){
 			System.out.println("Es requereix un fitxer LANS");
@@ -31,7 +26,7 @@ public class LANSet {
 			   classfile = classfile + ".class";
 			//p.setLANSClassFile(classfile);
 		}
-		p.var_declaration_block();
+		p.assignment();
 	}
 
 }
