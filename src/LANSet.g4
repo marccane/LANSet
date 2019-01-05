@@ -88,7 +88,23 @@ public void undefinedTypeError(String t, int line){
     System.out.println("Semantic error at line " + line + ": type " + t + " is not defined.");
 }
 
-public void typeMissmatchError(String id, int line, String foundType, String expectedType){
+public void undefinedIdentifierError(String id, int line){
+    System.out.println("Semantic error at line " + line + ": " + id + " is not defined.");
+}
+
+public void identifierIsNotAVariableError(String id, int line){
+    System.out.println("Semantic error at line " + line + ": " + id + " is not a variable.");
+}
+
+public void nonBasetypeReadingError(String id, String type, int line){
+    System.out.println("Semantic error at line " + line + ": Cannot read variable " + id + ". Read operation does not support reading " + type + " variables.");
+}
+
+public void typeMismatchError(String type1, String type2, int line){
+    System.out.println("Type mismatch error at line " + line + ": Type " + type1 + " does not match with " + type2);
+}
+
+public void typeMissmatchError2(String id, int line, String foundType, String expectedType){
     System.out.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +".");
 }
 
@@ -232,9 +248,9 @@ type_declaration
         }
     }
     |
-    id=TK_IDENTIFIER TK_COLON vector_definition {System.out.println($id.text);}
+    id=TK_IDENTIFIER TK_COLON vector_definition {System.out.println("TODO: vector definition");}
     |
-    id=TK_IDENTIFIER TK_COLON tuple_definition {System.out.println($id.text);}
+    id=TK_IDENTIFIER TK_COLON tuple_definition {System.out.println("TODO: tuple definition");}
     ;
 
 vector_definition: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)?;
@@ -290,7 +306,7 @@ const_declaration:  bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT
                                                 System.out.println("Adicio2 correcte");
                                             }
                                             else{
-                                                typeMissmatchError($id.text, $id.line, valueType, $bt.text);
+                                                typeMissmatchError2($id.text, $id.line, valueType, $bt.text);
                                                 errorSemantic=true;
                                             }
 
@@ -325,7 +341,7 @@ var_declaration
             }
             else {
                 if($type.tkType == TK_IDENTIFIER){ //alias, tuple or vector
-                    System.out.println("TODO: alias, tuple or vector detected");
+                    System.out.println("TODO: alias, tuple or vector variable detected");
                 }
                 else registerBasetypeVariable($type.text, $id);
             }
@@ -364,9 +380,19 @@ sentence: assignment TK_SEMICOLON |
           write_operation TK_SEMICOLON | 
           writeln_operation TK_SEMICOLON;
 
-assignment: lvalue TK_ASSIGNMENT expr; //lvalue or expr
+assignment
+    :
+    lval=lvalue
+    TK_ASSIGNMENT
+    e=expr{
+        if($lval.typ != $e.typ){
+            errorSemantic = true;
+            typeMismatchError($lval.typ, $e.typ, $lval.line);
+        }
+    }
+    ; //lvalue or expr
 
-lvalue: tuple_acces | vector_acces | TK_IDENTIFIER;
+lvalue returns[String typ, int line]: tuple_acces | vector_acces | id=TK_IDENTIFIER {$typ = "hey"; $line = $id.line;};
 
 conditional: KW_IF expr /* boolean */ KW_THEN sentence* 
             (KW_ELSE sentence*)?
@@ -378,7 +404,29 @@ while_loop: KW_WHILE expr /* boolean */ KW_DO sentence* KW_ENDWHILE;
 
 function_call: TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
 
-read_operation: KW_INPUT TK_LPAR TK_IDENTIFIER TK_RPAR;
+read_operation
+    :
+    KW_INPUT
+    TK_LPAR
+    id=TK_IDENTIFIER {
+        //registerBasetypeVariable(Registre.FLOAT_TYPE,$id);
+        Registre var = TS.obtenir($id.text);
+        //var.putSupertype(Registre.TUPLE_SUPERTYPE);
+        //var.putType("lmoile");
+        errorSemantic = true; //we assume semantic error, then rectify if there's no error.
+
+        if(var == null) undefinedIdentifierError($id.text, $id.line);
+        else if(var.getSupertype() != Registre.VARIABLE_SUPERTYPE) identifierIsNotAVariableError($id.text, $id.line);
+        else{
+            if(!var.isBasicType()){
+                nonBasetypeReadingError($id.text, var.getType(), $id.line);
+            }
+            else errorSemantic = false;
+        }
+    }
+    TK_RPAR;
+
+//No semantic analysis required for write operations
 
 write_operation: KW_OUTPUT TK_LPAR expr (TK_COMMA expr)* TK_RPAR;
 
@@ -388,7 +436,7 @@ writeln_operation: KW_OUTPUTLN TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
 
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
-expr: ternary | subexpr ; //careful priority
+expr returns[String typ]: ternary | subexpr {$typ = "randomexpr";}; //careful priority
 
 direct_evaluation_expr: constant_value |
                         TK_IDENTIFIER | //constant or variable
