@@ -85,6 +85,10 @@ public void nonBasetypeReadingError(String id, String type, int line){
     System.out.println("Semantic error at line " + line + ": Cannot read variable " + id + ". Read operation does not support reading " + type + " variables.");
 }
 
+public void typeMismatchError(String type1, String type2, int line){
+    System.out.println("Type mismatch error at line " + line + ": Type " + type1 + " does not match with " + type2);
+}
+
 }
 
 //////////////////// FRAGMENTS ////////////////////
@@ -225,9 +229,9 @@ type_declaration
         }
     }
     |
-    id=TK_IDENTIFIER TK_COLON vector_definition {System.out.println($id.text);}
+    id=TK_IDENTIFIER TK_COLON vector_definition {System.out.println("TODO: vector definition");}
     |
-    id=TK_IDENTIFIER TK_COLON tuple_definition {System.out.println($id.text);}
+    id=TK_IDENTIFIER TK_COLON tuple_definition {System.out.println("TODO: tuple definition");}
     ;
 
 vector_definition: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)?;
@@ -297,7 +301,7 @@ var_declaration
             }
             else {
                 if($type.tkType == TK_IDENTIFIER){ //alias, tuple or vector
-                    System.out.println("TODO: alias, tuple or vector detected");
+                    System.out.println("TODO: alias, tuple or vector variable detected");
                 }
                 else registerBasetypeVariable($type.text, $id);
             }
@@ -336,9 +340,19 @@ sentence: assignment TK_SEMICOLON |
           write_operation TK_SEMICOLON | 
           writeln_operation TK_SEMICOLON;
 
-assignment: lvalue TK_ASSIGNMENT expr; //lvalue or expr
+assignment
+    :
+    lval=lvalue
+    TK_ASSIGNMENT
+    e=expr{
+        if($lval.typ != $e.typ){
+            errorSemantic = true;
+            typeMismatchError($lval.typ, $e.typ, $lval.line);
+        }
+    }
+    ; //lvalue or expr
 
-lvalue: tuple_acces | vector_acces | TK_IDENTIFIER;
+lvalue returns[String typ, int line]: tuple_acces | vector_acces | id=TK_IDENTIFIER {$typ = "hey"; $line = $id.line;};
 
 conditional: KW_IF expr /* boolean */ KW_THEN sentence* 
             (KW_ELSE sentence*)?
@@ -382,7 +396,7 @@ writeln_operation: KW_OUTPUTLN TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
 
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
-expr: ternary | subexpr ; //careful priority
+expr returns[String typ]: ternary | subexpr {$typ = "randomexpr";}; //careful priority
 
 direct_evaluation_expr: constant_value |
                         TK_IDENTIFIER | //constant or variable
