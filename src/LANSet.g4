@@ -50,8 +50,8 @@ public String processBaseType(String type){
     return idType;
 }
 
-public void registerVariable(String supertype, String type, Token id){
-    TS.inserir(id.getText(), new Registre(id.getText(), idType, id.getLine(), id.getCharPositionInLine()));
+public void registerBasetypeVariable(String type, Token id){
+    TS.inserir(id.getText(), new Registre(id.getText(), Registre.VARIABLE_SUPERTYPE, type, id.getLine(), id.getCharPositionInLine()));
 }
 
 public boolean identifierInUse(String id){
@@ -220,9 +220,9 @@ function_declaration: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RP
 
 formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)*;
 
-type returns [int tkType, String text]
+type returns [int tkType, String text, int line]
     :
-    typ = (TK_BASETYPE | TK_IDENTIFIER) {$tkType = $typ.type; $text = $typ.text;}
+    typ = (TK_BASETYPE | TK_IDENTIFIER) {$tkType = $typ.type; $text = $typ.text; $line = $typ.line; }
     ; //Be careful with this
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -254,20 +254,20 @@ var_declaration
                 //TS.inserir($type.text, new Registre($type.text));
                 if(!identifierInUse($type.text)){
                     errorSemantic = true;
-                    undefinedTypeError($type.text);
+                    undefinedTypeError($type.text, $type.line);
                 }
             }
         }
     id = TK_IDENTIFIER {
             if(identifierInUse($id.text)){
                 errorSemantic = true;
-                repeatedIdentifierError($id.text);
+                repeatedIdentifierError($id.text, $id.line);
             }
             else {
                 if($type.tkType == TK_IDENTIFIER){ //alias, tuple or vector
                     System.out.println("TODO: alias, tuple or vector detected");
                 }
-                else registerBasetypeSymbol($type.text, $id);
+                else registerBasetypeVariable($type.text, $id);
             }
         }
     ;
