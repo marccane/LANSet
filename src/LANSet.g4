@@ -27,7 +27,7 @@ public void notifyErrorListeners(Token offendingToken, String msg, RecognitionEx
     errorSintactic=true;
 }
 
-public void registerBasetypeSymbol(String type, Token id){
+public String processBaseType(String type){
     String idType = Registre.INVALID_TYPE;
     switch(type){
         case CHAR_TYPE:
@@ -47,6 +47,10 @@ public void registerBasetypeSymbol(String type, Token id){
             break;
     }
 
+    return idType;
+}
+
+public void registerVariable(String supertype, String type, Token id){
     TS.inserir(id.getText(), new Registre(id.getText(), idType, id.getLine(), id.getCharPositionInLine()));
 }
 
@@ -54,12 +58,12 @@ public boolean identifierInUse(String id){
     return TS.existeix(id);
 }
 
-public void repeatedIdentifierError(String id){
-    System.out.println("Semantic error: the identifier " + id + " is already in use.");
+public void repeatedIdentifierError(String id, int line){
+    System.out.println("Semantic error at line " + line + ": the identifier " + id + " is already in use.");
 }
 
-public void undefinedTypeError(String t){
-    System.out.println("Semantic error: type " + t + " is not defined.");
+public void undefinedTypeError(String t, int line){
+    System.out.println("Semantic error at line " + line + ": type " + t + " is not defined.");
 }
 
 }

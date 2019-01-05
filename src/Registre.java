@@ -64,16 +64,24 @@ public class Registre  {
 
 public class Registre  {
 
-	static final String INVALID_TYPE = "Null";
+	static final String INVALID_TYPE = "NULL";
+
+	//supertypes
+	static final String CONSTANT_SUPERTYPE = "constant";
+	static final String VARIABLE_SUPERTYPE = "variable";
+	static final String FUNCTION_SUPERTYPE = "funcio";
+	static final String ACTION_SUPERTYPE = "accio";
+	static final String TUPLE_SUPERTYPE = "tupla";
+	static final String VECTOR_SUPERTYPE = "vector";
+
+	//types
 	static final String CHARACTER_TYPE = "car";
 	static final String INTEGER_TYPE = "enter";
 	static final String BOOLEAN_TYPE = "boolea";
 	static final String FLOAT_TYPE = "real";
-	static final String TUPLE_TYPE = "tupla";
-	static final String VECTOR_TYPE = "vector";
-
 
 	String text;
+	String supertype;
 	String type;
 	String subtype;
 	int line;
@@ -83,6 +91,7 @@ public class Registre  {
 
 public Registre() {
 	text = "";
+	supertype = INVALID_TYPE;
 	type = INVALID_TYPE;
 	line = -1;
 	pos = -1;
@@ -90,40 +99,44 @@ public Registre() {
 
 public Registre(String te) {
 	text = te;
+	supertype = INVALID_TYPE;
 	type = INVALID_TYPE;
 	line = -1;
 	pos = -1;
 }
 
-public Registre(String te, String t) {
+public Registre(String te, String st) {
 	text = te;
+	supertype = st;
+	type = INVALID_TYPE;
+	line = -1;
+	pos = -1;
+}
+
+public Registre(String te, String st, String t) {
+	text = te;
+	supertype = st;
 	type = t;
 	line = -1;
 	pos = -1;
 }
 
-public Registre(String te, String t, int l) {
+public Registre(String te, String st, String t, int l) {
 	text = te;
+	supertype = st;
 	type = t;
 	line = l;
 	pos = -1;
 }
 
-public Registre(String te, String t, String st, int l) {
+public Registre(String te, String st, String t, int l, int p) {
 	text = te;
-	type = t;
-	subtype = st;
-	line = l;
-	pos = -1;
-}
-
-public Registre(String te, String t, int l, int p) {
-	text = te;
+	supertype = st;
 	type = t;
 	line = l;
 	pos = p;
 }
-
+/*
 public Registre(String te, String t, int l, int p, int i) {
 	text = te;
 	type = t;
@@ -131,11 +144,14 @@ public Registre(String te, String t, int l, int p, int i) {
 	pos = p;
 	intval = i;
 }
-
+*/
 
 public String getText() {
 	return (text);
 	}
+public String getSupertype() {
+	return (supertype);
+}
 public String getType() {
 	return (type);
 	}
