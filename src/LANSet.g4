@@ -50,8 +50,9 @@ public String processBaseType(String type){
     return idType;
 }
 
-public void registerVariable(String supertype, String type, Token id){
-    TS.inserir(id.getText(), new Registre(id.getText(), idType, id.getLine(), id.getCharPositionInLine()));
+public void registerConstant(String id, String type){
+    String bt = processBaseType(type);
+    CONSTANT
 }
 
 public boolean identifierInUse(String id){
@@ -66,12 +67,8 @@ public void undefinedTypeError(String t, int line){
     System.out.println("Semantic error at line " + line + ": type " + t + " is not defined.");
 }
 
-public void undefinedTypeError(String t){
-    System.out.println("Semantic error: type " + t + " is not defined.");
-}
-
-public void typeMissmatchError(String id, int pos, String foundType, String expectedType){
-    System.out.println("Semantic error: variable " + id + " is type " + foundType + " but should be " + expectedType +" .");
+public void typeMissmatchError(String id, int line, String foundType, String expectedType){
+    System.out.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +" .");
 }
 
 }
@@ -241,36 +238,37 @@ type returns [int tkType, String text]
 
 const_declaration_block: KW_CONSTBLOCK (const_declaration TK_SEMICOLON)* KW_ENDCONSTBLOCK;
 
-const_declaration: bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT value=basetype_value {
-                    System.out.println("He vist l'identificador " + $id.text);
-                    System.out.println("Tipus: " + $bt.type + " " + $value.t + " " + TK_REAL);
+const_declaration:  bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT
+                    value=basetype_value {
+                                            //System.out.println("He vist l'identificador " + $id.text);
+                                            System.out.println("Tipus: " + $bt.type + " " + $value.t + " " + TK_REAL);
 
-                    if(identifyerinuse($id.text){
-                        repeatedIdentifierError($id.text);
-                        errorSintactic=true;
-                    }
+                                            if(identifierInUse($id.text)){
+                                                repeatedIdentifierError($id.text, $id.line);
+                                                errorSemantic=true;
+                                            }
 
-                    if ($bt.text == "enter" && $value.t == TK_INTEGER){
-                        registerBasetypeSymbol(Register.INTEGER_TYPE,$id);
-                    }
-                    else if ($bt.text == "boolea" && $value.t == TK_INTEGER){
-                        registerBasetypeSymbol(Register.BOOLEAN_TYPE,$id);
-                    }
-                    else if ($bt.text == "car" && $value.t == TK_INTEGER){
-                        registerBasetypeSymbol(Register.CHARACTER_TYPE,$id);
-                    }
-                    else if ($bt.text == "real" && $value.t == TK_INTEGER){
-                        registerBasetypeSymbol(Register.FLOAT_TYPE,$id);
-                    }
-                    else if ($bt.text == "real" && $value.t == TK_REAL){
-                        registerBasetypeSymbol(Register.FLOAT_TYPE,$id);
-                    }
-                    else{
-                        errorSintactic=true;
-                    }
+                                            if ($bt.text == Register.INTEGER_TYPE && $value.t == TK_INTEGER){
+                                                registerBasetypeSymbol(Register.INTEGER_TYPE,$id);
+                                            }
+                                            else if ($bt.text == Register.BOOLEAN_TYPE && $value.t == TK_BOOLEAN){
+                                                registerBasetypeSymbol(Register.BOOLEAN_TYPE,$id);
+                                            }
+                                            else if ($bt.text == Register.CHARACTER_TYPE && $value.t == TK_CHARACTER){
+                                                registerBasetypeSymbol(Register.CHARACTER_TYPE,$id);
+                                            }
+                                            else if ($bt.text == Register.FLOAT_TYPE && $value.t == TK_INTEGER){
+                                                registerBasetypeSymbol(Register.FLOAT_TYPE,$id);
+                                            }
+                                            else if ($bt.text == Register.FLOAT_TYPE && $value.t == TK_REAL){
+                                                registerBasetypeSymbol(Register.FLOAT_TYPE,$id);
+                                            }
+                                            else{
+                                                typeMissmatchError($id.text, $id.line, $value.t, $bt.text);
+                                                errorSemantic=true;
+                                            }
 
-
-                    };
+                                        };
 
 basetype_value returns [int t]: tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL) {$t=$tk.type;};
 
