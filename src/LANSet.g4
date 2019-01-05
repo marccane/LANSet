@@ -73,6 +73,18 @@ public void undefinedTypeError(String t, int line){
     System.out.println("Semantic error at line " + line + ": type " + t + " is not defined.");
 }
 
+public void undefinedIdentifierError(String id, int line){
+    System.out.println("Semantic error at line " + line + ": " + id + " is not defined.");
+}
+
+public void identifierIsNotAVariableError(String id, int line){
+    System.out.println("Semantic error at line " + line + ": " + id + " is not a variable.");
+}
+
+public void nonBasetypeReadingError(String id, String type, int line){
+    System.out.println("Semantic error at line " + line + ": Cannot read variable " + id + ". Read operation does not support reading " + type + " variables.");
+}
+
 }
 
 //////////////////// FRAGMENTS ////////////////////
@@ -338,7 +350,29 @@ while_loop: KW_WHILE expr /* boolean */ KW_DO sentence* KW_ENDWHILE;
 
 function_call: TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
 
-read_operation: KW_INPUT TK_LPAR TK_IDENTIFIER TK_RPAR;
+read_operation
+    :
+    KW_INPUT
+    TK_LPAR
+    id=TK_IDENTIFIER {
+        //registerBasetypeVariable(Registre.FLOAT_TYPE,$id);
+        Registre var = TS.obtenir($id.text);
+        //var.putSupertype(Registre.TUPLE_SUPERTYPE);
+        //var.putType("lmoile");
+        errorSemantic = true; //we assume semantic error, then rectify if there's no error.
+
+        if(var == null) undefinedIdentifierError($id.text, $id.line);
+        else if(var.getSupertype() != Registre.VARIABLE_SUPERTYPE) identifierIsNotAVariableError($id.text, $id.line);
+        else{
+            if(!var.isBasicType()){
+                nonBasetypeReadingError($id.text, var.getType(), $id.line);
+            }
+            else errorSemantic = false;
+        }
+    }
+    TK_RPAR;
+
+//No semantic analysis required for write operations
 
 write_operation: KW_OUTPUT TK_LPAR expr (TK_COMMA expr)* TK_RPAR;
 

@@ -155,7 +155,10 @@ public String getSupertype() {
 }
 public String getType() {
 	return (type);
-	}
+}
+public String getSubtype() {
+	return (subtype);
+}
 public Integer getLine() {
 	return (line);
 	}
@@ -181,8 +184,15 @@ public void putPos(int p) {
 public void putIntval(int i) {
 	intval = i;
 }
+public void putSupertype(String st) {
+	supertype = st;
+}
 public void putSubtype(String st) {
 	subtype = st;
+}
+
+public boolean isBasicType(){
+	return type == CHARACTER_TYPE || type == INTEGER_TYPE || type == FLOAT_TYPE || type == BOOLEAN_TYPE;
 }
 
 }
