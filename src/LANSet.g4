@@ -50,6 +50,15 @@ public String processBaseType(String type){
     return idType;
 }
 
+public String getStringTypeFromTKIndex(int index){
+    String res = "INVALID";
+    if(index == TK_INTEGER) res = INT_TYPE;
+    else if(index == TK_CHARACTER) res = CHAR_TYPE;
+    else if(index == TK_BOOLEAN) res = BOOL_TYPE;
+    else if(index == TK_REAL) res = FLOAT_TYPE;
+    return res;
+}
+
 public void registerBasetypeVariable(String type, Token id){
     TS.inserir(id.getText(), new Registre(id.getText(), Registre.VARIABLE_SUPERTYPE, type, id.getLine(), id.getCharPositionInLine()));
 }
@@ -61,9 +70,10 @@ public void registerAlias(Token id, Token type){
     TS.inserir(id.getText(), r);
 }
 
-public void registerConstant(String id, String type){
-    String bt = processBaseType(type);
-    CONSTANT
+public void registerConstant(Token id, Token type){
+    String bType = processBaseType(type.getText());
+    Registre r = new Registre(id.getText(), Registre.CONSTANT_SUPERTYPE, bType, id.getLine(), id.getCharPositionInLine());
+    TS.inserir(id.getText(), r);
 }
 
 public boolean identifierInUse(String id){
@@ -79,7 +89,7 @@ public void undefinedTypeError(String t, int line){
 }
 
 public void typeMissmatchError(String id, int line, String foundType, String expectedType){
-    System.out.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +" .");
+    System.out.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +".");
 }
 
 }
@@ -263,31 +273,24 @@ const_declaration_block: KW_CONSTBLOCK (const_declaration TK_SEMICOLON)* KW_ENDC
 
 const_declaration:  bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT
                     value=basetype_value {
-                                            //System.out.println("He vist l'identificador " + $id.text);
-                                            System.out.println("Tipus: " + $bt.type + " " + $value.t + " " + TK_REAL);
+                                            //System.out.println("Tipus: " + $bt.type + " " + $value.t + " " + TK_REAL);
 
                                             if(identifierInUse($id.text)){
                                                 repeatedIdentifierError($id.text, $id.line);
                                                 errorSemantic=true;
                                             }
 
-                                            if ($bt.text == Register.INTEGER_TYPE && $value.t == TK_INTEGER){
-                                                registerBasetypeSymbol(Register.INTEGER_TYPE,$id);
+                                            String valueType = getStringTypeFromTKIndex($value.t);
+                                            if ($bt.text.equals(valueType)){
+                                                registerConstant($id,$bt);
+                                                System.out.println("Adicio correcte");
                                             }
-                                            else if ($bt.text == Register.BOOLEAN_TYPE && $value.t == TK_BOOLEAN){
-                                                registerBasetypeSymbol(Register.BOOLEAN_TYPE,$id);
-                                            }
-                                            else if ($bt.text == Register.CHARACTER_TYPE && $value.t == TK_CHARACTER){
-                                                registerBasetypeSymbol(Register.CHARACTER_TYPE,$id);
-                                            }
-                                            else if ($bt.text == Register.FLOAT_TYPE && $value.t == TK_INTEGER){
-                                                registerBasetypeSymbol(Register.FLOAT_TYPE,$id);
-                                            }
-                                            else if ($bt.text == Register.FLOAT_TYPE && $value.t == TK_REAL){
-                                                registerBasetypeSymbol(Register.FLOAT_TYPE,$id);
+                                            else if ($bt.text.equals(Registre.FLOAT_TYPE) && valueType.equals(Registre.INTEGER_TYPE)){
+                                                registerConstant($id,$bt);
+                                                System.out.println("Adicio2 correcte");
                                             }
                                             else{
-                                                typeMissmatchError($id.text, $id.line, $value.t, $bt.text);
+                                                typeMissmatchError($id.text, $id.line, valueType, $bt.text);
                                                 errorSemantic=true;
                                             }
 
