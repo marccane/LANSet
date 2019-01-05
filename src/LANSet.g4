@@ -50,6 +50,17 @@ public String processBaseType(String type){
     return idType;
 }
 
+public void registerBasetypeVariable(String type, Token id){
+    TS.inserir(id.getText(), new Registre(id.getText(), Registre.VARIABLE_SUPERTYPE, type, id.getLine(), id.getCharPositionInLine()));
+}
+
+public void registerAlias(Token id, Token type){
+    String bType = processBaseType(type.getText());
+    Registre r = new Registre(id.getText(), Registre.ALIAS_SUPERTYPE, Registre.INVALID_TYPE, id.getLine(), id.getCharPositionInLine());
+    r.putSubtype(bType);
+    TS.inserir(id.getText(), r);
+}
+
 public void registerConstant(String id, String type){
     String bt = processBaseType(type);
     CONSTANT
@@ -135,7 +146,6 @@ KW_OUTPUTLN: 'escriureln';
 ////////////////// GENERAL TOKENS /////////////////
 
 TK_BASETYPE: 'car' | 'enter' | 'real' | 'boolea'; //If it's a custom type, it will be an TK_IDENTIFIER (careful)
-
 TK_IDENTIFIER: LETTER ('_' | LETTER | DIGIT)*;
 
 TK_INTEGER: '1'..'9' DIGIT* | '0' ;
@@ -202,15 +212,28 @@ type_declaration_block: KW_TYPEBLOCK
                         (type_declaration TK_SEMICOLON)*
                         KW_ENDTYPEBLOCK;
 
-type_declaration: TK_IDENTIFIER TK_COLON TK_BASETYPE        |
-                  TK_IDENTIFIER TK_COLON vector_definition  |
-                  TK_IDENTIFIER TK_COLON tuple_definition;
+type_declaration
+    :
+    id=TK_IDENTIFIER TK_COLON btype=TK_BASETYPE {
+        if(!identifierInUse($id.text)) registerAlias($id, $btype);
+        else {
+            errorSemantic = true;
+            repeatedIdentifierError($id.text, $id.line);
+        }
+    }
+    |
+    id=TK_IDENTIFIER TK_COLON vector_definition {System.out.println($id.text);}
+    |
+    id=TK_IDENTIFIER TK_COLON tuple_definition {System.out.println($id.text);}
+    ;
 
 vector_definition: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)?;
 
-tuple_definition: KW_TUPLE
-                  (TK_BASETYPE TK_IDENTIFIER TK_SEMICOLON)+
-                  KW_ENDTUPLE;
+tuple_definition
+    :
+    KW_TUPLE
+    (TK_BASETYPE TK_IDENTIFIER TK_SEMICOLON)+
+    KW_ENDTUPLE;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -226,9 +249,9 @@ function_declaration: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RP
 
 formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)*;
 
-type returns [int tkType, String text]
+type returns [int tkType, String text, int line]
     :
-    typ = (TK_BASETYPE | TK_IDENTIFIER) {$tkType = $typ.type; $text = $typ.text;}
+    typ = (TK_BASETYPE | TK_IDENTIFIER) {$tkType = $typ.type; $text = $typ.text; $line = $typ.line; }
     ; //Be careful with this
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -288,20 +311,20 @@ var_declaration
                 //TS.inserir($type.text, new Registre($type.text));
                 if(!identifierInUse($type.text)){
                     errorSemantic = true;
-                    undefinedTypeError($type.text);
+                    undefinedTypeError($type.text, $type.line);
                 }
             }
         }
     id = TK_IDENTIFIER {
             if(identifierInUse($id.text)){
                 errorSemantic = true;
-                repeatedIdentifierError($id.text);
+                repeatedIdentifierError($id.text, $id.line);
             }
             else {
                 if($type.tkType == TK_IDENTIFIER){ //alias, tuple or vector
                     System.out.println("TODO: alias, tuple or vector detected");
                 }
-                else registerBasetypeSymbol($type.text, $id);
+                else registerBasetypeVariable($type.text, $id);
             }
         }
     ;
