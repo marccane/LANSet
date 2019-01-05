@@ -3,7 +3,6 @@ import java.io.*;
 import org.antlr.v4.runtime.*;
 
 
-
 // LANSet Compiler.
 public class LANSet {
 	static SymTable<Registre> TS = new SymTable<Registre>(1000);

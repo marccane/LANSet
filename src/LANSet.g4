@@ -1,5 +1,5 @@
 /*  LANS Lexer and Parser
-*   MADE BY: Marc Cane Salamia and Enric Rodríguez Galan
+*   MADE BY: Marc Cane Salamia and Enric Rodrï¿½guez Galan
 */
 
 grammar LANSet;
@@ -50,6 +50,15 @@ public String processBaseType(String type){
     return idType;
 }
 
+public String getStringTypeFromTKIndex(int index){
+    String res = "INVALID";
+    if(index == TK_INTEGER) res = INT_TYPE;
+    else if(index == TK_CHARACTER) res = CHAR_TYPE;
+    else if(index == TK_BOOLEAN) res = BOOL_TYPE;
+    else if(index == TK_REAL) res = FLOAT_TYPE;
+    return res;
+}
+
 public void registerBasetypeVariable(String type, Token id){
     TS.inserir(id.getText(), new Registre(id.getText(), Registre.VARIABLE_SUPERTYPE, type, id.getLine(), id.getCharPositionInLine()));
 }
@@ -58,6 +67,12 @@ public void registerAlias(Token id, Token type){
     String bType = processBaseType(type.getText());
     Registre r = new Registre(id.getText(), Registre.ALIAS_SUPERTYPE, Registre.INVALID_TYPE, id.getLine(), id.getCharPositionInLine());
     r.putSubtype(bType);
+    TS.inserir(id.getText(), r);
+}
+
+public void registerConstant(Token id, Token type){
+    String bType = processBaseType(type.getText());
+    Registre r = new Registre(id.getText(), Registre.CONSTANT_SUPERTYPE, bType, id.getLine(), id.getCharPositionInLine());
     TS.inserir(id.getText(), r);
 }
 
@@ -87,6 +102,10 @@ public void nonBasetypeReadingError(String id, String type, int line){
 
 public void typeMismatchError(String type1, String type2, int line){
     System.out.println("Type mismatch error at line " + line + ": Type " + type1 + " does not match with " + type2);
+}
+
+public void typeMissmatchError2(String id, int line, String foundType, String expectedType){
+    System.out.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +".");
 }
 
 }
@@ -266,13 +285,34 @@ type returns [int tkType, String text, int line]
 
 ///////////////////////// CONSTANT DECLARATION BLOCK //////////////////////////
 
-const_declaration_block: KW_CONSTBLOCK
-                         (const_declaration TK_SEMICOLON)*
-                         KW_ENDCONSTBLOCK;
+const_declaration_block: KW_CONSTBLOCK (const_declaration TK_SEMICOLON)* KW_ENDCONSTBLOCK;
 
-const_declaration: TK_BASETYPE TK_IDENTIFIER TK_ASSIGNMENT basetype_value;
+const_declaration:  bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT
+                    value=basetype_value {
+                                            //System.out.println("Tipus: " + $bt.type + " " + $value.t + " " + TK_REAL);
 
-basetype_value: TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL;
+                                            if(identifierInUse($id.text)){
+                                                repeatedIdentifierError($id.text, $id.line);
+                                                errorSemantic=true;
+                                            }
+
+                                            String valueType = getStringTypeFromTKIndex($value.t);
+                                            if ($bt.text.equals(valueType)){
+                                                registerConstant($id,$bt);
+                                                System.out.println("Adicio correcte");
+                                            }
+                                            else if ($bt.text.equals(Registre.FLOAT_TYPE) && valueType.equals(Registre.INTEGER_TYPE)){
+                                                registerConstant($id,$bt);
+                                                System.out.println("Adicio2 correcte");
+                                            }
+                                            else{
+                                                typeMissmatchError2($id.text, $id.line, valueType, $bt.text);
+                                                errorSemantic=true;
+                                            }
+
+                                        };
+
+basetype_value returns [int t]: tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL) {$t=$tk.type;};
 
 ///////////////////////////////////////////////////////////////////////////////
   
