@@ -10,6 +10,11 @@ grammar LANSet;
 
 @parser::members{
 
+static final String CHAR_TYPE = "car";
+static final String INT_TYPE = "enter";
+static final String FLOAT_TYPE = "real";
+static final String BOOL_TYPE = "boolea";
+
 SymTable<Registre> TS = new SymTable<Registre>(1000);
 boolean errorSintactic = false;
 boolean errorSemantic = false;
@@ -22,20 +27,39 @@ public void notifyErrorListeners(Token offendingToken, String msg, RecognitionEx
     errorSintactic=true;
 }
 
-public boolean checkAndLogIdentifier(Token t){
-    if(!identifierInUse(t.getText())){
-        TS.inserir(t.getText(),new Registre(t.getText(),t.getType(),t.getLine(),t.getCharPositionInLine()));
-        return false;
-    } else return true;
+public void registerBasetypeSymbol(String type, Token id){
+    String idType = Registre.INVALID_TYPE;
+    switch(type){
+        case CHAR_TYPE:
+            idType = Registre.CHARACTER_TYPE;
+            break;
+        case INT_TYPE:
+            idType = Registre.INTEGER_TYPE;
+            break;
+        case FLOAT_TYPE:
+            idType = Registre.FLOAT_TYPE;
+            break;
+        case BOOL_TYPE:
+            idType = Registre.BOOLEAN_TYPE;
+            break;
+        default:
+            //do nothing
+            break;
+    }
+
+    TS.inserir(id.getText(), new Registre(id.getText(), idType, id.getLine(), id.getCharPositionInLine()));
 }
 
 public boolean identifierInUse(String id){
-    if(TS.existeix(id)){
-        //errorSemantic = true;
-        System.out.println("Semantic error: The identifier " + id + " is already in use.");
-        return true;
-    }
-    else return false;
+    return TS.existeix(id);
+}
+
+public void repeatedIdentifierError(String id){
+    System.out.println("Semantic error: the identifier " + id + " is already in use.");
+}
+
+public void undefinedTypeError(String t){
+    System.out.println("Semantic error: type " + t + " is not defined.");
 }
 
 }
@@ -193,9 +217,9 @@ function_declaration: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RP
 
 formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)*;
 
-type returns [int t, String text]
+type returns [int tkType, String text]
     :
-    typ = (TK_BASETYPE | TK_IDENTIFIER) {$t = $typ.type; $text = $typ.text;}
+    typ = (TK_BASETYPE | TK_IDENTIFIER) {$tkType = $typ.type; $text = $typ.text;}
     ; //Be careful with this
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -234,10 +258,29 @@ var_declaration_block: KW_VARIABLEBLOCK
                        (var_declaration TK_SEMICOLON)*
                        KW_ENDVARIABLEBLOCK;
 
-var_declaration returns []
+var_declaration
     :
-    t = type{ if($type.t == TK_IDENTIFIER) identifierInUse($type.text); }
-    id = TK_IDENTIFIER {errorSemantic = checkAndLogIdentifier($id);}
+    t = type{
+            if($type.tkType == TK_IDENTIFIER) {
+                //TS.inserir($type.text, new Registre($type.text));
+                if(!identifierInUse($type.text)){
+                    errorSemantic = true;
+                    undefinedTypeError($type.text);
+                }
+            }
+        }
+    id = TK_IDENTIFIER {
+            if(identifierInUse($id.text)){
+                errorSemantic = true;
+                repeatedIdentifierError($id.text);
+            }
+            else {
+                if($type.tkType == TK_IDENTIFIER){ //alias, tuple or vector
+                    System.out.println("TODO: alias, tuple or vector detected");
+                }
+                else registerBasetypeSymbol($type.text, $id);
+            }
+        }
     ;
 
 ///////////////////////////////////////////////////////////////////////////////
