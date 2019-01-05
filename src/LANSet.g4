@@ -10,6 +10,11 @@ grammar LANSet;
 
 @parser::members{
 
+static final String CHAR_TYPE = "car";
+static final String INT_TYPE = "enter";
+static final String FLOAT_TYPE = "real";
+static final String BOOL_TYPE = "boolea";
+
 SymTable<Registre> TS = new SymTable<Registre>(1000);
 boolean errorSintactic = false;
 boolean errorSemantic = false;
@@ -22,8 +27,27 @@ public void notifyErrorListeners(Token offendingToken, String msg, RecognitionEx
     errorSintactic=true;
 }
 
-public void registerIdentifier(Token t){
-    TS.inserir(t.getText(),new Registre(t.getText(),t.getType(),t.getLine(),t.getCharPositionInLine()));
+public void registerBasetypeSymbol(String type, Token id){
+    String idType = Registre.INVALID_TYPE;
+    switch(type){
+        case CHAR_TYPE:
+            idType = Registre.CHARACTER_TYPE;
+            break;
+        case INT_TYPE:
+            idType = Registre.INTEGER_TYPE;
+            break;
+        case FLOAT_TYPE:
+            idType = Registre.FLOAT_TYPE;
+            break;
+        case BOOL_TYPE:
+            idType = Registre.BOOLEAN_TYPE;
+            break;
+        default:
+            //do nothing
+            break;
+    }
+
+    TS.inserir(id.getText(), new Registre(id.getText(), idType, id.getLine(), id.getCharPositionInLine()));
 }
 
 public boolean identifierInUse(String id){
@@ -192,9 +216,9 @@ function_declaration: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RP
 
 formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)*;
 
-type returns [int t, String text]
+type returns [int tkType, String text]
     :
-    typ = (TK_BASETYPE | TK_IDENTIFIER) {$t = $typ.type; $text = $typ.text;}
+    typ = (TK_BASETYPE | TK_IDENTIFIER) {$tkType = $typ.type; $text = $typ.text;}
     ; //Be careful with this
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -222,7 +246,7 @@ var_declaration_block: KW_VARIABLEBLOCK
 var_declaration
     :
     t = type{
-            if($type.t == TK_IDENTIFIER) {
+            if($type.tkType == TK_IDENTIFIER) {
                 //TS.inserir($type.text, new Registre($type.text));
                 if(!identifierInUse($type.text)){
                     errorSemantic = true;
@@ -236,7 +260,10 @@ var_declaration
                 repeatedIdentifierError($id.text);
             }
             else {
-                registerIdentifier($id); //aixo s'haura de canviar fijo
+                if($type.tkType == TK_IDENTIFIER){ //alias, tuple or vector
+                    System.out.println("TODO: alias, tuple or vector detected");
+                }
+                else registerBasetypeSymbol($type.text, $id);
             }
         }
     ;
