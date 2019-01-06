@@ -418,9 +418,9 @@ assignment
 
 lvalue returns[String typ, int line, String ident]
     :
-    tuple_acces
+    tuple_acces {System.out.println("TODO: tuple as an lvalue");}
     |
-    vector_acces
+    vector_acces {System.out.println("TODO: vector as an lvalue");}
     |
     id=TK_IDENTIFIER {
         //registerBasetypeVariable(FLOAT_TYPE,$id); //debug
@@ -505,7 +505,11 @@ writeln_operation:
 
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
-expr returns[String typ, int line]: ternary | subexpr {$typ = "randomexpr"; $line = -1;}; //careful priority
+expr returns[String typ, int line]
+    :
+    ternary {$typ = $ternary.typ; $line = $ternary.line;}
+    |
+    subexpr {$typ = $subexpr.typ; $line = $subexpr.line;}; //careful priority
 
 direct_evaluation_expr: constant_value |
                         TK_IDENTIFIER | //constant or variable
@@ -515,11 +519,11 @@ direct_evaluation_expr: constant_value |
 
 constant_value: basetype_value | TK_STRING; //For illustrative purposes
 
-tuple_acces: TK_IDENTIFIER TK_DOT TK_IDENTIFIER;
+tuple_acces: TK_IDENTIFIER TK_DOT TK_IDENTIFIER {System.out.println("TODO: Tuple acces");};
 
-vector_acces: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK;
+vector_acces: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK {System.out.println("TODO: Vector acces");};
 
-ternary: subexpr /* boolean */ TK_QMARK expr TK_COLON expr;
+ternary returns [String typ, int line]: subexpr /* boolean */ TK_QMARK e1=expr{$typ = $e1.typ;} TK_COLON e2=expr;
 
 //HAZARD ZONE
 subexpr returns [String typ, int line]: term1 (logic_operators term1)*;
