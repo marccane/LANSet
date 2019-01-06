@@ -130,7 +130,7 @@ public void writeOperationUnsupportedTypeError(String type, int line){
 }
 
 public void ternaryTypeMismatchError(String t1, String t2, int line){
-    System.out.println("Type mismatch error at line " + line + ": Type " + type1 + " does not match with " + type2 + ". Both ternary inner expressions must be the same type.");
+    System.out.println("Type mismatch error at line " + line + ": Type " + t1 + " does not match with " + t2 + ". Both ternary inner expressions must be the same type.");
 }
 
 }
@@ -610,17 +610,30 @@ ternary returns [String typ, int line]
     ;
 
 //HAZARD ZONE
-subexpr returns [String typ, int line]
-/*@after{
-    if($o == null) {$typ = $t1.typ; $line = $t1.line;}
-    else{
-
+subexpr returns [String typ, int line] locals [boolean hasOperator, String operator]
+@init{$hasOperator = false;}
+@after{
+    if($hasOperator){
+        if(!$t1.typ.equals(BOOL_TYPE)){
+            errorSemantic = true;
+            System.out.println("Type mismatch Error at line " + $line + ": operator " + $operator + " does not work with " + $t1.typ + " expressions.");
+        }
     }
-}*/
-: t1=term1 (o=logic_operators t2=term1)*;
+}
+    :
+    t1=term1 {$typ = $t1.typ; $line = $t1.line;}
+    (
+        o=logic_operators {$operator = $o.op; $hasOperator = true;}
+        t2=term1{
+            if(!$t2.typ.equals(BOOL_TYPE)){
+                errorSemantic = true;
+                System.out.println("Type mismatch Error at line " + $line + ": operator " + $operator + " does not work with " + $t2.typ + " expressions.");
+            }
+        }
+    )*;
 
 //operation: (term1 logic_operators operation) | term1;
-logic_operators: TK_AND | TK_OR;
+logic_operators returns [String op]: tk=(TK_AND | TK_OR){$op = $tk.text;};
 
 term1 returns [String typ, int line]: term2 (equality_operator term2)*;
 //term1: (term2 equality_operator term1) | term2;
