@@ -129,6 +129,10 @@ public void writeOperationUnsupportedTypeError(String type, int line){
     System.out.println("Unsupported type error at line " + line + ". Only \'" + STRING_TYPE + "\' expressions can be written to screen.");
 }
 
+public void ternaryTypeMismatchError(String t1, String t2, int line){
+    System.out.println("Type mismatch error at line " + line + ": Type " + type1 + " does not match with " + type2 + ". Both ternary inner expressions must be the same type.");
+}
+
 }
 
 //////////////////// FRAGMENTS ////////////////////
@@ -586,20 +590,39 @@ vector_acces: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK {System
 ternary returns [String typ, int line]
     :
     cond=subexpr /* boolean */{
-
+        $line = $cond.line;
+        if(!$cond.typ.equals(BOOL_TYPE)){
+            errorSemantic=true;
+            typeMismatchError($cond.typ, BOOL_TYPE, $cond.line);
+        }
     }
     TK_QMARK
     e1=expr {$typ = $e1.typ;}
     TK_COLON
-    e2=expr
+    e2=expr{
+        if($e1.typ.equals(FLOAT_TYPE) && $e2.typ.equals(INT_TYPE)) $e2.typ = FLOAT_TYPE; //to real promotion
+        else if($e2.typ.equals(FLOAT_TYPE) && $e1.typ.equals(INT_TYPE)) $e1.typ = FLOAT_TYPE; //to real promotion
+        else if(!$e1.typ.equals($e2.typ)){ //none of both are real
+            errorSemantic = true;
+            ternaryTypeMismatchError($e1.typ, $e2.typ, $cond.line);
+        }
+    }
     ;
 
 //HAZARD ZONE
-subexpr returns [String typ, int line]: term1 (logic_operators term1)*;
+subexpr returns [String typ, int line]
+/*@after{
+    if($o == null) {$typ = $t1.typ; $line = $t1.line;}
+    else{
+
+    }
+}*/
+: t1=term1 (o=logic_operators t2=term1)*;
+
 //operation: (term1 logic_operators operation) | term1;
 logic_operators: TK_AND | TK_OR;
 
-term1: term2 (equality_operator term2)*;
+term1 returns [String typ, int line]: term2 (equality_operator term2)*;
 //term1: (term2 equality_operator term1) | term2;
 equality_operator: TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ;
 
