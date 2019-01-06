@@ -121,7 +121,7 @@ public void typeMismatchError(String type1, String type2, int line){
     System.out.println("Type mismatch error at line " + line + ": Type " + type1 + " does not match with " + type2);
 }
 
-public void typeMissmatchError2(String id, int line, String foundType, String expectedType){
+public void typeMismatchError2(String id, int line, String foundType, String expectedType){
     System.out.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +".");
 }
 
@@ -329,7 +329,7 @@ const_declaration
                 registerConstant($id,$bt);
             }
             else{
-                typeMissmatchError2($id.text, $id.line, valueType, $bt.text);
+                typeMismatchError2($id.text, $id.line, valueType, $bt.text);
                 errorSemantic=true;
             }
         }
@@ -438,13 +438,25 @@ lvalue returns[String typ, int line, String ident]
         $ident = $id.text;
     };
 
-conditional: KW_IF expr /* boolean */ KW_THEN sentence* 
+conditional: KW_IF expr /* boolean */ {
+                if(!$expr.typ.equals(BOOL_TYPE)){
+                    errorSemantic=true;
+                    typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
+                }
+            }
+            KW_THEN sentence*
             (KW_ELSE sentence*)?
-             KW_ENDIF;
+            KW_ENDIF;
 
 for_loop: KW_FOR TK_IDENTIFIER KW_FROM expr /* integer */ KW_TO expr /* integer */ KW_DO sentence* KW_ENDFOR;
 
-while_loop: KW_WHILE expr /* boolean */ KW_DO sentence* KW_ENDWHILE;
+while_loop: KW_WHILE expr /* boolean */ {
+                if(!$expr.typ.equals(BOOL_TYPE)){
+                    errorSemantic=true;
+                    typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
+                }
+            }
+            KW_DO sentence* KW_ENDWHILE;
 
 function_call: TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
 
