@@ -64,23 +64,6 @@ public class Registre  {
 
 public class Registre  {
 
-	static final String INVALID_TYPE = "NULL";
-
-	//supertypes
-	static final String CONSTANT_SUPERTYPE = "constant";
-	static final String VARIABLE_SUPERTYPE = "variable";
-	static final String ALIAS_SUPERTYPE = "alias";
-	static final String FUNCTION_SUPERTYPE = "funcio";
-	static final String ACTION_SUPERTYPE = "accio";
-	static final String TUPLE_SUPERTYPE = "tupla";
-	static final String VECTOR_SUPERTYPE = "vector";
-
-	//types
-	static final String CHARACTER_TYPE = "car";
-	static final String INTEGER_TYPE = "enter";
-	static final String BOOLEAN_TYPE = "boolea";
-	static final String FLOAT_TYPE = "real";
-
 	String text;
 	String supertype;
 	String type;
@@ -92,16 +75,16 @@ public class Registre  {
 
 public Registre() {
 	text = "";
-	supertype = INVALID_TYPE;
-	type = INVALID_TYPE;
+	supertype = LANSetParser.INVALID_TYPE;
+	type = LANSetParser.INVALID_TYPE;
 	line = -1;
 	pos = -1;
 }
 
 public Registre(String te) {
 	text = te;
-	supertype = INVALID_TYPE;
-	type = INVALID_TYPE;
+	supertype = LANSetParser.INVALID_TYPE;
+	type = LANSetParser.INVALID_TYPE;
 	line = -1;
 	pos = -1;
 }
@@ -109,7 +92,7 @@ public Registre(String te) {
 public Registre(String te, String st) {
 	text = te;
 	supertype = st;
-	type = INVALID_TYPE;
+	type = LANSetParser.INVALID_TYPE;
 	line = -1;
 	pos = -1;
 }
@@ -190,9 +173,9 @@ public void putSupertype(String st) {
 public void putSubtype(String st) {
 	subtype = st;
 }
-
+/*
 public boolean isBasicType(){
 	return type == CHARACTER_TYPE || type == INTEGER_TYPE || type == FLOAT_TYPE || type == BOOLEAN_TYPE;
 }
-
+*/
 }

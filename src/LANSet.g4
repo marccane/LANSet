@@ -10,15 +10,27 @@ grammar LANSet;
 
 @parser::members{
 
+    //types
+static final String INVALID_TYPE = "NULL";
 static final String CHAR_TYPE = "car";
 static final String INT_TYPE = "enter";
 static final String FLOAT_TYPE = "real";
 static final String BOOL_TYPE = "boolea";
 static final String STRING_TYPE = "string";
 
+	//supertypes
+static final String CONSTANT_SUPERTYPE = "constant";
+static final String VARIABLE_SUPERTYPE = "variable";
+static final String ALIAS_SUPERTYPE = "alias";
+static final String FUNCTION_SUPERTYPE = "funcio";
+static final String ACTION_SUPERTYPE = "accio";
+static final String TUPLE_SUPERTYPE = "tupla";
+static final String VECTOR_SUPERTYPE = "vector";
+
 SymTable<Registre> TS = new SymTable<Registre>(1000);
 boolean errorSintactic = false;
 boolean errorSemantic = false;
+
 //Override
 public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException e)
 {
@@ -29,19 +41,19 @@ public void notifyErrorListeners(Token offendingToken, String msg, RecognitionEx
 }
 
 public String processBaseType(String type){
-    String idType = Registre.INVALID_TYPE;
+    String idType = INVALID_TYPE;
     switch(type){
         case CHAR_TYPE:
-            idType = Registre.CHARACTER_TYPE;
+            idType = CHAR_TYPE;
             break;
         case INT_TYPE:
-            idType = Registre.INTEGER_TYPE;
+            idType = INT_TYPE;
             break;
         case FLOAT_TYPE:
-            idType = Registre.FLOAT_TYPE;
+            idType = FLOAT_TYPE;
             break;
         case BOOL_TYPE:
-            idType = Registre.BOOLEAN_TYPE;
+            idType = BOOL_TYPE;
             break;
         default:
             //do nothing
@@ -52,7 +64,7 @@ public String processBaseType(String type){
 }
 
 public String getStringTypeFromTKIndex(int index){
-    String res = "INVALID";
+    String res = INVALID_TYPE;
     if(index == TK_INTEGER) res = INT_TYPE;
     else if(index == TK_CHARACTER) res = CHAR_TYPE;
     else if(index == TK_BOOLEAN) res = BOOL_TYPE;
@@ -62,19 +74,19 @@ public String getStringTypeFromTKIndex(int index){
 }
 
 public void registerBasetypeVariable(String type, Token id){
-    TS.inserir(id.getText(), new Registre(id.getText(), Registre.VARIABLE_SUPERTYPE, type, id.getLine(), id.getCharPositionInLine()));
+    TS.inserir(id.getText(), new Registre(id.getText(), VARIABLE_SUPERTYPE, type, id.getLine(), id.getCharPositionInLine()));
 }
 
 public void registerAlias(Token id, Token type){
     String bType = processBaseType(type.getText());
-    Registre r = new Registre(id.getText(), Registre.ALIAS_SUPERTYPE, Registre.INVALID_TYPE, id.getLine(), id.getCharPositionInLine());
+    Registre r = new Registre(id.getText(), ALIAS_SUPERTYPE, INVALID_TYPE, id.getLine(), id.getCharPositionInLine());
     r.putSubtype(bType);
     TS.inserir(id.getText(), r);
 }
 
 public void registerConstant(Token id, Token type){
     String bType = processBaseType(type.getText());
-    Registre r = new Registre(id.getText(), Registre.CONSTANT_SUPERTYPE, bType, id.getLine(), id.getCharPositionInLine());
+    Registre r = new Registre(id.getText(), CONSTANT_SUPERTYPE, bType, id.getLine(), id.getCharPositionInLine());
     TS.inserir(id.getText(), r);
 }
 
@@ -302,7 +314,7 @@ const_declaration:  bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT
                                             if ($bt.text.equals(valueType)){
                                                 registerConstant($id,$bt);
                                             }
-                                            else if ($bt.text.equals(Registre.FLOAT_TYPE) && valueType.equals(Registre.INTEGER_TYPE)){
+                                            else if ($bt.text.equals(FLOAT_TYPE) && valueType.equals(INT_TYPE)){
                                                 registerConstant($id,$bt);
                                             }
                                             else{
@@ -390,7 +402,7 @@ assignment
             errorSemantic = true;
             undefinedIdentifierError($lval.ident, $lval.line);
         }
-        else if(var.getSupertype() != Registre.VARIABLE_SUPERTYPE){
+        else if(var.getSupertype() != VARIABLE_SUPERTYPE){
             errorSemantic = true;
             identifierIsNotAVariableError($lval.ident, $lval.line); //no es el mes adient perque pot ser tuple o vector...
         }
@@ -407,8 +419,9 @@ lvalue returns[String typ, int line, String ident]
     vector_acces
     |
     id=TK_IDENTIFIER {
+        //registerBasetypeVariable(FLOAT_TYPE,$id); //debug
         Registre r = TS.obtenir($id.text);
-        $typ = (r == null) ? Registre.INVALID_TYPE : r.getType();
+        $typ = (r == null) ? INVALID_TYPE : r.getType();
         $line = $id.line;
         $ident = $id.text;
     };
@@ -428,26 +441,26 @@ read_operation
     KW_INPUT
     TK_LPAR
     id=TK_IDENTIFIER {
-        //registerBasetypeVariable(Registre.FLOAT_TYPE,$id);
+        registerBasetypeVariable(FLOAT_TYPE,$id);
         Registre var = TS.obtenir($id.text);
-        //var.putSupertype(Registre.TUPLE_SUPERTYPE);
-        //var.putType("lmoile");
+        //var.putSupertype(TUPLE_SUPERTYPE);
+        var.putType("lmoile");
         errorSemantic = true; //we assume semantic error, then rectify if there's no error.
 
         if(var == null) undefinedIdentifierError($id.text, $id.line);
-        else if(var.getSupertype() != Registre.VARIABLE_SUPERTYPE) identifierIsNotAVariableError($id.text, $id.line);
-        else{
-            if(!var.isBasicType()){
-                nonBasetypeReadingError($id.text, var.getType(), $id.line);
-            }
-            else errorSemantic = false;
-        }
+        else if(var.getSupertype() != VARIABLE_SUPERTYPE) identifierIsNotAVariableError($id.text, $id.line);
+        else if(processBaseType(var.getType()) == INVALID_TYPE){ //is not a basetpye
+                nonBasetypeReadingError($id.text, var.getType(), $id.line); }
+        else errorSemantic = false;
     }
     TK_RPAR;
 
-//No semantic analysis required for write operations
-
-write_operation: KW_OUTPUT TK_LPAR expr (TK_COMMA expr)* TK_RPAR;
+write_operation:
+    KW_OUTPUT
+    TK_LPAR
+    e=expr
+    (TK_COMMA ea=expr)* {System.out.println($ea.typ);}
+    TK_RPAR;
 
 writeln_operation: KW_OUTPUTLN TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
 
