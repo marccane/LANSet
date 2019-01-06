@@ -390,7 +390,7 @@ assignment
     }
     TK_ASSIGNMENT
     e=expr{
-        if($lval.typ != $e.typ){
+        if(!$lval.typ.equals($e.typ)){
             errorSemantic = true;
             typeMismatchError($lval.typ, $e.typ, $lval.line);
         }
@@ -403,7 +403,7 @@ lvalue returns[String typ, String iden, int line]
     |
     vector_acces
     |
-    id=TK_IDENTIFIER {$typ = "hey"; $iden = id.text; $line = $id.line;};
+    id=TK_IDENTIFIER {Registre r = TS.obtenir($id.text); $typ = (r!=null?r.getType():Registre.INVALID_TYPE); $iden = $id.text; $line = $id.line;};
 
 conditional: KW_IF expr /* boolean */ KW_THEN sentence* 
             (KW_ELSE sentence*)?
