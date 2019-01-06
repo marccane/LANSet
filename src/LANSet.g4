@@ -190,13 +190,14 @@ KW_OUTPUTLN: 'escriureln';
 ////////////////// GENERAL TOKENS /////////////////
 
 TK_BASETYPE: 'car' | 'enter' | 'real' | 'boolea'; //If it's a custom type, it will be an TK_IDENTIFIER (careful)
-TK_IDENTIFIER: LETTER ('_' | LETTER | DIGIT)*;
 
 TK_INTEGER: '1'..'9' DIGIT* | '0' ;
 TK_CHARACTER: '\'' SINGLE_CHAR '\'' ;
 TK_BOOLEAN: 'true' | 'false';
 TK_REAL: DECIMAL | DECIMAL 'E' ('-')? DIGIT+ ;
 TK_STRING: '"' SINGLE_CHAR* '"';
+
+TK_IDENTIFIER: LETTER ('_' | LETTER | DIGIT)*;
 //TK_VECTOR: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)?; //Made in Parser
 
 TK_ASSIGNMENT: ':=';
@@ -313,17 +314,18 @@ const_declaration:  bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT
                                                 repeatedIdentifierError($id.text, $id.line);
                                                 errorSemantic=true;
                                             }
-
-                                            String valueType = getStringTypeFromTKIndex($value.t);
-                                            if ($bt.text.equals(valueType)){
-                                                registerConstant($id,$bt);
-                                            }
-                                            else if ($bt.text.equals(FLOAT_TYPE) && valueType.equals(INT_TYPE)){
-                                                registerConstant($id,$bt);
-                                            }
                                             else{
-                                                typeMissmatchError2($id.text, $id.line, valueType, $bt.text);
-                                                errorSemantic=true;
+                                                String valueType = getStringTypeFromTKIndex($value.t);
+                                                if ($bt.text.equals(valueType)){
+                                                    registerConstant($id,$bt);
+                                                }
+                                                else if ($bt.text.equals(FLOAT_TYPE) && valueType.equals(INT_TYPE)){
+                                                    registerConstant($id,$bt);
+                                                }
+                                                else{
+                                                    typeMissmatchError2($id.text, $id.line, valueType, $bt.text);
+                                                    errorSemantic=true;
+                                                }
                                             }
 
                                         };

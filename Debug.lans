@@ -1,0 +1,107 @@
+/*tipus
+	natural: enter;
+	
+	vec_E_1K: vector enter mida 1000 inici 0;
+
+ftipus
+	
+
+funcio factorial(enter n) retorna enter;
+
+accio hanoi(enter n, car origen, car desti, car aux);
+
+
+accio estadistiques(vec_E_1K v, ent enter n, entsor enter min, entsor enter max, entsor real mitjana);
+
+
+funcio area(punt2D p1, punt2D p2) retorna real;
+*/
+
+constants
+	real PI := 3.14159;
+	enter errorChar := 'd'; //error de tipus
+	enter set := 7;
+	car caracteraso := 'O';
+	car charespecial := '_';
+	real testdefinitiu := 123;
+	boolea boolOk := true; 
+	boolea errorTipus := 77; //error de tipus
+	enter mismatchBool := false; //error de tipus
+	enter identificadorRedeclarat := 777;
+fconstants
+
+//============= Programa principal ================
+
+programa ProgramaTest
+variables
+	car c;
+	enter n;
+	enter e;
+	enter min;
+	enter max;
+	enter mitjana;
+	real testassigreal;
+	car identificadorRedeclarat; //error: ja declarat (pero no hi ha scopes?)
+fvariables
+
+//escriureln(10);
+//escriure("Entra un numero de NIF: ");
+escriureln();
+
+//e := set;
+//c := caracteraso;
+//testassigreal := PI;
+
+fprograma
+
+/*
+funcio factorial(enter n) retorna enter
+	retorna n>1 ? n*factorial(n-1) : 1;
+ffuncio
+
+funcio area(punt2D p1, punt2D p2) retorna real
+	retorna (p1.x < p2.x)
+			?	(p1.y < p2.y)
+				?	(p2.x - p1.x) * (p2.y - p1.y) 
+				:	 (p2.x - p1.x) * (p1.y - p2.y)
+			:	(p1.y < p2.y)
+				?	(p1.x - p2.x) * (p2.y - p1.y) 
+				:	 ~(p2.x - p1.x) * (p1.y - p2.y);
+				
+ffuncio
+
+
+
+accio hanoi(enter n, car origen, car desti, car aux)
+	//Cas base
+	si n== 1 llavors
+		escriureln("Moure disc ", n, " de ", origen, " a", desti);
+	//Cas recursiu
+	altrament
+		hanoi(n-1,origen,aux,desti);
+		escriureln("Moure disc ", n, " de ", origen, " a", desti);
+		hanoi(n-1,aux,desti,origen);
+	fsi
+faccio
+
+accio estadistiques(vec_E_1K v, ent enter n, entsor enter min, entsor enter max, entsor real mitjana)
+	variables
+		enter suma;
+		enter i;
+	fvariables
+	
+	//Inicialitzem els valors abans del recorregut
+	min := v[0];
+	max := v[0];
+	suma := v[0];
+
+	per i de 1 fins n-1 fer
+		si v[i] < min llavors min := v[i]; fsi
+		si v[i] > max llavors max := v[i]; fsi
+		suma := suma + v[i];
+	fper
+	
+	mitjana := suma / n;
+
+faccio
+*/
