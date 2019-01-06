@@ -24,7 +24,8 @@ constants
 	car caracteraso := 'O';
 	car charespecial := '_';
 	real testdefinitiu := 123;
-	boolea boolOk := true; 
+	boolea boolOk := true;
+	boolea boolFals := false;
 	boolea errorTipus := 77; //error de tipus
 	enter mismatchBool := false; //error de tipus
 	enter identificadorRedeclarat := 777;
@@ -42,6 +43,7 @@ variables
 	enter mitjana;
 	real testassigreal;
 	car identificadorRedeclarat; //error: ja declarat (pero no hi ha scopes?)
+	boolea unaIt;
 fvariables
 
 //escriureln(10);
@@ -51,6 +53,21 @@ escriureln();
 //e := set;
 //c := caracteraso;
 //testassigreal := PI;
+
+si boolOk llavors 
+	escriureln();
+altrament
+	escriureln("hola");
+fsi
+
+si boolFals llavors
+	escriureln();
+fsi
+
+mentre boolIt fer
+	escriureln();
+	unaIt := false;
+fmentre
 
 fprograma
 
