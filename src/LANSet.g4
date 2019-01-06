@@ -398,10 +398,20 @@ assignment
             errorSemantic = true;
             typeMismatchError($lval.typ, $e.typ, $lval.line);
         }
-    }
-    ; //lvalue or expr
+    }; //lvalue or expr
 
-lvalue returns[String typ, int line, String ident]: tuple_acces | vector_acces | id=TK_IDENTIFIER {$typ = "hey"; $line = $id.line; $ident = $id.text;};
+lvalue returns[String typ, int line, String ident]
+    :
+    tuple_acces
+    |
+    vector_acces
+    |
+    id=TK_IDENTIFIER {
+        Registre r = TS.obtenir($id.text);
+        $typ = (r == null) ? Registre.INVALID_TYPE : r.getType();
+        $line = $id.line;
+        $ident = $id.text;
+    };
 
 conditional: KW_IF expr /* boolean */ KW_THEN sentence* 
             (KW_ELSE sentence*)?
