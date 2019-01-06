@@ -67,7 +67,7 @@ public class Registre  {
 	String text;
 	String supertype;
 	String type;
-	String subtype;
+	//String subtype;
 	int line;
 	int pos;
 	int intval;
@@ -139,9 +139,9 @@ public String getSupertype() {
 public String getType() {
 	return (type);
 }
-public String getSubtype() {
+/*public String getSubtype() {
 	return (subtype);
-}
+}*/
 public Integer getLine() {
 	return (line);
 	}
@@ -170,9 +170,9 @@ public void putIntval(int i) {
 public void putSupertype(String st) {
 	supertype = st;
 }
-public void putSubtype(String st) {
+/*public void putSubtype(String st) {
 	subtype = st;
-}
+}*/
 /*
 public boolean isBasicType(){
 	return type == CHARACTER_TYPE || type == INTEGER_TYPE || type == FLOAT_TYPE || type == BOOLEAN_TYPE;

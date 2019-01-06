@@ -83,8 +83,7 @@ public void registerBasetypeVariable(String type, Token id){
 
 public void registerAlias(Token id, Token type){
     String bType = processBaseType(type.getText());
-    Registre r = new Registre(id.getText(), ALIAS_SUPERTYPE, INVALID_TYPE, id.getLine(), id.getCharPositionInLine());
-    r.putSubtype(bType);
+    Registre r = new Registre(id.getText(), ALIAS_SUPERTYPE, bType, id.getLine(), id.getCharPositionInLine());
     TS.inserir(id.getText(), r);
 }
 
@@ -310,31 +309,34 @@ type returns [int tkType, String text, int line]
 
 const_declaration_block: KW_CONSTBLOCK (const_declaration TK_SEMICOLON)* KW_ENDCONSTBLOCK;
 
-const_declaration:  bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT
-                    value=basetype_value {
-                                            //System.out.println("Tipus: " + $bt.type + " " + $value.t + " " + TK_REAL);
+const_declaration
+    :
+    bt=TK_BASETYPE
+    id=TK_IDENTIFIER TK_ASSIGNMENT
+    value=basetype_value {
+        //System.out.println("Tipus: " + $bt.type + " " + $value.typ + " " + TK_REAL);
 
-                                            if(identifierInUse($id.text)){
-                                                repeatedIdentifierError($id.text, $id.line);
-                                                errorSemantic=true;
-                                            }
-                                            else{
-                                                String valueType = getStringTypeFromTKIndex($value.t);
-                                                if ($bt.text.equals(valueType)){
-                                                    registerConstant($id,$bt);
-                                                }
-                                                else if ($bt.text.equals(FLOAT_TYPE) && valueType.equals(INT_TYPE)){
-                                                    registerConstant($id,$bt);
-                                                }
-                                                else{
-                                                    typeMissmatchError2($id.text, $id.line, valueType, $bt.text);
-                                                    errorSemantic=true;
-                                                }
-                                            }
+        if(identifierInUse($id.text)){
+            repeatedIdentifierError($id.text, $id.line);
+            errorSemantic=true;
+        }
+        else{
+            String valueType = $value.typ;
+            if ($bt.text.equals(valueType)){
+                registerConstant($id,$bt);
+            }
+            else if ($bt.text.equals(FLOAT_TYPE) && valueType.equals(INT_TYPE)){
+                registerConstant($id,$bt);
+            }
+            else{
+                typeMissmatchError2($id.text, $id.line, valueType, $bt.text);
+                errorSemantic=true;
+            }
+        }
+    };
 
-                                        };
-
-basetype_value returns [int t]: tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL) {$t=$tk.type;};
+basetype_value returns [String typ, int line]: tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL)
+    {$typ=getStringTypeFromTKIndex($tk.type); $line = $tk.line;};
 
 ///////////////////////////////////////////////////////////////////////////////
   
@@ -451,17 +453,21 @@ read_operation
     KW_INPUT
     TK_LPAR
     id=TK_IDENTIFIER {
-        registerBasetypeVariable(FLOAT_TYPE,$id);
+        //registerBasetypeVariable(FLOAT_TYPE,$id);
         Registre var = TS.obtenir($id.text);
         //var.putSupertype(TUPLE_SUPERTYPE);
-        var.putType("lmoile");
-        errorSemantic = true; //we assume semantic error, then rectify if there's no error.
+        //var.putType("lmoile");
 
-        if(var == null) undefinedIdentifierError($id.text, $id.line);
-        else if(var.getSupertype() != VARIABLE_SUPERTYPE) identifierIsNotAVariableError($id.text, $id.line);
+        if(var == null) { errorSemantic = true; undefinedIdentifierError($id.text, $id.line);}
+        else if(var.getSupertype() != VARIABLE_SUPERTYPE) {
+            errorSemantic = true;
+            identifierIsNotAVariableError($id.text, $id.line);
+        }
         else if(processBaseType(var.getType()) == INVALID_TYPE){ //is not a basetpye
-                nonBasetypeReadingError($id.text, var.getType(), $id.line); }
-        else errorSemantic = false;
+            errorSemantic = true;
+            nonBasetypeReadingError($id.text, var.getType(), $id.line);
+        }
+
     }
     TK_RPAR;
 
@@ -517,19 +523,62 @@ expr returns[String typ, int line]
     |
     subexpr {$typ = $subexpr.typ; $line = $subexpr.line;}; //careful priority
 
-direct_evaluation_expr: constant_value |
-                        TK_IDENTIFIER | //constant or variable
-                        tuple_acces |
-                        vector_acces |
-                        function_call;
+direct_evaluation_expr returns[String typ, int line]:
+    cv=constant_value {$typ = $cv.typ; $line = $cv.line;} |
+    id=TK_IDENTIFIER { //constant or variable
+        Registre var = TS.obtenir($id.text);
 
-constant_value: basetype_value | TK_STRING; //For illustrative purposes
+        $line = $id.line;
+
+        if(var == null){
+            undefinedIdentifierError($id.text, $id.line);
+            $typ = INVALID_TYPE;
+            errorSemantic = true;
+        }
+        else if(var.getSupertype().equals(VARIABLE_SUPERTYPE)){
+            String varType = var.getType();
+
+            if(isBasetype(varType)){
+                $typ = varType;
+            }
+            else{
+                Registre t = TS.obtenir(varType); //existence validation is not needed.
+                String st = t.getSupertype();
+
+                if(st.equals(ALIAS_SUPERTYPE)) $typ = t.getType();
+                else $typ = varType;
+            }
+        }
+        else if (var.getSupertype().equals(CONSTANT_SUPERTYPE)){
+            $typ = var.getType();
+        }
+        else {
+            $typ = INVALID_TYPE;
+            errorSemantic = true;
+        }
+    } |
+    tuple_acces |
+    vector_acces |
+    function_call;
+
+constant_value returns [String typ, int line]
+    :
+    b=basetype_value{$typ = $b.typ; $line = $b.line;}
+    |
+    s=TK_STRING {$typ = STRING_TYPE; $line = $s.line;}; //For illustrative purposes
 
 tuple_acces: TK_IDENTIFIER TK_DOT TK_IDENTIFIER {System.out.println("TODO: Tuple acces");};
 
 vector_acces: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK {System.out.println("TODO: Vector acces");};
 
-ternary returns [String typ, int line]: subexpr /* boolean */ TK_QMARK e1=expr{$typ = $e1.typ;} TK_COLON e2=expr;
+ternary returns [String typ, int line]
+    :
+    subexpr /* boolean */
+    TK_QMARK
+    e1=expr {$typ = $e1.typ;}
+    TK_COLON
+    e2=expr
+    ;
 
 //HAZARD ZONE
 subexpr returns [String typ, int line]: term1 (logic_operators term1)*;
