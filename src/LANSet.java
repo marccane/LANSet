@@ -25,7 +25,7 @@ public class LANSet {
 			   classfile = classfile + ".class";
 			//p.setLANSClassFile(classfile);
 		}
-		p.start();
+		p.direct_evaluation_expr();
 	}
 
 }

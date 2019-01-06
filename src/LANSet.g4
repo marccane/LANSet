@@ -573,7 +573,9 @@ vector_acces: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK {System
 
 ternary returns [String typ, int line]
     :
-    subexpr /* boolean */
+    cond=subexpr /* boolean */{
+
+    }
     TK_QMARK
     e1=expr {$typ = $e1.typ;}
     TK_COLON
