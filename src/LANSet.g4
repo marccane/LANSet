@@ -73,6 +73,10 @@ public String getStringTypeFromTKIndex(int index){
     return res;
 }
 
+public boolean isBasetype(String type){
+    return type == CHAR_TYPE || type == INT_TYPE || type == FLOAT_TYPE || type == BOOL_TYPE;
+}
+
 public void registerBasetypeVariable(String type, Token id){
     TS.inserir(id.getText(), new Registre(id.getText(), VARIABLE_SUPERTYPE, type, id.getLine(), id.getCharPositionInLine()));
 }
@@ -465,7 +469,7 @@ write_operation:
     KW_OUTPUT
     TK_LPAR
     e=expr {
-        if(!$e.typ.equals(STRING_TYPE)){
+        if(!(isBasetype($e.typ) || $e.typ.equals(STRING_TYPE))){
             errorSemantic = true;
             writeOperationUnsupportedTypeError($e.typ, $e.line);
         }
@@ -473,7 +477,7 @@ write_operation:
     (
         TK_COMMA
         ea=expr{
-            if(!$e.typ.equals(STRING_TYPE)){
+            if(!(isBasetype($ea.typ) || $ea.typ.equals(STRING_TYPE))){
                 errorSemantic = true;
                 writeOperationUnsupportedTypeError($e.typ, $e.line);
             }
@@ -486,14 +490,14 @@ writeln_operation:
     TK_LPAR
     (
         e=expr{
-            if(!$e.typ.equals(STRING_TYPE)){
+            if(!(isBasetype($e.typ) || $e.typ.equals(STRING_TYPE))){
                 errorSemantic = true;
                 writeOperationUnsupportedTypeError($e.typ, $e.line);
             }
         }
         (
             TK_COMMA ea=expr{
-                if(!$e.typ.equals(STRING_TYPE)){
+                if(!(isBasetype($ea.typ) || $ea.typ.equals(STRING_TYPE))){
                     errorSemantic = true;
                     writeOperationUnsupportedTypeError($e.typ, $e.line);
                 }
