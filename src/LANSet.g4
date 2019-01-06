@@ -14,6 +14,7 @@ static final String CHAR_TYPE = "car";
 static final String INT_TYPE = "enter";
 static final String FLOAT_TYPE = "real";
 static final String BOOL_TYPE = "boolea";
+static final String STRING_TYPE = "string";
 
 SymTable<Registre> TS = new SymTable<Registre>(1000);
 boolean errorSintactic = false;
@@ -56,6 +57,7 @@ public String getStringTypeFromTKIndex(int index){
     else if(index == TK_CHARACTER) res = CHAR_TYPE;
     else if(index == TK_BOOLEAN) res = BOOL_TYPE;
     else if(index == TK_REAL) res = FLOAT_TYPE;
+    else if(index == TK_STRING) res = STRING_TYPE; //sha de fer algo mes?
     return res;
 }
 
@@ -299,11 +301,9 @@ const_declaration:  bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT
                                             String valueType = getStringTypeFromTKIndex($value.t);
                                             if ($bt.text.equals(valueType)){
                                                 registerConstant($id,$bt);
-                                                System.out.println("Adicio correcte");
                                             }
                                             else if ($bt.text.equals(Registre.FLOAT_TYPE) && valueType.equals(Registre.INTEGER_TYPE)){
                                                 registerConstant($id,$bt);
-                                                System.out.println("Adicio2 correcte");
                                             }
                                             else{
                                                 typeMissmatchError2($id.text, $id.line, valueType, $bt.text);
@@ -382,28 +382,26 @@ sentence: assignment TK_SEMICOLON |
 
 assignment
     :
-    lval=lvalue{
-        if(!TS.existeix($lval.iden)){
-            errorSemantic = true;
-            undefinedIdentifierError($lval.iden, $lvalue.line);
-        }
-    }
+    lval=lvalue
     TK_ASSIGNMENT
     e=expr{
-        if(!$lval.typ.equals($e.typ)){
+        Registre var = TS.obtenir($lval.ident);
+        if(var == null){
+            errorSemantic = true;
+            undefinedIdentifierError($lval.ident, $lval.line);
+        }
+        else if(var.getSupertype() != Registre.VARIABLE_SUPERTYPE){
+            errorSemantic = true;
+            identifierIsNotAVariableError($lval.ident, $lval.line); //no es el mes adient perque pot ser tuple o vector...
+        }
+        else if(!$lval.typ.equals($e.typ)){ //falta mirar si es pot promocionar de enter a float
             errorSemantic = true;
             typeMismatchError($lval.typ, $e.typ, $lval.line);
         }
     }
     ; //lvalue or expr
 
-lvalue returns[String typ, String iden, int line]
-    :
-    tuple_acces
-    |
-    vector_acces
-    |
-    id=TK_IDENTIFIER {Registre r = TS.obtenir($id.text); $typ = (r!=null?r.getType():Registre.INVALID_TYPE); $iden = $id.text; $line = $id.line;};
+lvalue returns[String typ, int line, String ident]: tuple_acces | vector_acces | id=TK_IDENTIFIER {$typ = "hey"; $line = $id.line; $ident = $id.text;};
 
 conditional: KW_IF expr /* boolean */ KW_THEN sentence* 
             (KW_ELSE sentence*)?
