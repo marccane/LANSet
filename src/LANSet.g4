@@ -382,7 +382,12 @@ sentence: assignment TK_SEMICOLON |
 
 assignment
     :
-    lval=lvalue
+    lval=lvalue{
+        if(!TS.existeix($lval.iden)){
+            errorSemantic = true;
+            undefinedIdentifierError($lval.iden, $lvalue.line);
+        }
+    }
     TK_ASSIGNMENT
     e=expr{
         if($lval.typ != $e.typ){
@@ -392,7 +397,13 @@ assignment
     }
     ; //lvalue or expr
 
-lvalue returns[String typ, int line]: tuple_acces | vector_acces | id=TK_IDENTIFIER {$typ = "hey"; $line = $id.line;};
+lvalue returns[String typ, String iden, int line]
+    :
+    tuple_acces
+    |
+    vector_acces
+    |
+    id=TK_IDENTIFIER {$typ = "hey"; $iden = id.text; $line = $id.line;};
 
 conditional: KW_IF expr /* boolean */ KW_THEN sentence* 
             (KW_ELSE sentence*)?
