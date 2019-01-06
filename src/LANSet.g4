@@ -122,6 +122,10 @@ public void typeMissmatchError2(String id, int line, String foundType, String ex
     System.out.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +".");
 }
 
+public void writeOperationUnsupportedTypeError(String type, int line){
+    System.out.println("Unsupported type error at line " + line + ". Only \'" + STRING_TYPE + "\' expressions can be written to screen.");
+}
+
 }
 
 //////////////////// FRAGMENTS ////////////////////
@@ -458,17 +462,50 @@ read_operation
 write_operation:
     KW_OUTPUT
     TK_LPAR
-    e=expr
-    (TK_COMMA ea=expr)* {System.out.println($ea.typ);}
+    e=expr {
+        if(!$e.typ.equals(STRING_TYPE)){
+            errorSemantic = true;
+            writeOperationUnsupportedTypeError($e.typ, $e.line);
+        }
+    }
+    (
+        TK_COMMA
+        ea=expr{
+            if(!$e.typ.equals(STRING_TYPE)){
+                errorSemantic = true;
+                writeOperationUnsupportedTypeError($e.typ, $e.line);
+            }
+        }
+    )*
     TK_RPAR;
 
-writeln_operation: KW_OUTPUTLN TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
+writeln_operation:
+    KW_OUTPUTLN
+    TK_LPAR
+    (
+        e=expr{
+            if(!$e.typ.equals(STRING_TYPE)){
+                errorSemantic = true;
+                writeOperationUnsupportedTypeError($e.typ, $e.line);
+            }
+        }
+        (
+            TK_COMMA ea=expr{
+                if(!$e.typ.equals(STRING_TYPE)){
+                    errorSemantic = true;
+                    writeOperationUnsupportedTypeError($e.typ, $e.line);
+                }
+            }
+        )*
+    )?
+
+    TK_RPAR;
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
-expr returns[String typ]: ternary | subexpr {$typ = "randomexpr";}; //careful priority
+expr returns[String typ, int line]: ternary | subexpr {$typ = "randomexpr"; $line = -1;}; //careful priority
 
 direct_evaluation_expr: constant_value |
                         TK_IDENTIFIER | //constant or variable
@@ -485,7 +522,7 @@ vector_acces: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK;
 ternary: subexpr /* boolean */ TK_QMARK expr TK_COLON expr;
 
 //HAZARD ZONE
-subexpr: term1 (logic_operators term1)*;
+subexpr returns [String typ, int line]: term1 (logic_operators term1)*;
 //operation: (term1 logic_operators operation) | term1;
 logic_operators: TK_AND | TK_OR;
 
