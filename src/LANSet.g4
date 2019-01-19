@@ -541,7 +541,8 @@ expr returns[String typ, int line]
     :
     ternary {$typ = $ternary.typ; $line = $ternary.line;}
     |
-    subexpr {$typ = $subexpr.typ; $line = $subexpr.line;}; //care with priority
+    subexpr {$typ = $subexpr.typ; $line = $subexpr.line;}
+    ; //care with priority
 
 direct_evaluation_expr returns[String typ, int line]:
     cv=constant_value {$typ = $cv.typ; $line = $cv.line;} |
@@ -649,6 +650,7 @@ logic_operators returns [String text]: tk=(TK_AND | TK_OR){$text = $tk.text;};
 term1 returns [String typ, int line] locals [boolean hasOperator, String firstOperator]
 @init{$hasOperator = false;}
 @after{
+    System.out.println("TODO: FINISH ME PLS");
     if($hasOperator){
         if(!($t1.typ.equals(INT_TYPE) || $t1.typ.equals(FLOAT_TYPE))){
 
@@ -669,23 +671,62 @@ term1 returns [String typ, int line] locals [boolean hasOperator, String firstOp
     )*
     ;
 
-
 //term1: (term2 equality_operator term1) | term2;
 equality_operator returns [String text]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) {$text = $tk.text;};
 
-term2 returns [String typ, int line] locals [boolean hasOperator, String operator]: term3 (addition_operators term3)* ;
-//term2: (term3 addition_operators term2) | term3;
-addition_operators: TK_SUB | TK_SUM;
+term2 returns [String typ, int line] locals [boolean hasOperator, String operator]
+@init{$hasOperator = false;}
+@after{
+    if($hasOperator){
+        if(!($t1.typ.equals(INT_TYPE) || $t1.typ.equals(FLOAT_TYPE))){
 
-term3: term4 (multiplication_operators term4)* ;
+        }
+    }
+}
+    :
+    t1 = term3
+    (
+        o = addition_operators
+        t2 = term3
+    )*
+    ;
+
+//term2: (term3 addition_operators term2) | term3;
+addition_operators returns [String text]: tk=(TK_SUB | TK_SUM) {$text = $tk.text;};
+
+term3 returns [String typ, int line] locals [boolean hasOperator, String operator]: term4 (multiplication_operators term4)* ;
 //term3: (term4 multiplication_operators term3) | term4;
 multiplication_operators: TK_PROD | TK_DIV | TK_INTDIV | TK_MODULO;
 
-term4: (negation_operators term5) | term5;
+term4 returns [String typ, int line]
+    :
+    (
+        o = negation_operators
+        t = term5
+    ) {
+        if( $o.tk_type == TK_INVERT && !($t.typ.equals(INT_TYPE) || $t.typ.equals(FLOAT_TYPE)) ){
+            errorSemantic = true;
+            operatorTypeMismatchError($t.typ, $o.text, $t.line, INT_TYPE + " or " + FLOAT_TYPE);
+        }
+        else if ( $o.tk_type == KW_NO && !($t.typ.equals(BOOL_TYPE)) ){
+            errorSemantic = true;
+            operatorTypeMismatchError($t.typ, $o.text, $t.line, BOOL_TYPE);
+        }
+        else{
+            $typ = $t.typ;
+            $line = $t.line;
+        }
+    }
+    |
+    t = term5 {$typ = $t.typ; $line = $t.line;};
 //term4: (negation_operators term4) | term5;
-negation_operators: KW_NO | TK_INVERT;
+negation_operators returns [String text, int tk_type]: tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
 
-term5: direct_evaluation_expr | TK_LPAR expr TK_RPAR;
+term5 returns [String typ, int line]
+    :
+    direct_evaluation_expr {$typ = $direct_evaluation_expr.typ; $line = $direct_evaluation_expr.line;}
+    |
+    TK_LPAR expr {$typ = $expr.typ; $line = $expr.line;} TK_RPAR;
 ///////////////////////////////////////////////////////////////////////////////
 /*
 operation: term1 operation_lr;
