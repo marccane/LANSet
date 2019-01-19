@@ -285,21 +285,21 @@ tuple_definition
     :
     KW_TUPLE
     (TK_BASETYPE TK_IDENTIFIER TK_SEMICOLON)+
-    KW_ENDTUPLE;
+    KW_ENDTUPLE {System.out.println("TODO: tuple definition");};
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
 ///////////////////// ACTION/FUNCTION DECLARATION BLOCK ///////////////////////
 
-func_declaration_block: (action_declaration | function_declaration)*;
+func_declaration_block: (action_declaration | function_declaration)* {System.out.println("TODO: function declaration block");};
 
-action_declaration: KW_ACTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RPAR TK_SEMICOLON;
+action_declaration: KW_ACTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RPAR TK_SEMICOLON {System.out.println("TODO: action declaration");};
 
 function_declaration: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RPAR 
-                      KW_RETURN TK_BASETYPE TK_SEMICOLON;
+                      KW_RETURN TK_BASETYPE TK_SEMICOLON {System.out.println("TODO: function declaration");};
 
-formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)*;
+formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)* {System.out.println("TODO: formal parameters");};
 
 type returns [int tkType, String text, int line]
     :
@@ -409,11 +409,18 @@ sentence: assignment TK_SEMICOLON |
           writeln_operation TK_SEMICOLON;
 
 assignment
+@init{
+        //TS.inserir("a", new Registre("a", VARIABLE_SUPERTYPE, FLOAT_TYPE, 1234, -1));
+        //TS.inserir("b", new Registre("b", VARIABLE_SUPERTYPE, CHAR_TYPE, 1234, -1));
+        }
     :
     lval=lvalue
     TK_ASSIGNMENT
     e=expr{
+
         Registre var = TS.obtenir($lval.ident);
+        Boolean canBePromoted = ($lval.typ.equals(FLOAT_TYPE) && $e.typ.equals(INT_TYPE));
+
         if(var == null){
             errorSemantic = true;
             undefinedIdentifierError($lval.ident, $lval.line);
@@ -422,10 +429,11 @@ assignment
             errorSemantic = true;
             identifierIsNotAVariableError($lval.ident, $lval.line); //no es el mes adient perque pot ser tuple o vector...
         }
-        else if(!$lval.typ.equals($e.typ)){ //falta mirar si es pot promocionar de enter a float
+        else if(!$lval.typ.equals($e.typ) && !canBePromoted){
             errorSemantic = true;
             typeMismatchError($lval.typ, $e.typ, $lval.line);
         }
+
     }; //lvalue or expr
 
 lvalue returns[String typ, int line, String ident]
@@ -452,7 +460,26 @@ conditional: KW_IF expr /* boolean */ {
             (KW_ELSE sentence*)?
             KW_ENDIF;
 
-for_loop: KW_FOR TK_IDENTIFIER KW_FROM expr /* integer */ KW_TO expr /* integer */ KW_DO sentence* KW_ENDFOR;
+for_loop: KW_FOR id=TK_IDENTIFIER KW_FROM expr /* integer */ KW_TO expr2=expr /* integer */ {
+                if(identifierInUse($id.text)){
+                    errorSemantic = true;
+                    repeatedIdentifierError($id.text, $id.line);
+                }
+                else {
+                    registerBasetypeVariable(INT_TYPE, $id);
+                }
+
+                if(!$expr.typ.equals(INT_TYPE)){
+                    errorSemantic=true;
+                    typeMismatchError2("*expressio*", $expr.line, $expr.typ, INT_TYPE);
+                }
+
+                if(!$expr2.typ.equals(INT_TYPE)){
+                    errorSemantic=true;
+                    typeMismatchError2("*expressio*", $expr2.line, $expr2.typ, INT_TYPE);
+                }
+
+            } KW_DO sentence* KW_ENDFOR;
 
 while_loop: KW_WHILE expr /* boolean */ {
                 if(!$expr.typ.equals(BOOL_TYPE)){
