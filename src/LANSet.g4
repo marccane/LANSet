@@ -133,6 +133,10 @@ public void ternaryTypeMismatchError(String t1, String t2, int line){
     System.out.println("Type mismatch error at line " + line + ": Type " + t1 + " does not match with " + t2 + ". Both ternary inner expressions must be the same type.");
 }
 
+public void operatorTypeMismatchError(String type, String op, int line, String expected){
+    System.out.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expected + " instead.");
+}
+
 }
 
 //////////////////// FRAGMENTS ////////////////////
@@ -612,24 +616,29 @@ ternary returns [String typ, int line]
     ;
 
 //HAZARD ZONE
-subexpr returns [String typ, int line] locals [boolean hasOperator, String operator]
+subexpr returns [String typ, int line] locals [boolean hasOperator, String firstOperator]
 @init{$hasOperator = false;}
 @after{
     if($hasOperator){
         if(!$t1.typ.equals(BOOL_TYPE)){
             errorSemantic = true;
-            System.out.println("Type mismatch Error at line " + $line + ": operator " + $operator + " does not work with " + $t1.typ + " expressions.");
+            operatorTypeMismatchError($t1.typ, $firstOperator, $line, BOOL_TYPE);
         }
     }
 }
     :
     t1=term1 {$typ = $t1.typ; $line = $t1.line;}
     (
-        o=logic_operators {$operator = $o.text; $hasOperator = true;}
+        o=logic_operators {
+            if(!$hasOperator){
+                $firstOperator = $o.text;
+                $hasOperator = true;
+            }
+        }
         t2=term1{
             if(!$t2.typ.equals(BOOL_TYPE)){
                 errorSemantic = true;
-                System.out.println("Type mismatch Error at line " + $line + ": operator " + $operator + " does not work with " + $t2.typ + " expressions.");
+                operatorTypeMismatchError($t2.typ, $o.text, $t2.line, BOOL_TYPE);
             }
         }
     )*;
@@ -637,20 +646,34 @@ subexpr returns [String typ, int line] locals [boolean hasOperator, String opera
 //operation: (term1 logic_operators operation) | term1;
 logic_operators returns [String text]: tk=(TK_AND | TK_OR){$text = $tk.text;};
 
-term1 returns [String typ, int line]
+term1 returns [String typ, int line] locals [boolean hasOperator, String firstOperator]
+@init{$hasOperator = false;}
+@after{
+    if($hasOperator){
+        if(!($t1.typ.equals(INT_TYPE) || $t1.typ.equals(FLOAT_TYPE))){
+
+        }
+    }
+}
     :
-    term2
+    t1 = term2 {$typ = $t1.typ; $line = $t1.line;}
     (
-    equality_operator
-    term2
+        o = equality_operator {
+            if(!$hasOperator){
+                $typ = BOOL_TYPE;
+                $firstOperator = $o.text;
+                $hasOperator = true;
+            }
+        }
+        t2 = term2
     )*
     ;
 
 
 //term1: (term2 equality_operator term1) | term2;
-equality_operator: TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ;
+equality_operator returns [String text]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) {$text = $tk.text;};
 
-term2: term3 (addition_operators term3)* ;
+term2 returns [String typ, int line] locals [boolean hasOperator, String operator]: term3 (addition_operators term3)* ;
 //term2: (term3 addition_operators term2) | term3;
 addition_operators: TK_SUB | TK_SUM;
 
@@ -685,14 +708,3 @@ term4: (negation_operators term4) | | term5;
 negation_operators: KW_NO | TK_INVERT;
 
 term5: direct_evaluation_expr | TK_LPAR expr TK_RPAR | ;*/
-
-dummyrule
-@init{System.out.println("recognising dummyrule");}
-@after{System.out.println("unrecognising dummyrule");}
-    :
-    a=dummyrule2 {System.out.println("mako");}
-    s=TK_ASSIGNMENT {System.out.println("lateumare");}
-    b=dummyrule2 {System.out.println($b.text);}
-    ;
-
-dummyrule2 returns [String text] : t = (TK_AND | TK_OR) {$text = $t.text;};
