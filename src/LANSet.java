@@ -26,6 +26,8 @@ public class LANSet {
 			//p.setLANSClassFile(classfile);
 		}
 		p.start();
+		//p.assignment();
+		//p.for_loop();
 	}
 
 }
