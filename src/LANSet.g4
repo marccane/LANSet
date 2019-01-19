@@ -462,7 +462,7 @@ while_loop: KW_WHILE expr /* boolean */ {
             }
             KW_DO sentence* KW_ENDWHILE;
 
-function_call: TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
+function_call returns [String typ, int line]: TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
 
 read_operation
     :
@@ -537,7 +537,7 @@ expr returns[String typ, int line]
     :
     ternary {$typ = $ternary.typ; $line = $ternary.line;}
     |
-    subexpr {$typ = $subexpr.typ; $line = $subexpr.line;}; //careful priority
+    subexpr {$typ = $subexpr.typ; $line = $subexpr.line;}; //care with priority
 
 direct_evaluation_expr returns[String typ, int line]:
     cv=constant_value {$typ = $cv.typ; $line = $cv.line;} |
@@ -570,12 +570,14 @@ direct_evaluation_expr returns[String typ, int line]:
         }
         else {
             $typ = INVALID_TYPE;
+            System.out.println("Error at line: " + $line + ": Use of identifier \'" + $id.text +"\' is not allowed here.");
             errorSemantic = true;
         }
     } |
-    tuple_acces |
-    vector_acces |
-    function_call;
+    tuple_acces {$typ = $tuple_acces.typ; $line = $tuple_acces.line;} |
+    vector_acces {$typ = $vector_acces.typ; $line = $vector_acces.line;} |
+    function_call {$typ = $function_call.typ; $line = $function_call.line;}
+    ;
 
 constant_value returns [String typ, int line]
     :
@@ -583,9 +585,9 @@ constant_value returns [String typ, int line]
     |
     s=TK_STRING {$typ = STRING_TYPE; $line = $s.line;}; //For illustrative purposes
 
-tuple_acces: TK_IDENTIFIER TK_DOT TK_IDENTIFIER {System.out.println("TODO: Tuple acces");};
+tuple_acces returns [String typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER {System.out.println("TODO: Tuple acces");};
 
-vector_acces: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK {System.out.println("TODO: Vector acces");};
+vector_acces returns [String typ, int line]: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK {System.out.println("TODO: Vector acces");};
 
 ternary returns [String typ, int line]
     :
@@ -623,7 +625,7 @@ subexpr returns [String typ, int line] locals [boolean hasOperator, String opera
     :
     t1=term1 {$typ = $t1.typ; $line = $t1.line;}
     (
-        o=logic_operators {$operator = $o.op; $hasOperator = true;}
+        o=logic_operators {$operator = $o.text; $hasOperator = true;}
         t2=term1{
             if(!$t2.typ.equals(BOOL_TYPE)){
                 errorSemantic = true;
@@ -633,9 +635,18 @@ subexpr returns [String typ, int line] locals [boolean hasOperator, String opera
     )*;
 
 //operation: (term1 logic_operators operation) | term1;
-logic_operators returns [String op]: tk=(TK_AND | TK_OR){$op = $tk.text;};
+logic_operators returns [String text]: tk=(TK_AND | TK_OR){$text = $tk.text;};
 
-term1 returns [String typ, int line]: term2 (equality_operator term2)*;
+term1 returns [String typ, int line]
+    :
+    term2
+    (
+    equality_operator
+    term2
+    )*
+    ;
+
+
 //term1: (term2 equality_operator term1) | term2;
 equality_operator: TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ;
 
