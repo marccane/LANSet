@@ -204,7 +204,7 @@ TK_BASETYPE: 'car' | 'enter' | 'real' | 'boolea'; //If it's a custom type, it wi
 
 TK_INTEGER: '1'..'9' DIGIT* | '0' ;
 TK_CHARACTER: '\'' SINGLE_CHAR '\'' ;
-TK_BOOLEAN: 'true' | 'false';
+TK_BOOLEAN: 'cert' | 'fals';
 TK_REAL: DECIMAL | DECIMAL 'E' ('-')? DIGIT+ ;
 TK_STRING: '"' SINGLE_CHAR* '"';
 
@@ -647,26 +647,11 @@ subexpr returns [String typ, int line] locals [boolean hasOperator, String first
 //operation: (term1 logic_operators operation) | term1;
 logic_operators returns [String text]: tk=(TK_AND | TK_OR){$text = $tk.text;};
 
-term1 returns [String typ, int line] locals [boolean hasOperator, String firstOperator]
-@init{$hasOperator = false;}
-@after{
-    System.out.println("TODO: FINISH ME PLS");
-    if($hasOperator){
-        if(!($t1.typ.equals(INT_TYPE) || $t1.typ.equals(FLOAT_TYPE))){
-
-        }
-    }
-}
+term1 returns [String typ, int line] locals []
     :
     t1 = term2 {$typ = $t1.typ; $line = $t1.line;}
     (
-        o = equality_operator {
-            if(!$hasOperator){
-                $typ = BOOL_TYPE;
-                $firstOperator = $o.text;
-                $hasOperator = true;
-            }
-        }
+        o = equality_operator
         t2 = term2
     )*
     ;
@@ -675,14 +660,6 @@ term1 returns [String typ, int line] locals [boolean hasOperator, String firstOp
 equality_operator returns [String text]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) {$text = $tk.text;};
 
 term2 returns [String typ, int line] locals [boolean hasOperator, String operator]
-@init{$hasOperator = false;}
-@after{
-    if($hasOperator){
-        if(!($t1.typ.equals(INT_TYPE) || $t1.typ.equals(FLOAT_TYPE))){
-
-        }
-    }
-}
     :
     t1 = term3
     (
@@ -694,9 +671,58 @@ term2 returns [String typ, int line] locals [boolean hasOperator, String operato
 //term2: (term3 addition_operators term2) | term3;
 addition_operators returns [String text]: tk=(TK_SUB | TK_SUM) {$text = $tk.text;};
 
-term3 returns [String typ, int line] locals [boolean hasOperator, String operator]: term4 (multiplication_operators term4)* ;
+term3 returns [String typ, int line] locals [String leftType]
+@after{
+    $typ = $leftType;
+    $line = $t1.line;
+    System.out.println($leftType);
+}
+    :
+    t1 = term4 {$leftType = $t1.typ;}
+    (
+        o = multiplication_operators
+        t2 = term4{
+            if( ($o.tk_type == TK_INTDIV || $o.tk_type == TK_MODULO) ){ // integer division or modulo
+                if( !$t2.typ.equals(INT_TYPE) ){ //if t2 it's not an integer
+                    errorSemantic = true;
+                    operatorTypeMismatchError($t2.typ, $o.text, $o.line, INT_TYPE);
+                }
+                else if( !$leftType.equals(INT_TYPE) ){ //if left operand is not an integer
+                    errorSemantic = true;
+                    operatorTypeMismatchError($leftType, $o.text, $o.line, INT_TYPE);
+                }
+
+                $leftType = INT_TYPE;
+            }
+            else{ //real division and multiplication
+                boolean errorLocal = false;
+
+                if( !($t2.typ.equals(FLOAT_TYPE) || $t2.typ.equals(INT_TYPE)) ){
+                    errorSemantic = true;
+                    errorLocal = true;
+                    operatorTypeMismatchError($t2.typ, $o.text, $o.line, INT_TYPE + " or " + FLOAT_TYPE);
+                }
+
+                if( !($leftType.equals(FLOAT_TYPE) || $leftType.equals(INT_TYPE)) ){ //if left operand is not an integer or a real number
+                    errorSemantic = true;
+                    errorLocal = true;
+                    operatorTypeMismatchError($leftType, $o.text, $o.line, INT_TYPE + " or " + FLOAT_TYPE);
+                }
+
+                if($o.tk_type == TK_DIV) $leftType = FLOAT_TYPE; //division always spits a real number.
+                else{ //multiplication
+                    if($t2.typ.equals(INT_TYPE) && $leftType.equals(INT_TYPE)) $leftType = INT_TYPE; //if both are integer type
+                    else if(!errorLocal) $leftType = FLOAT_TYPE; //at least one of them is real, and the other is real or integer
+                    else $leftType = INT_TYPE;//typing error, propagate less restrictive type
+                }
+
+            }
+        }
+    )*
+    ;
+
 //term3: (term4 multiplication_operators term3) | term4;
-multiplication_operators: TK_PROD | TK_DIV | TK_INTDIV | TK_MODULO;
+multiplication_operators returns [String text, int tk_type, int line]: tk=(TK_PROD | TK_DIV | TK_INTDIV | TK_MODULO) {$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
 term4 returns [String typ, int line]
     :
@@ -704,18 +730,21 @@ term4 returns [String typ, int line]
         o = negation_operators
         t = term5
     ) {
-        if( $o.tk_type == TK_INVERT && !($t.typ.equals(INT_TYPE) || $t.typ.equals(FLOAT_TYPE)) ){
+        if( $o.tk_type == TK_INVERT && !($t.typ.equals(INT_TYPE) || $t.typ.equals(FLOAT_TYPE)) ){ //if not inverting an integer or a real
             errorSemantic = true;
             operatorTypeMismatchError($t.typ, $o.text, $t.line, INT_TYPE + " or " + FLOAT_TYPE);
+            $typ = INT_TYPE; //propagate the (less restrictive) operation type, whether there's an error or not, to avoid error propagation.
         }
-        else if ( $o.tk_type == KW_NO && !($t.typ.equals(BOOL_TYPE)) ){
+        else if ( $o.tk_type == KW_NO && !($t.typ.equals(BOOL_TYPE)) ){ //if not negating a boolean
             errorSemantic = true;
             operatorTypeMismatchError($t.typ, $o.text, $t.line, BOOL_TYPE);
+            $typ = BOOL_TYPE; //propagate the operation type, whether there's an error or not, to avoid error propagation.
         }
-        else{
+        else{ //no error
             $typ = $t.typ;
-            $line = $t.line;
         }
+
+        $line = $t.line;
     }
     |
     t = term5 {$typ = $t.typ; $line = $t.line;};
