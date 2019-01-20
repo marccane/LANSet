@@ -261,7 +261,7 @@ inici: (~EOF)+ ; //Lexer testing rule
 
 start locals [Bytecode program]
 @init{$program = new Bytecode(classFile);}
-//@after{$program.show();}
+@after{$program.show();}
     :  type_declaration_block?
        func_declaration_block
        const_declaration_block?

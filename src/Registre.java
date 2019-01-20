@@ -72,6 +72,8 @@ public class Registre  {
 	int pos;
 	int intval;
 
+	int dir;
+
 
 public Registre() {
 	text = "";
@@ -151,6 +153,9 @@ public Integer getPos() {
 public Integer getIntval() {
 		return (intval);
 	}
+public Integer getDir() {
+		return (dir);
+}
 
 public void putText(String te) {
 	text = te;
@@ -170,6 +175,9 @@ public void putIntval(int i) {
 public void putSupertype(String st) {
 	supertype = st;
 }
+public void putDir(int d) {
+		dir = d;
+	}
 /*public void putSubtype(String st) {
 	subtype = st;
 }*/
