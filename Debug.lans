@@ -46,30 +46,33 @@ variables
 	boolea unaIt;
 fvariables
 
-//escriureln(10);
-//escriure("Entra un numero de NIF: ");
-escriureln();
-
-//e := set;
-//c := caracteraso;
-//testassigreal := PI;
+PI := 1.234; //intent de modificar constant
 
 /*
+escriureln(10);
+escriure("Entra un numero de NIF: ");
+
+e := set;
+c := caracteraso;
+testassigreal := PI;
+
 si boolOk llavors 
 	escriureln();
 altrament
 	escriureln("hola");
 fsi
 
-si boolFals llavors
+si boolFals?1:2 llavors
 	escriureln();
 fsi
+*/
 
-mentre boolIt fer
-	escriureln();
+unaIt := cert;
+
+mentre unaIt fer
+	escriureln("Aixo es printeja un cop");
 	unaIt := fals;
 fmentre
-*/
 
 
 fprograma
