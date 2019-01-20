@@ -80,7 +80,7 @@ public String getStringTypeFromTKIndex(int index){
 }
 
 public boolean isBasetype(String type){
-    return type == CHAR_TYPE || type == INT_TYPE || type == FLOAT_TYPE || type == BOOL_TYPE;
+    return type.equals(CHAR_TYPE) || type.equals(INT_TYPE) || type.equals(FLOAT_TYPE) || type.equals(BOOL_TYPE);
 }
 
 public void registerBasetypeVariable(String type, Token id){
@@ -259,7 +259,10 @@ inici: (~EOF)+ ; //Lexer testing rule
 
 ////////////////////////////////// MAIN RULE //////////////////////////////////
 
-start: type_declaration_block?
+start locals [Bytecode program]
+@init{$program = new Bytecode(classFile);}
+//@after{$program.show();}
+    :  type_declaration_block?
        func_declaration_block
        const_declaration_block?
        KW_PROGRAM TK_IDENTIFIER
@@ -516,7 +519,7 @@ read_operation
             errorSemantic = true;
             identifierIsNotAVariableError($id.text, $id.line);
         }
-        else if(processBaseType(var.getType()) == INVALID_TYPE){ //is not a basetpye
+        else if(processBaseType(var.getType()).equals(INVALID_TYPE)){ //is not a basetpye
             errorSemantic = true;
             nonBasetypeReadingError($id.text, var.getType(), $id.line);
         }
