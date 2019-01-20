@@ -45,6 +45,9 @@ variables
 	real testassigreal;
 	car identificadorRedeclarat; //error: ja declarat (pero no hi ha scopes?)
 	boolea unaIt;
+	enter i;
+	enter j;
+	enter k;
 fvariables
 
 PI := 1.234; //error: intent de modificar constant
@@ -83,12 +86,47 @@ fsi
 n:=20;
 debug:=1;
 
-per i de 2 fins 3 fer
-	debug := debug + n;
-	testassigreal := PI + debug + 8.123;
+per i de 2 fins 5 fer
+	debug := debug + n - i;
+	testassigreal := PI + debug + 3.123 * i;
 fper
 
-escriure(noDeclarada);
+per i de 1 fins 5 fer
+	debug := debug + n - i;
+fper
+
+per i de 2 fins 5 fer
+	per j de 1 fins 5 fer
+		per k de ~1 fins 5 fer
+			debug := debug + n - i + j - k;
+			testassigreal := ~i + ~j - k *0.1;
+		fper
+	fper
+fper
+
+mentre unaIt fer
+	per i de 2 fins 5 fer
+		per j de 1 fins 5 fer
+			per k de ~1 fins 5 fer
+				mentre fals | cert & cert fer
+					debug := debug + n - i + j - k;
+				fmentre
+			fper
+		fper
+	fper
+fmentre
+
+per set de 1 fins 2 fer //error: set es una constant
+	n := n+1;
+fper
+
+per n de 1 fins 20 fer
+	n := n+1;
+fper
+
+unaIt := cert & cert;
+
+//escriure(noDeclarada);
 
 fprograma
 

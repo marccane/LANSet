@@ -474,12 +474,18 @@ conditional: KW_IF expr /* boolean */ {
             KW_ENDIF;
 
 for_loop: KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */ {
-                if(identifierInUse($id.text)){
+                Registre var_iter = TS.obtenir($id.text);
+                if(var_iter == null){
                     errorSemantic = true;
-                    repeatedIdentifierError($id.text, $id.line);
+                    undefinedIdentifierError($id.text, $id.line);
                 }
-                else {
-                    registerBasetypeVariable(INT_TYPE, $id);
+                else if(!var_iter.getSupertype().equals(VARIABLE_SUPERTYPE)){
+                    errorSemantic = true;
+                    identifierIsNotAVariableError($id.text, $id.line);
+                }
+                else if(!var_iter.getType().equals(INT_TYPE)){
+                    errorSemantic = true;
+                    typeMismatchError2($id.text, $id.line, var_iter.getType(), INT_TYPE);
                 }
 
                 if(!$expr1.typ.equals(INT_TYPE)){
@@ -515,7 +521,7 @@ read_operation
         //var.putType("lmoile");
 
         if(var == null) { errorSemantic = true; undefinedIdentifierError($id.text, $id.line);}
-        else if(var.getSupertype() != VARIABLE_SUPERTYPE) {
+        else if(!var.getSupertype().equals(VARIABLE_SUPERTYPE)) {
             errorSemantic = true;
             identifierIsNotAVariableError($id.text, $id.line);
         }
