@@ -132,7 +132,7 @@ public void typeMismatchError2(String id, int line, String foundType, String exp
 }
 
 public void writeOperationUnsupportedTypeError(String type, int line){
-    System.out.println("Unsupported type error at line " + line + ". Only \'" + STRING_TYPE + "\' expressions can be written to screen.");
+    System.out.println("Unsupported type " + type + " at line " + line);
 }
 
 public void ternaryTypeMismatchError(String t1, String t2, int line){
@@ -473,7 +473,7 @@ conditional: KW_IF expr /* boolean */ {
             (KW_ELSE sentence*)?
             KW_ENDIF;
 
-for_loop: KW_FOR id=TK_IDENTIFIER KW_FROM expr /* integer */ KW_TO expr2=expr /* integer */ {
+for_loop: KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */ {
                 if(identifierInUse($id.text)){
                     errorSemantic = true;
                     repeatedIdentifierError($id.text, $id.line);
@@ -482,9 +482,9 @@ for_loop: KW_FOR id=TK_IDENTIFIER KW_FROM expr /* integer */ KW_TO expr2=expr /*
                     registerBasetypeVariable(INT_TYPE, $id);
                 }
 
-                if(!$expr.typ.equals(INT_TYPE)){
+                if(!$expr1.typ.equals(INT_TYPE)){
                     errorSemantic=true;
-                    typeMismatchError2("*expressio*", $expr.line, $expr.typ, INT_TYPE);
+                    typeMismatchError2("*expressio*", $expr1.line, $expr1.typ, INT_TYPE);
                 }
 
                 if(!$expr2.typ.equals(INT_TYPE)){
