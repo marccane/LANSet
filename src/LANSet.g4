@@ -5,7 +5,7 @@
 grammar LANSet;
 
 @header{
-
+    import java.util.Vector;
 }
 
 @parser::members{
@@ -608,14 +608,16 @@ writeln_operation:
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
 expr returns[String typ, int line]
-@after{System.out.println($typ);}
+//@after{System.out.println($typ);}
     :
     ternary {$typ = $ternary.typ; $line = $ternary.line;}
     |
     subexpr {$typ = $subexpr.typ; $line = $subexpr.line;}
     ; //care with priority
 
-direct_evaluation_expr returns[String typ, int line]:
+direct_evaluation_expr returns[String typ, int line, Vector<Long> code]
+@init{$code = new Vector<>();}
+:
     cv=constant_value {$typ = $cv.typ; $line = $cv.line;} |
     id=TK_IDENTIFIER { //constant or variable
         Registre var = TS.obtenir($id.text);
@@ -643,6 +645,11 @@ direct_evaluation_expr returns[String typ, int line]:
         }
         else if (var.getSupertype().equals(CONSTANT_SUPERTYPE)){
             $typ = var.getType();
+
+            Long constDir = var.getDir();
+            $code.add(program.LDC_W);
+            $code.add(program.nByte(constDir,2));
+            $code.add(program.nByte(constDir,1));
         }
         else {
             $typ = INVALID_TYPE;
