@@ -354,10 +354,10 @@ type returns [int tkType, String text, int line]
 
 ///////////////////////// CONSTANT DECLARATION BLOCK //////////////////////////
 
-const_declaration_block: KW_CONSTBLOCK (const_declaration TK_SEMICOLON)* KW_ENDCONSTBLOCK;
+const_declaration_block
+: KW_CONSTBLOCK (const_declaration TK_SEMICOLON)* KW_ENDCONSTBLOCK;
 
-const_declaration
-    :
+const_declaration:
     bt=TK_BASETYPE
     id=TK_IDENTIFIER TK_ASSIGNMENT
     value=basetype_value {
@@ -446,7 +446,9 @@ function_definition: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RPA
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
 
-sentence: assignment TK_SEMICOLON | 
+sentence returns [Vector<Long> code]
+:
+          assignment TK_SEMICOLON |
           conditional | 
           for_loop | 
           while_loop | 
@@ -497,15 +499,36 @@ lvalue returns[String typ, int line, String ident]
         $ident = $id.text;
     };
 
-conditional: KW_IF expr /* boolean */ {
+conditional returns [Vector<Long> code]
+@init{
+    $code = new Vector<>();
+    Vector<Long> c1Code = new Vector<>();
+    Vector<Long> c2Code = new Vector<>();
+}
+    : KW_IF expr /* boolean */
+            KW_THEN (sentence{c1Code.addAll($sentence.code);})*
+            (KW_ELSE (sentence{c2Code.addAll($sentence.code);})*)?
+            KW_ENDIF{
                 if(!$expr.typ.equals(BOOL_TYPE)){
                     errorSemantic=true;
                     typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
                 }
-            }
-            KW_THEN sentence*
-            (KW_ELSE sentence*)?
-            KW_ENDIF;
+                else{
+                    $code.addAll($expr.code);
+                    $code.add(program.IFEQ); //if false, jumps to else (c1.size()+6)
+
+                    Long jump = 2L + c1Code.size() + 3L + 1L; //if condition is false, jump to c2 (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
+                    $code.add(program.nByte(jump,2));
+                    $code.add(program.nByte(jump,1));
+                    $code.addAll(c1Code);
+                    $code.add(program.GOTO);
+
+                    jump = c2Code.size()+3L; //if we're on the end of c1, skip c2 (3 = goto1 + goto2 + 1)
+                    $code.add(program.nByte(jump,2));
+                    $code.add(program.nByte(jump,1));
+                    $code.addAll(c2Code);
+                }
+            };
 
 for_loop: KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */ {
                 Registre var_iter = TS.obtenir($id.text);
@@ -613,7 +636,7 @@ writeln_operation:
 
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
-expr returns[String typ, int line]
+expr returns[String typ, int line, Vector<Long> code]
 //@after{System.out.println($typ);}
     :
     ternary {$typ = $ternary.typ; $line = $ternary.line;}
