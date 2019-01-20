@@ -23,7 +23,7 @@ public class LANSet {
 			String classfile = args[1];
 			if(!classfile.endsWith(".class"))
 			   classfile = classfile + ".class";
-			//p.setLANSClassFile(classfile);
+			p.setLANSClassFile(classfile);
 		}
 		p.start();
 		//p.assignment();

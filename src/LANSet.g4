@@ -31,6 +31,8 @@ SymTable<Registre> TS = new SymTable<Registre>(1000);
 boolean errorSintactic = false;
 boolean errorSemantic = false;
 
+String classFile = "";
+
 //Override
 public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException e)
 {
@@ -38,6 +40,10 @@ public void notifyErrorListeners(Token offendingToken, String msg, RecognitionEx
     super.notifyErrorListeners(offendingToken,msg,e);
     //Codi personalitzat
     errorSintactic=true;
+}
+
+public void setLANSClassFile(String classfile){
+    classFile = classfile;
 }
 
 public String processBaseType(String type){
@@ -565,6 +571,7 @@ writeln_operation:
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
 expr returns[String typ, int line]
+@after{System.out.println($typ);}
     :
     ternary {$typ = $ternary.typ; $line = $ternary.line;}
     |
@@ -644,65 +651,137 @@ ternary returns [String typ, int line]
     ;
 
 //HAZARD ZONE
-subexpr returns [String typ, int line] locals [boolean hasOperator, String firstOperator]
-@init{$hasOperator = false;}
-@after{
-    if($hasOperator){
-        if(!$t1.typ.equals(BOOL_TYPE)){
-            errorSemantic = true;
-            operatorTypeMismatchError($t1.typ, $firstOperator, $line, BOOL_TYPE);
-        }
-    }
-}
+subexpr returns [String typ, int line] locals [boolean hasOperator]
+@init{ $hasOperator = false;}
     :
     t1=term1 {$typ = $t1.typ; $line = $t1.line;}
     (
         o=logic_operators {
-            if(!$hasOperator){
-                $firstOperator = $o.text;
+            if(!$hasOperator){ //if there's at least one operation, typecheck of t1 is needed
                 $hasOperator = true;
+                if(!$t1.typ.equals(BOOL_TYPE)){
+                    errorSemantic = true;
+                    operatorTypeMismatchError($t1.typ, $o.text, $o.line, BOOL_TYPE);
+                }
             }
         }
         t2=term1{
-            if(!$t2.typ.equals(BOOL_TYPE)){
+            if(!$t2.typ.equals(BOOL_TYPE)){ //check if the right operand is boolean
                 errorSemantic = true;
-                operatorTypeMismatchError($t2.typ, $o.text, $t2.line, BOOL_TYPE);
+                operatorTypeMismatchError($t2.typ, $o.text, $o.line, BOOL_TYPE);
             }
         }
     )*;
 
 //operation: (term1 logic_operators operation) | term1;
-logic_operators returns [String text]: tk=(TK_AND | TK_OR){$text = $tk.text;};
+logic_operators returns [String text, int tk_type, int line]: tk=(TK_AND | TK_OR){$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
-term1 returns [String typ, int line] locals []
+term1 returns [String typ, int line] locals[boolean hasOperator, String leftType]
+@init{$hasOperator = false;}
+@after{$typ = $leftType;}
     :
-    t1 = term2 {$typ = $t1.typ; $line = $t1.line;}
+    t1 = term2 {$leftType = $t1.typ; $line = $t1.line;}
     (
-        o = equality_operator
-        t2 = term2
+        o = equality_operator{
+            if(!$hasOperator){ //first left operand found, typecheck needed
+                $hasOperator = true;
+                if($o.tk_type == TK_EQUALS || $o.tk_type == TK_NEQUALS ) { // == or !=
+                    if( !(isBasetype($leftType)) ){ //if the operator isn't a basic type
+                        errorSemantic = true;
+                        operatorTypeMismatchError($t1.typ, $o.text, $o.line, "basic type");
+                        //impossible to propagate a "less restrictive" type, so let's propagate the original one.
+                    }
+                    //otherwise, leftType should be propagated
+                }
+                else{ //other operations only work on integer or real numbers
+                    if( !($leftType.equals(INT_TYPE) || $leftType.equals(FLOAT_TYPE)) ){ //
+                        errorSemantic = true;
+                        operatorTypeMismatchError($t1.typ, $o.text, $o.line, INT_TYPE + " or " + FLOAT_TYPE);
+                        $leftType = INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
+                    }
+                    //otherwise, leftType should be propagated
+                }
+            }
+        }
+        t2 = term2{
+            if($o.tk_type == TK_EQUALS || $o.tk_type == TK_NEQUALS ) { // == or !=
+                if( !(isBasetype($t2.typ)) ){ //if the operator isn't a basic type
+                    errorSemantic = true;
+                    operatorTypeMismatchError($t1.typ, $o.text, $o.line, "basic type");
+                    //impossible to propagate a "less restrictive" type, so let's propagate the original one.
+                }
+                else if($leftType.equals(INT_TYPE) || $t2.typ.equals(INT_TYPE)){
+                    //maybe useless if statements
+                    if($leftType.equals(INT_TYPE) && $t2.typ.equals(FLOAT_TYPE)) $leftType = FLOAT_TYPE;
+                    else if($leftType.equals(FLOAT_TYPE) && $t2.typ.equals(INT_TYPE)) $leftType = FLOAT_TYPE;
+                    else if( !($leftType.equals(INT_TYPE) && $t2.typ.equals(INT_TYPE)) ){ //error, leftType and t2 types doesn't match
+                        errorSemantic = true;
+                        typeMismatchError($leftType, $t2.typ, $o.line);
+                    }
+                }
+                else if( !$leftType.equals($t2.typ) ){
+                    errorSemantic = true;
+                    typeMismatchError($leftType, $t2.typ, $o.line);
+                }
+
+                $leftType = BOOL_TYPE;
+            }
+            else{ //other operations only work on integer or real numbers
+                if( !($t2.typ.equals(INT_TYPE) || $t2.typ.equals(FLOAT_TYPE)) ){
+                    errorSemantic = true;
+                    operatorTypeMismatchError($leftType, $o.text, $o.line, INT_TYPE + " or " + FLOAT_TYPE);
+                }
+                else{ //if tis integer or real
+                    if($t2.typ.equals(FLOAT_TYPE)) $leftType = FLOAT_TYPE; //integer promotion if needed
+                    //otherwise promotion depends on leftType, so no changes needed
+                }
+
+                $leftType = BOOL_TYPE;
+            }
+        }
     )*
     ;
 
 //term1: (term2 equality_operator term1) | term2;
-equality_operator returns [String text]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) {$text = $tk.text;};
+equality_operator returns [String text, int tk_type, int line]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) {$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
-term2 returns [String typ, int line] locals [boolean hasOperator, String operator]
+term2 returns [String typ, int line] locals [boolean hasOperator, String leftType]
+@init{$hasOperator = false;}
+@after{$typ = $leftType;}
     :
-    t1 = term3
+    t1 = term3 {$leftType = $t1.typ; $line = $t1.line;}
     (
-        o = addition_operators
-        t2 = term3
+        o = addition_operators{
+            if(!$hasOperator){ //first left operand found, typecheck needed
+                $hasOperator = true;
+                if( !($leftType.equals(INT_TYPE) || $leftType.equals(FLOAT_TYPE)) ){ //if is neither an integer or a real number
+                    errorSemantic = true;
+                    operatorTypeMismatchError($t1.typ, $o.text, $o.line, INT_TYPE + " or " + FLOAT_TYPE);
+                    //$leftType = INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
+                }
+            }
+        }
+        t2 = term3{
+            if($t2.typ.equals(FLOAT_TYPE)){ //if t2 is float type, integer promotion may be needed
+                $leftType = FLOAT_TYPE;
+            }
+            else if ($t2.typ.equals(INT_TYPE)){} //if t2 is integer, the result depends on leftType, so no action is needed.
+            else{ //typing error
+                errorSemantic = true;
+                operatorTypeMismatchError($t2.typ, $o.text, $o.line, INT_TYPE + " or " + FLOAT_TYPE);
+                $leftType = INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
+            }
+        }
     )*
     ;
 
 //term2: (term3 addition_operators term2) | term3;
-addition_operators returns [String text]: tk=(TK_SUB | TK_SUM) {$text = $tk.text;};
+addition_operators returns [String text, int tk_type, int line]: tk=(TK_SUB | TK_SUM) {$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
 term3 returns [String typ, int line] locals [String leftType]
 @after{
     $typ = $leftType;
     $line = $t1.line;
-    System.out.println($leftType);
 }
     :
     t1 = term4 {$leftType = $t1.typ;}
@@ -740,7 +819,7 @@ term3 returns [String typ, int line] locals [String leftType]
                 else{ //multiplication
                     if($t2.typ.equals(INT_TYPE) && $leftType.equals(INT_TYPE)) $leftType = INT_TYPE; //if both are integer type
                     else if(!errorLocal) $leftType = FLOAT_TYPE; //at least one of them is real, and the other is real or integer
-                    else $leftType = INT_TYPE;//typing error, propagate less restrictive type
+                    else $leftType = INT_TYPE;//typing error, propagate less restrictive type in order to continue semantic analysis
                 }
 
             }
