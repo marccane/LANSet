@@ -634,8 +634,8 @@ ternary returns [String typ, int line]
     e1=expr {$typ = $e1.typ;}
     TK_COLON
     e2=expr{
-        if($e1.typ.equals(FLOAT_TYPE) && $e2.typ.equals(INT_TYPE)) $typ = FLOAT_TYPE; //$e2.typ = FLOAT_TYPE; //to real promotion
-        else if($e2.typ.equals(FLOAT_TYPE) && $e1.typ.equals(INT_TYPE)) $typ = FLOAT_TYPE; //$e1 b.typ = FLOAT_TYPE; //to real promotion
+        if($e1.typ.equals(FLOAT_TYPE) && $e2.typ.equals(INT_TYPE)) $typ = FLOAT_TYPE; //(dolar)e2.typ = FLOAT_TYPE; //to real promotion
+        else if($e2.typ.equals(FLOAT_TYPE) && $e1.typ.equals(INT_TYPE)) $typ = FLOAT_TYPE; //(dolar)e1 b.typ = FLOAT_TYPE; //to real promotion
         else if(!$e1.typ.equals($e2.typ)){ //none of both are real
             errorSemantic = true;
             ternaryTypeMismatchError($e1.typ, $e2.typ, $cond.line);

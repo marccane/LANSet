@@ -24,10 +24,10 @@ constants
 	car caracteraso := 'O';
 	car charespecial := '_';
 	real testdefinitiu := 123;
-	boolea boolOk := true;
-	boolea boolFals := false;
+	boolea boolOk := cert;
+	boolea boolFals := fals;
 	boolea errorTipus := 77; //error de tipus
-	enter mismatchBool := false; //error de tipus
+	enter mismatchBool := fals; //error de tipus
 	enter identificadorRedeclarat := 777;
 fconstants
 
@@ -67,7 +67,7 @@ fsi
 
 mentre boolIt fer
 	escriureln();
-	unaIt := false;
+	unaIt := fals;
 fmentre
 */
 
