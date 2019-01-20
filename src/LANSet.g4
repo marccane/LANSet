@@ -472,7 +472,7 @@ assignment
             errorSemantic = true;
             undefinedIdentifierError($lval.ident, $lval.line);
         }
-        else if(var.getSupertype() != VARIABLE_SUPERTYPE){
+        else if(!var.getSupertype().equals(VARIABLE_SUPERTYPE)){
             errorSemantic = true;
             identifierIsNotAVariableError($lval.ident, $lval.line); //no es el mes adient perque pot ser tuple o vector...
         }
