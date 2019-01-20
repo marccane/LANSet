@@ -28,6 +28,9 @@ static final String TUPLE_SUPERTYPE = "tupla";
 static final String VECTOR_SUPERTYPE = "vector";
 
 SymTable<Registre> TS = new SymTable<Registre>(1000);
+Bytecode program;
+Long jump;
+int nVar = 0;
 boolean errorSintactic = false;
 boolean errorSemantic = false;
 
@@ -44,6 +47,32 @@ public void notifyErrorListeners(Token offendingToken, String msg, RecognitionEx
 
 public void setLANSClassFile(String classfile){
     classFile = classfile;
+}
+
+public String bytecodeType(String type){
+    String idType = "V";
+    switch(type){
+        case CHAR_TYPE:
+            idType = "C";
+            break;
+        case INT_TYPE:
+            idType = "I";
+            break;
+        case FLOAT_TYPE:
+            idType = "F";
+            break;
+        case BOOL_TYPE:
+            idType = "Z";
+            break;
+        case STRING_TYPE:
+            idType = "S";
+            break;
+        default:
+            //do nothing
+            break;
+    }
+
+    return idType;
 }
 
 public String processBaseType(String type){
@@ -93,10 +122,11 @@ public void registerAlias(Token id, Token type){
     TS.inserir(id.getText(), r);
 }
 
-public void registerConstant(Token id, Token type){
+public Registre registerConstant(Token id, Token type){
     String bType = processBaseType(type.getText());
     Registre r = new Registre(id.getText(), CONSTANT_SUPERTYPE, bType, id.getLine(), id.getCharPositionInLine());
     TS.inserir(id.getText(), r);
+    return r;
 }
 
 public boolean identifierInUse(String id){
@@ -259,9 +289,9 @@ inici: (~EOF)+ ; //Lexer testing rule
 
 ////////////////////////////////// MAIN RULE //////////////////////////////////
 
-start locals [Bytecode program]
-@init{$program = new Bytecode(classFile);}
-//@after{$program.show();}
+start
+@init{program = new Bytecode(classFile);}
+@after{program.show();}
     :  type_declaration_block?
        func_declaration_block
        const_declaration_block?
@@ -340,10 +370,14 @@ const_declaration
         else{
             String valueType = $value.typ;
             if ($bt.text.equals(valueType)){
-                registerConstant($id,$bt);
+                Registre r = registerConstant($id,$bt);
+                Long dir = program.addConstName(r.getText(), bytecodeType(r.getType()), $value.text);
+                r.putDir(dir);
             }
             else if ($bt.text.equals(FLOAT_TYPE) && valueType.equals(INT_TYPE)){
-                registerConstant($id,$bt);
+                Registre r = registerConstant($id,$bt);
+                Long dir = program.addConstName(r.getText(), bytecodeType(r.getType()), $value.text);
+                r.putDir(dir);
             }
             else{
                 typeMismatchError2($id.text, $id.line, valueType, $bt.text);
@@ -352,8 +386,8 @@ const_declaration
         }
     };
 
-basetype_value returns [String typ, int line]: tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL)
-    {$typ=getStringTypeFromTKIndex($tk.type); $line = $tk.line;};
+basetype_value returns [String text, String typ, int line]: tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL)
+    {$text = $tk.text; $typ=getStringTypeFromTKIndex($tk.type); $line = $tk.line;};
 
 ///////////////////////////////////////////////////////////////////////////////
   
