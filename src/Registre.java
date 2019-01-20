@@ -72,7 +72,7 @@ public class Registre  {
 	int pos;
 	int intval;
 
-	int dir;
+	Long dir;
 
 
 public Registre() {
@@ -153,7 +153,7 @@ public Integer getPos() {
 public Integer getIntval() {
 		return (intval);
 	}
-public Integer getDir() {
+public Long getDir() {
 		return (dir);
 }
 
@@ -175,7 +175,7 @@ public void putIntval(int i) {
 public void putSupertype(String st) {
 	supertype = st;
 }
-public void putDir(int d) {
+public void putDir(Long d) {
 		dir = d;
 	}
 /*public void putSubtype(String st) {
