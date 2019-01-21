@@ -1165,8 +1165,8 @@ term4 returns [String typ, int line, Vector<Long> code]
                 $code.add(program.IXOR); //1 xor any = !any
             }
             else{ //KW_INVERT
-                /*if($t.typ.equals(INT_TYPE))
-                else*/
+                if($t.typ.equals(INT_TYPE)) $code.add(program.INEG);
+                else $code.add(program.FNEG);
             }
         }
 
