@@ -32,11 +32,7 @@ reala:=9.1234;
 //escriureln(7+6+5+4);
 
 
-si cert llavors
-	escriureln(7);
-altrament
-	escriureln(0);
-fsi
+escriureln(5%2);
 
 
 //llegir(n);

@@ -1104,17 +1104,21 @@ term2 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
         }
         t2 = term3{
             if($t2.typ.equals(FLOAT_TYPE)){ //if t2 is float type, integer promotion may be needed
-                $leftType = FLOAT_TYPE;
+
+                if($leftType.equals(INT_TYPE)) $code.add(program.I2F);
                 $code.addAll($t2.code); //right operand
 
                 if($o.tk_type == TK_SUM) $code.add(program.FADD);
                 else $code.add(program.FSUB);
+
+                $leftType = FLOAT_TYPE;
             }
             else if ($t2.typ.equals(INT_TYPE)){ //if t2 is integer, the result depends on leftType.
 
                 $code.addAll($t2.code); //right operand
 
                 if($leftType.equals(FLOAT_TYPE)){
+                    $code.add(program.I2F);
                     if($o.tk_type == TK_SUM) $code.add(program.FADD);
                     else $code.add(program.FSUB);
                 }
@@ -1190,9 +1194,10 @@ term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
                 }
                 else{ //multiplication
                     if($t2.typ.equals(INT_TYPE) && $leftType.equals(INT_TYPE)) {
-                        $leftType = INT_TYPE; //if both are integer type
                         $code.addAll($t2.code); //right operand
                         $code.add(program.IMUL);
+
+                        $leftType = INT_TYPE; //if both are integer type
                     }
                     else if(!errorLocal){
 
