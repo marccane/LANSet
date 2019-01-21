@@ -1115,7 +1115,7 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
                     errorSemantic = true;
                     typeMismatchError($leftType, $t2.typ, $o.line);
                 }
-                else{ //both equals but not integers
+                else{ //both equals but not integers (bytecode integers)
 
                 }
 
