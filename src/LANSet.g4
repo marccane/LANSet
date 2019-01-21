@@ -637,7 +637,7 @@ conditional returns [Vector<Long> code]
             }
      };
 
-for_loop returns [Vector<Long> code] locals [boolean errorLocal]
+for_loop returns [Vector<Long> code] locals [boolean errorLocal] //7
 @init{
     $code = new Vector<>();
     Vector<Long> c1Code = new Vector<>();
