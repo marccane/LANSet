@@ -955,10 +955,10 @@ ternary returns [String typ, int line, Vector<Long> code]
 
 //HAZARD ZONE
 subexpr returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator]
-@init{ $hasOperator = false; $code = new Vector<>();}
+@init{ $hasOperator = false;}
 @after{$code.toString();}
     :
-    t1=term1 {$typ = $t1.typ; $line = $t1.line; $code.addAll($t1.code);}
+    t1=term1 {$typ = $t1.typ; $line = $t1.line; $code = $t1.code;}
     (
         o=logic_operators {
             if(!$hasOperator){ //if there's at least one operation, typecheck of t1 is needed
@@ -975,7 +975,10 @@ subexpr returns [String typ, int line, Vector<Long> code] locals [boolean hasOpe
                 operatorTypeMismatchError($t2.typ, $o.text, $o.line, BOOL_TYPE);
             }
             else{ //no error
+                $code.addAll($t2.code);
 
+                if($o.tk_type == TK_AND) $code.add(program.IAND);
+                else $code.add(program.IOR);
             }
         }
     )*;
@@ -1053,7 +1056,7 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
 equality_operator returns [String text, int tk_type, int line]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) {$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
 term2 returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator, String leftType]
-@init{ $code = new Vector<>(); $hasOperator = false;}
+@init{ $hasOperator = false;}
 @after{$typ = $leftType; $code.toString();}
     :
     t1 = term3 {$leftType = $t1.typ; $line = $t1.line; $code = $t1.code;}
