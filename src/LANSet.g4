@@ -449,20 +449,21 @@ function_definition: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RPA
 sentence returns [Vector<Long> code]
 @init{ $code = new Vector<>(); }
 :
-          assignment TK_SEMICOLON |
-          conditional | 
-          for_loop | 
-          while_loop | 
-          function_call TK_SEMICOLON | 
-          read_operation TK_SEMICOLON | 
-          write_operation TK_SEMICOLON | 
-          writeln_operation TK_SEMICOLON;
+          assignment TK_SEMICOLON {$code.addAll($assignment.code);} |
+          conditional {$code.addAll($conditional.code);} |
+          for_loop {$code.addAll($for_loop.code);} |
+          while_loop {$code.addAll($while_loop.code);} |
+          function_call TK_SEMICOLON {$code.addAll($function_call.code);} |
+          read_operation TK_SEMICOLON {$code.addAll($read_operation.code);} |
+          write_operation TK_SEMICOLON {$code.addAll($write_operation.code);} |
+          writeln_operation TK_SEMICOLON {$code.addAll($writeln_operation.code);};
 
-assignment
-@init{
+assignment returns [Vector<Long> code]
+@init{ $code = new Vector<>(); }
+/*@init{
         //TS.inserir("a", new Registre("a", VARIABLE_SUPERTYPE, FLOAT_TYPE, 1234, -1));
         //TS.inserir("b", new Registre("b", VARIABLE_SUPERTYPE, CHAR_TYPE, 1234, -1));
-        }
+        }*/
     :
     lval=lvalue
     TK_ASSIGNMENT
@@ -531,7 +532,9 @@ conditional returns [Vector<Long> code]
                 }
             };
 
-for_loop: KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */ {
+for_loop returns [Vector<Long> code]
+@init{ $code = new Vector<>(); }
+    : KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */ {
                 Registre var_iter = TS.obtenir($id.text);
                 if(var_iter == null){
                     errorSemantic = true;
@@ -576,9 +579,12 @@ while_loop returns [Vector<Long> code]
             }
             KW_DO sentence* KW_ENDWHILE;
 
-function_call returns [String typ, int line]: TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
+function_call returns [String typ, int line, Vector<Long> code]
+@init{ $code = new Vector<>(); }
+    : TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR;
 
-read_operation
+read_operation returns [Vector<Long> code]
+@init{ $code = new Vector<>(); }
     :
     KW_INPUT
     TK_LPAR
@@ -601,7 +607,9 @@ read_operation
     }
     TK_RPAR;
 
-write_operation:
+write_operation returns [Vector<Long> code]
+@init{ $code = new Vector<>(); }
+    :
     KW_OUTPUT
     TK_LPAR
     e=expr {
@@ -621,7 +629,9 @@ write_operation:
     )*
     TK_RPAR;
 
-writeln_operation:
+writeln_operation returns [Vector<Long> code]
+@init{ $code = new Vector<>(); }
+    :
     KW_OUTPUTLN
     TK_LPAR
     (
