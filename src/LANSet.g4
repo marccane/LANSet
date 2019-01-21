@@ -1070,11 +1070,53 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
                 }
                 else{ //if its integer or real
                     if($t2.typ.equals(FLOAT_TYPE)) {
-                        //if()
-                        $leftType = FLOAT_TYPE; //integer promotion if needed
 
+                        if($leftType.equals(INT_TYPE)) $code.add(program.I2F);
+                        $code.addAll($t2.code);
+                        $code.add(program.FCMPL);
+
+                        $leftType = FLOAT_TYPE; //integer promotion if needed
                     }
-                    //otherwise promotion depends on leftType, so no changes needed
+                    else if ($leftType.equals(FLOAT_TYPE)){ //otherwise promotion depends on leftType, so no changes needed
+
+                        $code.addAll($t2.code);
+                        $code.add(program.I2F);
+                        $code.add(program.FCMPL);
+
+                        /*if($o.tk_type == TK_LESS)
+                        else if($o.tk_type == TK_LESSEQ)
+                        else if($o.tk_type == TK_GREATER)
+                        else */ //GREATEREQ
+
+                        //leftType is automatically propagated
+                    }
+                    else{ //both are integers
+                        $code.addAll($t2.code);
+
+                        if($o.tk_type == TK_LESS) $code.add(program.IF_ICMPLT);
+                        else if($o.tk_type == TK_LESSEQ) $code.add(program.IF_ICMPLE);
+                        else if($o.tk_type == TK_GREATER) $code.add(program.IF_ICMPGT);
+                        else $code.add(program.IF_ICMPGE); //GREATEREQ
+
+                        Long jump = 8L; //jump to true
+                        $code.add(program.nByte(jump,2));
+                        $code.add(program.nByte(jump,1));
+                    }
+
+                    //section of code dedicated only to compare two numbers //
+
+                    $code.add(program.BIPUSH);
+                    $code.add(0L); //put a 0
+
+                    Long jump = 5L; //bipush length
+                    $code.add(program.GOTO);
+                    $code.add(program.nByte(jump,2));
+                    $code.add(program.nByte(jump,1));
+
+                    $code.add(program.BIPUSH);
+                    $code.add(1L); //put a 1
+
+                    //////////////////////////////////////////////////////////
                 }
 
                 $leftType = BOOL_TYPE;
