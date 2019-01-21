@@ -20,14 +20,23 @@ variables
 	enter max;
 	enter debug;
 	enter mitjana;
-	real testassigreal;
+	real reala;
 	boolea unaIt;
 	enter i;
 	enter j;
 	enter k;
 	mitjana errortipus;
 fvariables
+n:=10;
+reala:=9.1234;
 
-escriureln("hola");
+si cert llavors
+	escriureln(7);
+altrament
+	escriureln(0);
+fsi
+
+llegir(n);
+escriureln(n);
 
 fprograma
