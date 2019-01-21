@@ -1084,19 +1084,39 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
                 }
                 else if($leftType.equals(INT_TYPE) || $t2.typ.equals(INT_TYPE)){
                     if($leftType.equals(INT_TYPE) && $t2.typ.equals(FLOAT_TYPE)) {
+
+                        $code.add(program.I2F);
+                        $code.addAll($t2.code);
+                        $code.add(program.FCMPL);
+
+                        //falta canviar segons si es == o !=
+
                         $leftType = FLOAT_TYPE;
                     }
                     else if($leftType.equals(FLOAT_TYPE) && $t2.typ.equals(INT_TYPE)) {
+
+                        $code.addAll($t2.code);
+                        $code.add(program.I2F);
+                        $code.add(program.FCMPL);
+
+                        //falta canviar segons si es == o !=
+
                         $leftType = FLOAT_TYPE; //unnecessary assignment
                     }
                     else if( !($leftType.equals(INT_TYPE) && $t2.typ.equals(INT_TYPE)) ){ //error, leftType and t2 types doesn't match
                         errorSemantic = true;
                         typeMismatchError($leftType, $t2.typ, $o.line);
                     }
+                    else{ //both integers
+
+                    }
                 }
                 else if( !$leftType.equals($t2.typ) ){
                     errorSemantic = true;
                     typeMismatchError($leftType, $t2.typ, $o.line);
+                }
+                else{ //both equals but not integers
+
                 }
 
                 $leftType = BOOL_TYPE;
@@ -1113,6 +1133,11 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
                         $code.addAll($t2.code);
                         $code.add(program.FCMPL);
 
+                        if($o.tk_type == TK_LESS) $code.add(program.IFLT);
+                        else if($o.tk_type == TK_LESSEQ) $code.add(program.IFLE);
+                        else if($o.tk_type == TK_GREATER) $code.add(program.IFGT);
+                        else $code.add(program.IFGE); //GREATEREQ
+
                         $leftType = FLOAT_TYPE; //integer promotion if needed
                     }
                     else if ($leftType.equals(FLOAT_TYPE)){ //otherwise promotion depends on leftType, so no changes needed
@@ -1121,10 +1146,10 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
                         $code.add(program.I2F);
                         $code.add(program.FCMPL);
 
-                        /*if($o.tk_type == TK_LESS)
-                        else if($o.tk_type == TK_LESSEQ)
-                        else if($o.tk_type == TK_GREATER)
-                        else */ //GREATEREQ
+                        if($o.tk_type == TK_LESS) $code.add(program.IFLT);
+                        else if($o.tk_type == TK_LESSEQ) $code.add(program.IFLE);
+                        else if($o.tk_type == TK_GREATER) $code.add(program.IFGT);
+                        else $code.add(program.IFGE); //GREATEREQ
 
                         //leftType is automatically propagated
                     }
@@ -1136,17 +1161,18 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
                         else if($o.tk_type == TK_GREATER) $code.add(program.IF_ICMPGT);
                         else $code.add(program.IF_ICMPGE); //GREATEREQ
 
-                        Long jump = 8L; //jump to true
-                        $code.add(program.nByte(jump,2));
-                        $code.add(program.nByte(jump,1));
                     }
+
+                    Long jump = 8L; //jump to true
+                    $code.add(program.nByte(jump,2));
+                    $code.add(program.nByte(jump,1));
 
                     //section of code dedicated only to compare two numbers //
 
                     $code.add(program.BIPUSH);
                     $code.add(0L); //put a 0
 
-                    Long jump = 5L; //bipush length
+                    jump = 5L; //bipush length
                     $code.add(program.GOTO);
                     $code.add(program.nByte(jump,2));
                     $code.add(program.nByte(jump,1));
