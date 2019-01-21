@@ -965,11 +965,11 @@ ternary returns [String typ, int line, Vector<Long> code] locals [boolean localE
             $code.addAll($e1.code);
             if(e1fcast) $code.add(program.I2F);
 
-            jump = $e1.code.size()+3L; //if we're on the end of e1, skip e2 (3 = goto1 + goto2 + 1)
+            jump = $e2.code.size()+3L; //if we're on the end of e1, skip e2 (3 = goto1 + goto2 + 1)
             $code.add(program.GOTO);
             $code.add(program.nByte(jump,2));
             $code.add(program.nByte(jump,1));
-            $code.addAll($e1.code);
+            $code.addAll($e2.code);
             if(e2fcast) $code.add(program.I2F);
         }
     }
@@ -1009,10 +1009,10 @@ subexpr returns [String typ, int line, Vector<Long> code] locals [boolean hasOpe
 logic_operators returns [String text, int tk_type, int line]: tk=(TK_AND | TK_OR){$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
 term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator, String leftType]
-@init{ $code = new Vector<>(); $hasOperator = false;}
+@init{ $hasOperator = false;}
 @after{$typ = $leftType; $code.toString();}
     :
-    t1 = term2 {$leftType = $t1.typ; $line = $t1.line; $code.addAll($t1.code);}
+    t1 = term2 {$leftType = $t1.typ; $line = $t1.line; $code = $t1.code;}
     (
         o = equality_operator{
             if(!$hasOperator){ //first left operand found, typecheck needed
@@ -1036,6 +1036,8 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
             }
         }
         t2 = term2{
+            boolean t1fcast = false, t2fcast = false;
+
             if($o.tk_type == TK_EQUALS || $o.tk_type == TK_NEQUALS ) { // == or !=
                 if( !(isBasetype($t2.typ)) ){ //if the operator isn't a basic type
                     errorSemantic = true;
