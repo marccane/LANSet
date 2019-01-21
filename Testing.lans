@@ -30,17 +30,40 @@ variables
 	boolea dos;
 	boolea tres;
 fvariables
+
 //n:=10;
 //reala:=9.1234;
-//escriureln(7+6+5+4);
+//reala:=777;
+//escriureln(reala);
+i:=20;
 
+per i de 1 fins 10 fer
+	escriureln(i);
+fper
+
+//escriureln();
+
+//+ - / * % \ ~ 'no'
+//escriureln(7+6+5+4);
+//escriureln(10-2);
+//escriureln(123/5);
+//escriureln(3*5);
 /*
+escriureln(32%5);
+escriureln(323\12);
+escriureln(~5 - ~10);
+escriureln(no cert);
+escriureln(no fals);
+
+
 si fals llavors
 	escriureln(7);
 altrament
 	escriureln(0);
 fsi
-*/
+
+escriureln((cert?fals:cert)?7:0);
+
 
 u:=fals;
 dos:=fals;
@@ -64,8 +87,8 @@ mentre fals fer
 	escriureln(0);
 fmentre
 
-
+n:=123;
 //llegir(n);
-//escriureln(n);
-
+escriureln(n);
+*/
 fprograma

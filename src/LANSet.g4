@@ -645,6 +645,7 @@ for_loop returns [Vector<Long> code] locals [boolean errorLocal]
 @init{
     $code = new Vector<>();
     Vector<Long> c1Code = new Vector<>();
+    Vector<Long> forExpr = new Vector<>();
     $errorLocal = false;
 }
     : KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */ {
@@ -678,7 +679,41 @@ for_loop returns [Vector<Long> code] locals [boolean errorLocal]
         }
 
     } KW_DO (sentence {c1Code.addAll($sentence.code);} )* KW_ENDFOR{
-        //if()
+        if(!errorSemantic){
+            Registre varIndex = TS.obtenir($id.text);
+            Long indexPos = new Long(varIndex.getDir());
+
+            forExpr.add(program.ILOAD);
+            forExpr.add(indexPos);
+            forExpr.addAll($expr2.code);
+            forExpr.add(program.IF_ICMPEQ); //comparar si it == expr2
+            Long jump = new Long((c1Code.size()+9));
+            System.out.println(jump);
+            forExpr.add(program.nByte(jump,2)); //saltar al final de tot
+            forExpr.add(program.nByte(jump,1));
+
+            //inici: inicialitzar varIndex
+            $code.addAll($expr1.code);
+            $code.add(program.ISTORE);
+            $code.add(indexPos);
+
+            //evaluar varIndex == fi
+            $code.addAll(forExpr);
+            //codi C1
+            $code.addAll(c1Code);
+
+            //i++
+            $code.add(program.IINC);
+            $code.add(indexPos);
+            $code.add(1L);
+
+            //tornar cap a dalt
+            $code.add(program.GOTO);
+            jump = -new Long((3+c1Code.size()+forExpr.size()));
+            System.out.println(jump);
+            $code.add(program.nByte(jump,2));
+            $code.add(program.nByte(jump,1));
+        }
     }
 ;
 
