@@ -681,14 +681,14 @@ for_loop returns [Vector<Long> code] locals [boolean errorLocal]
     } KW_DO (sentence {c1Code.addAll($sentence.code);} )* KW_ENDFOR{
         if(!errorSemantic){
             Registre varIndex = TS.obtenir($id.text);
-            Long indexPos = new Long(varIndex.getDir());
+            Long indexPos = varIndex.getDir();
+
 
             forExpr.add(program.ILOAD);
             forExpr.add(indexPos);
             forExpr.addAll($expr2.code);
-            forExpr.add(program.IF_ICMPEQ); //comparar si it == expr2
+            forExpr.add(program.IF_ICMPGT); //comparar si it == expr2
             Long jump = new Long((c1Code.size()+9));
-            System.out.println(jump);
             forExpr.add(program.nByte(jump,2)); //saltar al final de tot
             forExpr.add(program.nByte(jump,1));
 
@@ -710,7 +710,6 @@ for_loop returns [Vector<Long> code] locals [boolean errorLocal]
             //tornar cap a dalt
             $code.add(program.GOTO);
             jump = -new Long((3+c1Code.size()+forExpr.size()));
-            System.out.println(jump);
             $code.add(program.nByte(jump,2));
             $code.add(program.nByte(jump,1));
         }
