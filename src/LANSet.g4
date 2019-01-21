@@ -30,7 +30,7 @@ static final String CONSTANT_SUPERTYPE = "constant";
 static final String VARIABLE_SUPERTYPE = "variable";
 static final String ALIAS_SUPERTYPE = "alias";
 static final String FUNCTION_SUPERTYPE = "funcio";
-static final String FUNCTION_SUPERTYPE = "accio";
+static final String ACTION_SUPERTYPE = "accio";
 static final String TUPLE_SUPERTYPE = "tupla";
 static final String VECTOR_SUPERTYPE = "vector";
 
