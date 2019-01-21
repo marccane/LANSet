@@ -1,0 +1,174 @@
+/*
+
+EXERCICI:
+
+
+Aquest fitxer LANS es correcte sintacticament, pero esta ple d'errors semantics.
+Troba tots els errors i fes una llista dels tipus d'errors que existeixen en aquest fitxer.
+
+No totes les linies de codi contenen errors semantics, hi ha algunes trampes.
+Alguns dels errors que apareixen tambe es podrien considerar errors sintactics.
+Aquests son exemples representatius dels errors semantics que trobem a LANS, pero no es una
+llista exhaustiva de tots els casos que ens podem trobar.
+Despres de fer l'exercici, igualment es necessari rellegir l'enunciat amb deteniment per
+tenir un llistat complet de tots els errors semantics.
+
+
+EXERCICI 2:
+D'acord amb els tipus d'error semàntic que has identificat, dissenya la taula de simbols
+per guardar tota la informacio necessaria de cada token per poder fer l'analisi semantic.
+
+*/
+
+
+tipus
+	alias1 : enter;
+	
+	vec10 : vector enter mida 10 inici 1;
+	
+	tup1: tupla
+		real r1; 
+		enter e1;
+	ftupla;
+		
+ftipus
+
+funcio func1() retorna enter;
+
+funcio func2() retorna real;
+
+funcio func3() retorna enter; 
+
+funcio func5(enter e1, enter e10, enter e100) retorna enter;
+
+
+
+funcio f1(enter n) retorna enter;
+
+funcio f1(car c) retorna enter;
+
+funcio f1(car c) retorna boolea;
+
+
+funcio f2(ent enter i, entsor boolea b) retorna enter; 
+
+
+funcio f3(enter x, real y) retorna enter; 
+
+funcio f3(real x, enter y) retorna enter;  
+
+
+funcio abc(enter i) retorna boolea; 
+
+accio abc(enter i); 
+
+accio abc(entsor boolea b);
+
+accio a1(entsor enter x);
+
+accio a1(ent enter x); 
+
+
+
+constants
+	real r1 := 1.2;
+	real r2 := 1;
+	enter e1 := 3;
+	enter e2 := 3.4;
+	boolea CERT := cert;
+fconstants
+
+
+
+
+//============= Programa principal ================
+programa ProgramaTestSemantic
+variables
+	enter e1; 
+	enter e3;
+	enter e7;
+	car e3; 
+	car alias1; 
+	car c1;
+	boolea b1;
+	tup1 tupl1;
+	tup1 tupl2;
+	vec10 vec;
+fvariables
+
+
+b1 := 4; 
+r1 := 5; 
+e5 := 2+2; 
+e3 := 2*abc*abcde; 
+c1 := e3 ? 'a' : 'b'; 
+b1 := 4 == true; 
+tup1 := tup2; 
+
+escriure(); 
+escriureln();
+escriure(b1 ? e3 : c1); 
+
+e3:=f3(2,3);
+
+e3:=f1(cert); 
+
+tup1.a := fals; 
+e3 := vec[c1];
+e3 := vec[10];
+
+abc(cert); 
+abc(CERT); 
+
+mentre e3 fer 
+	e3 := e3+1;
+	escriure(e3);
+fmentre
+
+e3:= 4;
+
+mentre e3 < 10  fer
+	escriure(e3);
+fmentre
+
+per i de 1 fins e3 fer 
+	escriureln(i);
+fper
+
+
+per e7 de 10 fins e3 fer
+	escriureln(e7);
+fper
+
+	
+fprograma
+
+
+
+
+
+funcio func1() retorna enter 
+	retorna cert; 
+ffuncio
+
+
+funcio func2() retorna enter 
+	retorna  3;
+ffuncio
+
+
+funcio func4() retorna enter
+	retorna 3;
+ffuncio
+
+funcio func5(enter e1, enter e10, enter e50) retorna enter 
+variables
+	enter e10; 
+fvariables
+
+retorna e10;
+ffuncio
+
+accio abc(boolea b) 
+escriure(b);
+faccio

@@ -1,0 +1,36 @@
+constants
+	real PI := 3.14159;
+	enter set := 7;
+	car caracteraso := 'O';
+	car charespecial := '_';
+	real testdefinitiu := 123;
+	boolea boolOk := cert;
+	boolea boolFals := fals;
+	enter identificadorRedeclarat := 777;
+fconstants
+
+//============= Programa principal ================
+
+programa ProgramaTest
+variables
+	car c;
+	enter n;
+	enter e;
+	enter min;
+	enter max;
+	enter debug;
+	enter mitjana;
+	real reala;
+	boolea unaIt;
+	enter i;
+	enter j;
+	enter k;
+	mitjana errortipus;
+	boolea u;
+	boolea dos;
+	boolea tres;
+fvariables
+
+escriure(3.0 > 2);
+
+fprograma

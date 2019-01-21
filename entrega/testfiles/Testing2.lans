@@ -1,0 +1,124 @@
+constants
+	real PI := 3.14159;
+	enter set := 7;
+	car caracteraso := 'O';
+	car charespecial := '_';
+	real testdefinitiu := 123;
+	boolea boolOk := cert;
+	boolea boolFals := fals;
+	enter identificadorRedeclarat := 777;
+fconstants
+
+//============= Programa principal ================
+
+programa ProgramaTest
+variables
+	car c;
+	enter n;
+	enter d;
+	enter a;
+	enter e;
+	enter tmp;
+	enter comptador;
+	enter min;
+	enter max;
+	enter debug;
+	enter mitjana;
+	real reala;
+	boolea unaIt;
+	enter i;
+	enter j;
+	enter k;
+	mitjana errortipus;
+	boolea u;
+	boolea dos;
+	boolea tres;
+	boolea esdivisible;
+fvariables
+
+escriureln("Introdueix numero de primers:");
+llegir(a);
+
+n:=2;
+comptador:=0;
+/*
+mentre comptador < a fer
+	tmp := n % d;
+	esdivisible := tmp <= 0 & tmp >= 0;
+	mentre no esdivisible & (d*d)<n fer
+		d := d+1;
+		tmp := n % d;
+		esdivisible := tmp <= 0 & tmp >= 0;
+	fmentre
+	si no esdivisible | (n <= 2 & n >= 2) llavors
+		escriureln(n);
+		comptador := comptador +1;
+	fsi
+	n := n+2;
+fmentre
+*/
+
+//n:=10;
+//reala:=9.1234;
+//reala:=777;
+//escriureln(reala);
+/*i:=20;
+
+per i de 1 fins 10 fer
+	escriureln(i);
+fper*/
+
+//escriureln();
+
+//+ - / * % \ ~ 'no'
+//escriureln(7+6+5+4);
+//escriureln(10-2);
+//escriureln(123/5);
+//escriureln(3*5);
+/*
+escriureln(32%5);
+escriureln(323\12);
+escriureln(~5 - ~10);
+escriureln(no cert);
+escriureln(no fals);
+
+
+si fals llavors
+	escriureln(7);
+altrament
+	escriureln(0);
+fsi
+
+escriureln((cert?fals:cert)?7:0);
+
+
+u:=fals;
+dos:=fals;
+tres:=cert;
+
+mentre tres fer
+	si dos llavors
+		tres:=fals;
+	fsi
+	si u llavors
+		dos:=cert;
+	fsi
+	u:=cert;
+	escriureln("iteracio");
+	si no tres llavors
+		escriureln("no tres");
+	fsi
+fmentre
+
+mentre fals fer
+	escriureln(0);
+fmentre
+
+n:=123;
+//llegir(n);
+escriureln(n);
+*/
+
+//escriure(3.0 > 2);
+
+fprograma
