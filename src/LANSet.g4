@@ -447,6 +447,7 @@ function_definition: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RPA
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
 
 sentence returns [Vector<Long> code]
+@init{ $code = new Vector<>(); }
 :
           assignment TK_SEMICOLON |
           conditional | 
@@ -557,10 +558,20 @@ for_loop: KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=e
 
             } KW_DO sentence* KW_ENDFOR;
 
-while_loop: KW_WHILE expr /* boolean */ {
+while_loop returns [Vector<Long> code]
+@init{
+    $code = new Vector<>();
+    Vector<Long> c1Code = new Vector<>();
+    Vector<Long> c2Code = new Vector<>();
+}
+    : KW_WHILE expr /* boolean */ {
                 if(!$expr.typ.equals(BOOL_TYPE)){
                     errorSemantic=true;
                     typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
+                }
+                else{
+                    $code.addAll($expr.code);
+                    $code.add(program.IFEQ); //if false, jumps to else (c1.size()+6)
                 }
             }
             KW_DO sentence* KW_ENDWHILE;
@@ -637,6 +648,7 @@ writeln_operation:
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
 expr returns[String typ, int line, Vector<Long> code]
+@init{$code = new Vector<>();}
 //@after{System.out.println($typ);}
     :
     ternary {$typ = $ternary.typ; $line = $ternary.line;}
