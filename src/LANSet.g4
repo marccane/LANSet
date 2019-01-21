@@ -37,6 +37,10 @@ static final String ACTION_SUPERTYPE = "accio";
 static final String TUPLE_SUPERTYPE = "tupla";
 static final String VECTOR_SUPERTYPE = "vector";
 
+//constants
+Long mainStackSize = 200L;
+Long mainNumVars = 100L;
+
 SymTable<Registre> TS = new SymTable<Registre>(1000);
 Bytecode program;
 Long lineBreak;
@@ -332,13 +336,13 @@ start
     @init{
         program = new Bytecode(classFile);
         lineBreak = program.addConstant(BYTECODE_STRINGTYPE, "\n");
-        Vector<Long> code = new Vector<>(10);
+        Vector<Long> code = new Vector<>(100);
     }
 @after{
         if (!errorSemantic)
         {
             code.add(program.RETURN);
-            program.addMainCode(10L,10L,code);
+            program.addMainCode(mainStackSize,mainNumVars,code);
             program.write();
             System.out.println(classFile + ".class generat");
         }
@@ -637,7 +641,7 @@ conditional returns [Vector<Long> code]
             }
      };
 
-for_loop returns [Vector<Long> code] locals [boolean errorLocal] //7
+for_loop returns [Vector<Long> code] locals [boolean errorLocal]
 @init{
     $code = new Vector<>();
     Vector<Long> c1Code = new Vector<>();

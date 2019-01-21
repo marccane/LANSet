@@ -26,17 +26,43 @@ variables
 	enter j;
 	enter k;
 	mitjana errortipus;
+	boolea u;
+	boolea dos;
+	boolea tres;
 fvariables
-n:=10;
-reala:=9.1234;
+//n:=10;
+//reala:=9.1234;
 //escriureln(7+6+5+4);
 
-
-si cert llavors
+/*
+si fals llavors
 	escriureln(7);
 altrament
 	escriureln(0);
 fsi
+*/
+
+u:=fals;
+dos:=fals;
+tres:=cert;
+
+mentre tres fer
+	si dos llavors
+		tres:=fals;
+	fsi
+	si u llavors
+		dos:=cert;
+	fsi
+	u:=cert;
+	escriureln("iteracio");
+	si no tres llavors
+		escriureln("botifarra (vegana) de pages");
+	fsi
+fmentre
+
+mentre fals fer
+	escriureln(0);
+fmentre
 
 
 //llegir(n);
