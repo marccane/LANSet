@@ -18,6 +18,9 @@ static final String FLOAT_TYPE = "real";
 static final String BOOL_TYPE = "boolea";
 static final String STRING_TYPE = "string";
 
+static final String BOOL_TRUE = "cert";
+static final String BOOL_FALSE = "fals";
+
 static final String BYTECODE_VOIDTYPE = "V";
 static final String BYTECODE_CHARTYPE = "C";
 static final String BYTECODE_INTTYPE = "I";
@@ -451,7 +454,7 @@ basetype_value returns [String text, String typ, int line, Vector<Long> code]
                 value = program.addConstant(BYTECODE_INTTYPE, $tk.text);
                 break;
             case TK_BOOLEAN:
-                value = program.addConstant(BYTECODE_BOOLTYPE, $tk.text);
+                value = program.addConstant(BYTECODE_BOOLTYPE, ($tk.text.equals(BOOL_TRUE)?"1":"0"));
                 break;
             case TK_CHARACTER:
                 value = program.addConstant(BYTECODE_CHARTYPE, $tk.text);
@@ -633,34 +636,46 @@ conditional returns [Vector<Long> code]
             }
      };
 
-for_loop returns [Vector<Long> code]
-@init{ $code = new Vector<>(); }
+for_loop returns [Vector<Long> code] locals [boolean errorLocal]
+@init{
+    $code = new Vector<>();
+    Vector<Long> c1Code = new Vector<>();
+    $errorLocal = false;
+}
     : KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */ {
         Registre var_iter = TS.obtenir($id.text);
         if(var_iter == null){
+            $errorLocal = true;
             errorSemantic = true;
             undefinedIdentifierError($id.text, $id.line);
         }
         else if(!var_iter.getSupertype().equals(VARIABLE_SUPERTYPE)){
+            $errorLocal = true;
             errorSemantic = true;
             identifierIsNotAVariableError($id.text, $id.line);
         }
         else if(!var_iter.getType().equals(INT_TYPE)){
+            $errorLocal = true;
             errorSemantic = true;
             typeMismatchError2($id.text, $id.line, var_iter.getType(), INT_TYPE);
         }
 
         if(!$expr1.typ.equals(INT_TYPE)){
+            $errorLocal = true;
             errorSemantic=true;
             typeMismatchError2("*expressio*", $expr1.line, $expr1.typ, INT_TYPE);
         }
 
         if(!$expr2.typ.equals(INT_TYPE)){
+            $errorLocal = true;
             errorSemantic=true;
             typeMismatchError2("*expressio*", $expr2.line, $expr2.typ, INT_TYPE);
         }
 
-    } KW_DO sentence* KW_ENDFOR;
+    } KW_DO (sentence {c1Code.addAll($sentence.code);} )* KW_ENDFOR{
+        //if()
+    }
+;
 
 while_loop returns [Vector<Long> code]
 @init{
@@ -1140,6 +1155,18 @@ term4 returns [String typ, int line, Vector<Long> code]
         }
         else{ //no error
             $typ = $t.typ;
+
+            $code.addAll($t.code); //expression code
+
+            if($o.tk_type == KW_NO){ //if we're inverting a boolean expression
+                $code.add(program.BIPUSH);
+                $code.add(1L); //put a 1
+                $code.add(program.IXOR); //1 xor any = !any
+            }
+            else{ //KW_INVERT
+                /*if($t.typ.equals(INT_TYPE))
+                else*/
+            }
         }
 
         $line = $t.line;
@@ -1147,10 +1174,7 @@ term4 returns [String typ, int line, Vector<Long> code]
     |
     t = term5 {$typ = $t.typ; $line = $t.line; $code = $t.code;};
 //term4: (negation_operators term4) | term5;
-negation_operators returns [String text, int tk_type, Vector<Long> code]
-@init{ $code = new Vector<>(); }
-:
-    tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
+negation_operators returns [String text, int tk_type]: tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
 
 term5 returns [String typ, int line, Vector<Long> code]
 @after{$code.toString();}
