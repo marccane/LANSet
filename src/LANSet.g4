@@ -1083,9 +1083,12 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
                     //impossible to propagate a "less restrictive" type, so let's propagate the original one.
                 }
                 else if($leftType.equals(INT_TYPE) || $t2.typ.equals(INT_TYPE)){
-                    //maybe useless if statements
-                    if($leftType.equals(INT_TYPE) && $t2.typ.equals(FLOAT_TYPE)) $leftType = FLOAT_TYPE;
-                    else if($leftType.equals(FLOAT_TYPE) && $t2.typ.equals(INT_TYPE)) $leftType = FLOAT_TYPE;
+                    if($leftType.equals(INT_TYPE) && $t2.typ.equals(FLOAT_TYPE)) {
+                        $leftType = FLOAT_TYPE;
+                    }
+                    else if($leftType.equals(FLOAT_TYPE) && $t2.typ.equals(INT_TYPE)) {
+                        $leftType = FLOAT_TYPE; //unnecessary assignment
+                    }
                     else if( !($leftType.equals(INT_TYPE) && $t2.typ.equals(INT_TYPE)) ){ //error, leftType and t2 types doesn't match
                         errorSemantic = true;
                         typeMismatchError($leftType, $t2.typ, $o.line);
@@ -1103,8 +1106,12 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
                     errorSemantic = true;
                     operatorTypeMismatchError($leftType, $o.text, $o.line, INT_TYPE + " or " + FLOAT_TYPE);
                 }
-                else{ //if tis integer or real
-                    if($t2.typ.equals(FLOAT_TYPE)) $leftType = FLOAT_TYPE; //integer promotion if needed
+                else{ //if its integer or real
+                    if($t2.typ.equals(FLOAT_TYPE)) {
+                        //if()
+                        $leftType = FLOAT_TYPE; //integer promotion if needed
+
+                    }
                     //otherwise promotion depends on leftType, so no changes needed
                 }
 
@@ -1211,9 +1218,13 @@ term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
                 }
 
                 if($o.tk_type == TK_DIV) {
-                    $leftType = FLOAT_TYPE; //division always spits a real number.
+
+                    if($leftType.equals(INT_TYPE)) $code.add(program.I2F);
                     $code.addAll($t2.code); //right operand
+                    if($t2.typ.equals(INT_TYPE)) $code.add(program.I2F);
                     $code.add(program.FDIV);
+
+                    $leftType = FLOAT_TYPE; //division always spits a real number.
                 }
                 else{ //multiplication
                     if($t2.typ.equals(INT_TYPE) && $leftType.equals(INT_TYPE)) {
@@ -1222,9 +1233,13 @@ term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
                         $code.add(program.IMUL);
                     }
                     else if(!errorLocal){
-                        $leftType = FLOAT_TYPE; //at least one of them is real, and the other is real or integer
+
+                        if($leftType.equals(INT_TYPE)) $code.add(program.I2F);
                         $code.addAll($t2.code); //right operand
+                        if($t2.typ.equals(INT_TYPE)) $code.add(program.I2F);
                         $code.add(program.FMUL);
+
+                        $leftType = FLOAT_TYPE; //at least one of them is real, and the other is real or integer
                     }
                     else $leftType = INT_TYPE;//typing error, propagate less restrictive type in order to continue semantic analysis
                 }
