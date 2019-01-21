@@ -546,11 +546,12 @@ sentence returns [Vector<Long> code]
           writeln_operation TK_SEMICOLON {$code.addAll($writeln_operation.code);};
 
 assignment returns [Vector<Long> code]
-@init{ $code = new Vector<>(); }
+@init{ $code = new Vector<>();}
     :
     lval=lvalue
     TK_ASSIGNMENT
     e=expr{
+        $code.addAll($e.code);
 
         Registre var = TS.obtenir($lval.ident);
         Boolean canBePromoted = ($lval.typ.equals(FLOAT_TYPE) && $e.typ.equals(INT_TYPE));
@@ -847,9 +848,9 @@ expr returns[String typ, int line, Vector<Long> code]
 
 direct_evaluation_expr returns[String typ, int line, Vector<Long> code]
 @init{$code = new Vector<>();}
-@after{$code.addAll(new Vector<>());}
+@after{$code.toString();}
 :
-    cv=constant_value {$typ = $cv.typ; $line = $cv.line; $code = $constant_value.code;} |
+    cv=constant_value {$typ = $cv.typ; $line = $cv.line; $code.addAll($constant_value.code);} |
     id=TK_IDENTIFIER { //constant or variable
         Registre var = TS.obtenir($id.text);
 
@@ -912,7 +913,7 @@ direct_evaluation_expr returns[String typ, int line, Vector<Long> code]
 constant_value returns [String typ, int line, Vector<Long> code]
 @init{$code = new Vector<>();}
     :
-    b=basetype_value{$typ = $b.typ; $line = $b.line; $code = $basetype_value.code;}
+    b=basetype_value{$typ = $b.typ; $line = $b.line; $code = $b.code;}
     |
     s=TK_STRING {
         $typ = STRING_TYPE;
@@ -1207,12 +1208,14 @@ term4 returns [String typ, int line, Vector<Long> code]
     |
     t = term5 {$typ = $t.typ; $line = $t.line; $code = $t.code;};
 //term4: (negation_operators term4) | term5;
-negation_operators returns [String text, int tk_type]: tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
+negation_operators returns [String text, int tk_type]:
+    tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
 
 term5 returns [String typ, int line, Vector<Long> code]
+@init{$code = new Vector<>();}
 @after{$code.toString();}
     :
-    direct_evaluation_expr {$typ = $direct_evaluation_expr.typ; $line = $direct_evaluation_expr.line; $code = $direct_evaluation_expr.code;}
+    direct_evaluation_expr {$typ = $direct_evaluation_expr.typ; $line = $direct_evaluation_expr.line; $code.addAll($direct_evaluation_expr.code);}
     |
     TK_LPAR expr {$typ = $expr.typ; $line = $expr.line; $code = $expr.code;} TK_RPAR;
 ///////////////////////////////////////////////////////////////////////////////
