@@ -507,30 +507,28 @@ conditional returns [Vector<Long> code]
     Vector<Long> c1Code = new Vector<>();
     Vector<Long> c2Code = new Vector<>();
 }
-    : KW_IF expr /* boolean */
-            KW_THEN (sentence{c1Code.addAll($sentence.code);})*
-            (KW_ELSE (sentence{c2Code.addAll($sentence.code);})*)?
-            KW_ENDIF{
-                if(!$expr.typ.equals(BOOL_TYPE)){
-                    errorSemantic=true;
-                    typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
-                }
-                else{
-                    $code.addAll($expr.code);
-                    $code.add(program.IFEQ); //if false, jumps to else (c1.size()+6)
+    : KW_IF expr /* boolean */ KW_THEN (sentence{c1Code.addAll($sentence.code);})*
+     (KW_ELSE (sentence{c2Code.addAll($sentence.code);})*)? KW_ENDIF{
+        if(!$expr.typ.equals(BOOL_TYPE)){
+            errorSemantic=true;
+            typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
+        }
+        else{
+            $code.addAll($expr.code);
+            $code.add(program.IFEQ); //if false, jumps to else (c1.size()+6)
 
-                    Long jump = 2L + c1Code.size() + 3L + 1L; //if condition is false, jump to c2 (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
-                    $code.add(program.nByte(jump,2));
-                    $code.add(program.nByte(jump,1));
-                    $code.addAll(c1Code);
-                    $code.add(program.GOTO);
+            Long jump = 2L + c1Code.size() + 3L + 1L; //if condition is false, jump to c2 (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
+            $code.add(program.nByte(jump,2));
+            $code.add(program.nByte(jump,1));
+            $code.addAll(c1Code);
 
-                    jump = c2Code.size()+3L; //if we're on the end of c1, skip c2 (3 = goto1 + goto2 + 1)
-                    $code.add(program.nByte(jump,2));
-                    $code.add(program.nByte(jump,1));
-                    $code.addAll(c2Code);
-                }
-            };
+            jump = c2Code.size()+3L; //if we're on the end of c1, skip c2 (3 = goto1 + goto2 + 1)
+            $code.add(program.GOTO);
+            $code.add(program.nByte(jump,2));
+            $code.add(program.nByte(jump,1));
+            $code.addAll(c2Code);
+        }
+     };
 
 for_loop returns [Vector<Long> code]
 @init{ $code = new Vector<>(); }
@@ -565,19 +563,27 @@ while_loop returns [Vector<Long> code]
 @init{
     $code = new Vector<>();
     Vector<Long> c1Code = new Vector<>();
-    Vector<Long> c2Code = new Vector<>();
 }
-    : KW_WHILE expr /* boolean */ {
-                if(!$expr.typ.equals(BOOL_TYPE)){
-                    errorSemantic=true;
-                    typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
-                }
-                else{
-                    $code.addAll($expr.code);
-                    $code.add(program.IFEQ); //if false, jumps to else (c1.size()+6)
-                }
-            }
-            KW_DO sentence* KW_ENDWHILE;
+    : KW_WHILE expr /* boolean */ KW_DO (sentence {c1Code.addAll($sentence.code);} )* KW_ENDWHILE {
+        if(!$expr.typ.equals(BOOL_TYPE)){
+            errorSemantic=true;
+            typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
+        }
+        else{
+            $code.addAll($expr.code);
+
+            $code.add(program.IFEQ); //if false, jumps to end of the while (c1.size()+6) (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
+            Long jump = 2L + c1Code.size() + 3L + 1L;
+            $code.add(program.nByte(jump,2));
+            $code.add(program.nByte(jump,1));
+            $code.addAll(c1Code);
+
+            jump = 0L-($code.size()); //jump to first instruction of expr, so -(c1.size + expr.code.size + 3) and also actual $code.size
+            $code.add(program.GOTO);
+            $code.add(program.nByte(jump,2));
+            $code.add(program.nByte(jump,1));
+        }
+    };
 
 function_call returns [String typ, int line, Vector<Long> code]
 @init{ $code = new Vector<>(); }
