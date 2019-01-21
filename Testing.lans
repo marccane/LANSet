@@ -28,6 +28,6 @@ variables
 	mitjana errortipus;
 fvariables
 
-escriureln(10);
+escriureln("hola");
 
 fprograma
