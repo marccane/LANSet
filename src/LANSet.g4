@@ -36,7 +36,7 @@ static final String VECTOR_SUPERTYPE = "vector";
 
 SymTable<Registre> TS = new SymTable<Registre>(1000);
 Bytecode program;
-Long jump;
+Long lineBreak;
 Long nVar = 0L;
 boolean errorSintactic = false;
 boolean errorSemantic = false;
@@ -180,6 +180,35 @@ public void operatorTypeMismatchError(String type, String op, int line, String e
     System.out.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expected + " instead.");
 }
 
+public Vector<Long> generateWriteCode(String type){
+    Vector <Long> code = new Vector<>();
+
+    code.add(program.INVOKESTATIC);
+
+    if(bcType.equals(BYTECODE_CHARTYPE)){
+        code.add(program.nByte(program.mPutChar,2));
+        code.add(program.nByte(program.mPutChar,1));
+    }
+    else if(bcType.equals(BYTECODE_INTTYPE)){
+        code.add(program.nByte(program.mPutInt,2));
+        code.add(program.nByte(program.mPutInt,1));
+    }
+    else if(bcType.equals(BYTECODE_FLOATTYPE)){
+        code.add(program.nByte(program.mPutFloat,2));
+        code.add(program.nByte(program.mPutFloat,1));
+    }
+    else if(bcType.equals(BYTECODE_BOOLTYPE)){
+        code.add(program.nByte(program.mPutBoolean,2));
+        code.add(program.nByte(program.mPutBoolean,1));
+    }
+    else if(bcType.equals(BYTECODE_STRINGTYPE)){
+        code.add(program.nByte(program.mPutString,2));
+        code.add(program.nByte(program.mPutString,1));
+    }
+
+    return code;
+}
+
 }
 
 //////////////////// FRAGMENTS ////////////////////
@@ -299,6 +328,7 @@ inici: (~EOF)+ ; //Lexer testing rule
 start
     @init{
         program = new Bytecode(classFile);
+        lineBreak = program.addConstant(BYTECODE_STRINGTYPE, "\n");
         Vector<Long> code = new Vector<>(10);
     }
 @after{
@@ -687,13 +717,27 @@ write_operation returns [Vector<Long> code]
             errorSemantic = true;
             writeOperationUnsupportedTypeError($e.typ, $e.line);
         }
+        else{
+            $code.addAll($e.code);
+
+            String bcType = bytecodeType($e.typ);
+
+            $code.addAll(generateWriteCode(bcType));
+        }
     }
     (
         TK_COMMA
         ea=expr{
             if(!(isBasetype($ea.typ) || $ea.typ.equals(STRING_TYPE))){
                 errorSemantic = true;
-                writeOperationUnsupportedTypeError($e.typ, $e.line);
+                writeOperationUnsupportedTypeError($ea.typ, $ea.line);
+            }
+            else{
+                 $code.addAll($ea.code);
+
+                 String bcType = bytecodeType($ea.typ);
+
+                 $code.addAll(generateWriteCode(bcType));
             }
         }
     )*
@@ -701,6 +745,12 @@ write_operation returns [Vector<Long> code]
 
 writeln_operation returns [Vector<Long> code]
 @init{ $code = new Vector<>(); }
+@after{
+    $code.add(program.LDC_W);
+    $code.add(program.nByte(lineBreak,2));
+    $code.add(program.nByte(lineBreak,1));
+    $code.addAll(generateWriteCode(BYTECODE_STRINGTYPE));
+}
     :
     KW_OUTPUTLN
     TK_LPAR
@@ -710,12 +760,26 @@ writeln_operation returns [Vector<Long> code]
                 errorSemantic = true;
                 writeOperationUnsupportedTypeError($e.typ, $e.line);
             }
+            else{
+                $code.addAll($e.code);
+
+                String bcType = bytecodeType($e.typ);
+
+                $code.addAll(generateWriteCode(bcType));
+            }
         }
         (
             TK_COMMA ea=expr{
                 if(!(isBasetype($ea.typ) || $ea.typ.equals(STRING_TYPE))){
                     errorSemantic = true;
-                    writeOperationUnsupportedTypeError($e.typ, $e.line);
+                    writeOperationUnsupportedTypeError($ea.typ, $ea.line);
+                }
+                else{
+                     $code.addAll($ea.code);
+
+                     String bcType = bytecodeType($ea.typ);
+
+                     $code.addAll(generateWriteCode(bcType));
                 }
             }
         )*
@@ -726,7 +790,7 @@ writeln_operation returns [Vector<Long> code]
 ///////////////////////////////////////////////////////////////////////////////
 
 
-/////////////////////////////// SENTENCES BLOCK ///////////////////////////////
+////////////////////////////// EXPRESSIONS BLOCK //////////////////////////////
 expr returns[String typ, int line, Vector<Long> code]
 @init{$code = new Vector<>();}
 //@after{System.out.println($typ);}
@@ -1044,6 +1108,8 @@ term5 returns [String typ, int line]
     |
     TK_LPAR expr {$typ = $expr.typ; $line = $expr.line;} TK_RPAR;
 ///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////// OLD GARBAGE BLOCK //////////////////////////////
 /*
 operation: term1 operation_lr;
 operation_lr: logic_operators operation | ;
