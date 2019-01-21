@@ -903,7 +903,7 @@ constant_value returns [String typ, int line, Vector<Long> code]
         $typ = STRING_TYPE;
         $line = $s.line;
 
-        Long str = program.addConstant(BYTECODE_STRINGTYPE, $s.text);
+        Long str = program.addConstant(BYTECODE_STRINGTYPE, $s.text.substring(1,$s.text.length()-1));
         $code.add(program.LDC_W);
         $code.add(program.nByte(str,2));
         $code.add(program.nByte(str,1));
