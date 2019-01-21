@@ -48,6 +48,7 @@ variables
 	enter i;
 	enter j;
 	enter k;
+	mitjana errortipus;
 fvariables
 
 PI := 1.234; //error: intent de modificar constant

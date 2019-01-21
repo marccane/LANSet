@@ -290,8 +290,18 @@ inici: (~EOF)+ ; //Lexer testing rule
 ////////////////////////////////// MAIN RULE //////////////////////////////////
 
 start
-@init{program = new Bytecode(classFile);}
-@after{program.show();}
+    @init{
+        program = new Bytecode(classFile);
+        Vector<Long> code = new Vector<>(10);
+    }
+@after{
+        if (!errorSemantic)
+        {
+            code.add(program.RETURN);
+            program.addMainCode(10L,10L,code);
+            program.write();
+        }
+    }
     :  type_declaration_block?
        func_declaration_block
        const_declaration_block?
