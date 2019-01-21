@@ -185,23 +185,23 @@ public Vector<Long> generateWriteCode(String type){
 
     code.add(program.INVOKESTATIC);
 
-    if(bcType.equals(BYTECODE_CHARTYPE)){
+    if(type.equals(BYTECODE_CHARTYPE)){
         code.add(program.nByte(program.mPutChar,2));
         code.add(program.nByte(program.mPutChar,1));
     }
-    else if(bcType.equals(BYTECODE_INTTYPE)){
+    else if(type.equals(BYTECODE_INTTYPE)){
         code.add(program.nByte(program.mPutInt,2));
         code.add(program.nByte(program.mPutInt,1));
     }
-    else if(bcType.equals(BYTECODE_FLOATTYPE)){
+    else if(type.equals(BYTECODE_FLOATTYPE)){
         code.add(program.nByte(program.mPutFloat,2));
         code.add(program.nByte(program.mPutFloat,1));
     }
-    else if(bcType.equals(BYTECODE_BOOLTYPE)){
+    else if(type.equals(BYTECODE_BOOLTYPE)){
         code.add(program.nByte(program.mPutBoolean,2));
         code.add(program.nByte(program.mPutBoolean,1));
     }
-    else if(bcType.equals(BYTECODE_STRINGTYPE)){
+    else if(type.equals(BYTECODE_STRINGTYPE)){
         code.add(program.nByte(program.mPutString,2));
         code.add(program.nByte(program.mPutString,1));
     }
