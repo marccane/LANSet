@@ -1175,8 +1175,7 @@ term4 returns [String typ, int line, Vector<Long> code]
     |
     t = term5 {$typ = $t.typ; $line = $t.line; $code = $t.code;};
 //term4: (negation_operators term4) | term5;
-negation_operators returns [String text, int tk_type]: tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
-:
+negation_operators returns [String text, int tk_type]:
     tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
 
 term5 returns [String typ, int line, Vector<Long> code]
