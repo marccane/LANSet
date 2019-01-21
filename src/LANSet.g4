@@ -1082,7 +1082,6 @@ term2 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
 addition_operators returns [String text, int tk_type, int line]: tk=(TK_SUB | TK_SUM) {$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
 term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
-@init{ $code = new Vector<>(); }
 @after{
     $typ = $leftType;
     $line = $t1.line;
@@ -1102,6 +1101,10 @@ term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
                     errorSemantic = true;
                     operatorTypeMismatchError($leftType, $o.text, $o.line, INT_TYPE);
                 }
+                else{ //no error
+                    if($o.tk_type == TK_INTDIV) $code.add(program.IDIV);
+                    else $code.add(program.IREM);
+                }
 
                 $leftType = INT_TYPE;
             }
@@ -1120,10 +1123,19 @@ term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
                     operatorTypeMismatchError($leftType, $o.text, $o.line, INT_TYPE + " or " + FLOAT_TYPE);
                 }
 
-                if($o.tk_type == TK_DIV) $leftType = FLOAT_TYPE; //division always spits a real number.
+                if($o.tk_type == TK_DIV) {
+                    $leftType = FLOAT_TYPE; //division always spits a real number.
+                    $code.add(program.FDIV);
+                }
                 else{ //multiplication
-                    if($t2.typ.equals(INT_TYPE) && $leftType.equals(INT_TYPE)) $leftType = INT_TYPE; //if both are integer type
-                    else if(!errorLocal) $leftType = FLOAT_TYPE; //at least one of them is real, and the other is real or integer
+                    if($t2.typ.equals(INT_TYPE) && $leftType.equals(INT_TYPE)) {
+                        $leftType = INT_TYPE; //if both are integer type
+                        $code.add(program.IMUL);
+                    }
+                    else if(!errorLocal){
+                        $leftType = FLOAT_TYPE; //at least one of them is real, and the other is real or integer
+                        $code.add(program.FMUL);
+                    }
                     else $leftType = INT_TYPE;//typing error, propagate less restrictive type in order to continue semantic analysis
                 }
 
