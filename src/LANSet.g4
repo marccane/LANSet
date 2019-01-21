@@ -1067,8 +1067,24 @@ term2 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
         t2 = term3{
             if($t2.typ.equals(FLOAT_TYPE)){ //if t2 is float type, integer promotion may be needed
                 $leftType = FLOAT_TYPE;
+                $code.addAll($t2.code); //right operand
+
+                if($o.tk_type == TK_SUM) $code.add(program.FADD);
+                else $code.add(program.FSUB);
             }
-            else if ($t2.typ.equals(INT_TYPE)){} //if t2 is integer, the result depends on leftType, so no action is needed.
+            else if ($t2.typ.equals(INT_TYPE)){ //if t2 is integer, the result depends on leftType.
+
+                $code.addAll($t2.code); //right operand
+
+                if($leftType.equals(FLOAT_TYPE)){
+                    if($o.tk_type == TK_SUM) $code.add(program.FADD);
+                    else $code.add(program.FSUB);
+                }
+                else{
+                    if($o.tk_type == TK_SUM) $code.add(program.IADD);
+                    else $code.add(program.ISUB);
+                }
+            }
             else{ //typing error
                 errorSemantic = true;
                 operatorTypeMismatchError($t2.typ, $o.text, $o.line, INT_TYPE + " or " + FLOAT_TYPE);
@@ -1102,6 +1118,8 @@ term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
                     operatorTypeMismatchError($leftType, $o.text, $o.line, INT_TYPE);
                 }
                 else{ //no error
+                    $code.addAll($t2.code); //right operand
+
                     if($o.tk_type == TK_INTDIV) $code.add(program.IDIV);
                     else $code.add(program.IREM);
                 }
@@ -1125,15 +1143,18 @@ term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
 
                 if($o.tk_type == TK_DIV) {
                     $leftType = FLOAT_TYPE; //division always spits a real number.
+                    $code.addAll($t2.code); //right operand
                     $code.add(program.FDIV);
                 }
                 else{ //multiplication
                     if($t2.typ.equals(INT_TYPE) && $leftType.equals(INT_TYPE)) {
                         $leftType = INT_TYPE; //if both are integer type
+                        $code.addAll($t2.code); //right operand
                         $code.add(program.IMUL);
                     }
                     else if(!errorLocal){
                         $leftType = FLOAT_TYPE; //at least one of them is real, and the other is real or integer
+                        $code.addAll($t2.code); //right operand
                         $code.add(program.FMUL);
                     }
                     else $leftType = INT_TYPE;//typing error, propagate less restrictive type in order to continue semantic analysis
