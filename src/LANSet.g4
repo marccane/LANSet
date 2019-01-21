@@ -793,6 +793,7 @@ writeln_operation returns [Vector<Long> code]
 ////////////////////////////// EXPRESSIONS BLOCK //////////////////////////////
 expr returns[String typ, int line, Vector<Long> code]
 @init{$code = new Vector<>();}
+@after{$code.toString();}
 //@after{System.out.println($typ);}
     :
     ternary {$typ = $ternary.typ; $line = $ternary.line;}
@@ -802,6 +803,7 @@ expr returns[String typ, int line, Vector<Long> code]
 
 direct_evaluation_expr returns[String typ, int line, Vector<Long> code]
 @init{$code = new Vector<>();}
+@after{$code.addAll(new Vector<>());}
 :
     cv=constant_value {$typ = $cv.typ; $line = $cv.line;} |
     id=TK_IDENTIFIER { //constant or variable
@@ -897,9 +899,10 @@ ternary returns [String typ, int line]
 
 //HAZARD ZONE
 subexpr returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator]
-@init{ $hasOperator = false;}
+@init{ $hasOperator = false; $code = new Vector<>();}
+@after{$code.toString();}
     :
-    t1=term1 {$typ = $t1.typ; $line = $t1.line;}
+    t1=term1 {$typ = $t1.typ; $line = $t1.line; $code.addAll($t1.code);}
     (
         o=logic_operators {
             if(!$hasOperator){ //if there's at least one operation, typecheck of t1 is needed
@@ -923,9 +926,9 @@ logic_operators returns [String text, int tk_type, int line]: tk=(TK_AND | TK_OR
 
 term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator, String leftType]
 @init{ $code = new Vector<>(); $hasOperator = false;}
-@after{$typ = $leftType;}
+@after{$typ = $leftType; $code.toString();}
     :
-    t1 = term2 {$leftType = $t1.typ; $line = $t1.line;}
+    t1 = term2 {$leftType = $t1.typ; $line = $t1.line; $code.addAll($t1.code);}
     (
         o = equality_operator{
             if(!$hasOperator){ //first left operand found, typecheck needed
@@ -992,7 +995,7 @@ equality_operator returns [String text, int tk_type, int line]: tk=(TK_EQUALS | 
 
 term2 returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator, String leftType]
 @init{ $code = new Vector<>(); $hasOperator = false;}
-@after{$typ = $leftType;}
+@after{$typ = $leftType; $code.toString();}
     :
     t1 = term3 {$leftType = $t1.typ; $line = $t1.line;}
     (
@@ -1028,6 +1031,7 @@ term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
 @after{
     $typ = $leftType;
     $line = $t1.line;
+    $code.toString();
 }
     :
     t1 = term4 {$leftType = $t1.typ;}
@@ -1078,6 +1082,7 @@ multiplication_operators returns [String text, int tk_type, int line]: tk=(TK_PR
 
 term4 returns [String typ, int line, Vector<Long> code]
 @init{ $code = new Vector<>(); }
+@after{$code.toString();}
     :
     (
         o = negation_operators
@@ -1102,10 +1107,11 @@ term4 returns [String typ, int line, Vector<Long> code]
     |
     t = term5 {$typ = $t.typ; $line = $t.line; $code = $t.code;};
 //term4: (negation_operators term4) | term5;
-negation_operators returns [String text, int tk_type, Vector<Long> code]:
+negation_operators returns [String text, int tk_type]:
     tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
 
 term5 returns [String typ, int line, Vector<Long> code]
+@after{$code.toString();}
     :
     direct_evaluation_expr {$typ = $direct_evaluation_expr.typ; $line = $direct_evaluation_expr.line; $code = $direct_evaluation_expr.code;}
     |
