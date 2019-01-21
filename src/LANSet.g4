@@ -37,7 +37,7 @@ static final String VECTOR_SUPERTYPE = "vector";
 SymTable<Registre> TS = new SymTable<Registre>(1000);
 Bytecode program;
 Long jump;
-int nVar = 0;
+Long nVar = 0L;
 boolean errorSintactic = false;
 boolean errorSemantic = false;
 
@@ -307,7 +307,11 @@ start
             code.add(program.RETURN);
             program.addMainCode(10L,10L,code);
             program.write();
+            System.out.println(classFile + ".class generat");
         }
+        else System.out.println(classFile + ".class NO generat");
+
+        //program.show();
     }
     :  type_declaration_block?
        func_declaration_block
@@ -435,7 +439,10 @@ var_declaration
                 if($type.tkType == TK_IDENTIFIER){ //alias, tuple or vector
                     System.out.println("TODO: alias, tuple or vector variable detected");
                 }
-                else registerBasetypeVariable($type.text, $id);
+                else {
+                    registerBasetypeVariable($type.text, $id);
+                    TS.obtenir($id.text).putDir(nVar++);
+                }
             }
         }
     ;
@@ -477,10 +484,6 @@ sentence returns [Vector<Long> code]
 
 assignment returns [Vector<Long> code]
 @init{ $code = new Vector<>(); }
-/*@init{
-        //TS.inserir("a", new Registre("a", VARIABLE_SUPERTYPE, FLOAT_TYPE, 1234, -1));
-        //TS.inserir("b", new Registre("b", VARIABLE_SUPERTYPE, CHAR_TYPE, 1234, -1));
-        }*/
     :
     lval=lvalue
     TK_ASSIGNMENT
@@ -500,6 +503,29 @@ assignment returns [Vector<Long> code]
         else if(!$lval.typ.equals($e.typ) && !canBePromoted){
             errorSemantic = true;
             typeMismatchError($lval.typ, $e.typ, $lval.line);
+        }
+        else{ //lval es un identificador existent, tipus variable i els tipus casen
+            if(canBePromoted){ //has to be promoted
+                $code.add(program.I2F);
+            }
+            String lvalVarType = var.getType();
+
+            switch(lvalVarType){ //tipus basics
+               case CHAR_TYPE:
+                   $code.add(program.ISTORE); //mhhhhh
+                   break;
+               case INT_TYPE:
+                   $code.add(program.ISTORE);
+                   break;
+               case FLOAT_TYPE:
+                   $code.add(program.FSTORE);
+                   break;
+               case BOOL_TYPE:
+                   $code.add(program.ISTORE); //mhhhhh
+                   break;
+            }
+            Long lvalVarDir = var.getDir();
+            $code.add(lvalVarDir); //index (long? hauria de ser byte?)
         }
 
     }; //lvalue or expr
@@ -729,6 +755,22 @@ direct_evaluation_expr returns[String typ, int line, Vector<Long> code]
 
             if(isBasetype(varType)){
                 $typ = varType;
+                switch(varType){
+                    case CHAR_TYPE:
+                        $code.add(program.ILOAD); //mhhhhh
+                        break;
+                    case INT_TYPE:
+                        $code.add(program.ILOAD);
+                        break;
+                    case FLOAT_TYPE:
+                        $code.add(program.FLOAD);
+                        break;
+                    case BOOL_TYPE:
+                        $code.add(program.ILOAD); //mhhhhh
+                        break;
+                }
+                Long varDir = var.getDir();
+                $code.add(varDir); //index (long? hauria de ser byte?)
             }
             else{
                 Registre t = TS.obtenir(varType); //existence validation is not needed.

@@ -1,3 +1,33 @@
-per i de a fins b fer
-	escriureln();
-fper
+constants
+	real PI := 3.14159;
+	enter set := 7;
+	car caracteraso := 'O';
+	car charespecial := '_';
+	real testdefinitiu := 123;
+	boolea boolOk := cert;
+	boolea boolFals := fals;
+	enter identificadorRedeclarat := 777;
+fconstants
+
+//============= Programa principal ================
+
+programa ProgramaTest
+variables
+	car c;
+	enter n;
+	enter e;
+	enter min;
+	enter max;
+	enter debug;
+	enter mitjana;
+	real testassigreal;
+	boolea unaIt;
+	enter i;
+	enter j;
+	enter k;
+	mitjana errortipus;
+fvariables
+
+escriureln(10);
+
+fprograma

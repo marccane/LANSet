@@ -5,17 +5,14 @@
 
 ftipus
 	
-*/
 funcio factorial(enter n) retorna enter;
 
 accio hanoi(enter n, car origen, car desti, car aux);
 
-
 accio estadistiques(vec_E_1K v, ent enter n, entsor enter min, entsor enter max, entsor real mitjana);
 
-
 funcio area(punt2D p1, punt2D p2) retorna real;
-
+*/
 
 constants
 	real PI := 3.14159;
