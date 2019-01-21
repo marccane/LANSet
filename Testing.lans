@@ -117,4 +117,7 @@ n:=123;
 //llegir(n);
 escriureln(n);
 */
+
+//escriure(3.0 > 2);
+
 fprograma
