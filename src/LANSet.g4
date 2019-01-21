@@ -348,7 +348,7 @@ start
        const_declaration_block?
        KW_PROGRAM TK_IDENTIFIER
        var_declaration_block?
-       sentence*
+       (sentence{code.addAll($sentence.code);})*
        KW_ENDPROGRAM
        func_implementation_block;
 
@@ -797,7 +797,7 @@ expr returns[String typ, int line, Vector<Long> code]
     :
     ternary {$typ = $ternary.typ; $line = $ternary.line;}
     |
-    subexpr {$typ = $subexpr.typ; $line = $subexpr.line;}
+    subexpr {$typ = $subexpr.typ; $line = $subexpr.line; $code = $subexpr.code;}
     ; //care with priority
 
 direct_evaluation_expr returns[String typ, int line, Vector<Long> code]
@@ -896,7 +896,7 @@ ternary returns [String typ, int line]
     ;
 
 //HAZARD ZONE
-subexpr returns [String typ, int line] locals [boolean hasOperator]
+subexpr returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator]
 @init{ $hasOperator = false;}
     :
     t1=term1 {$typ = $t1.typ; $line = $t1.line;}
@@ -921,8 +921,8 @@ subexpr returns [String typ, int line] locals [boolean hasOperator]
 //operation: (term1 logic_operators operation) | term1;
 logic_operators returns [String text, int tk_type, int line]: tk=(TK_AND | TK_OR){$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
-term1 returns [String typ, int line] locals[boolean hasOperator, String leftType]
-@init{$hasOperator = false;}
+term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator, String leftType]
+@init{ $code = new Vector<>(); $hasOperator = false;}
 @after{$typ = $leftType;}
     :
     t1 = term2 {$leftType = $t1.typ; $line = $t1.line;}
@@ -990,8 +990,8 @@ term1 returns [String typ, int line] locals[boolean hasOperator, String leftType
 //term1: (term2 equality_operator term1) | term2;
 equality_operator returns [String text, int tk_type, int line]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) {$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
-term2 returns [String typ, int line] locals [boolean hasOperator, String leftType]
-@init{$hasOperator = false;}
+term2 returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator, String leftType]
+@init{ $code = new Vector<>(); $hasOperator = false;}
 @after{$typ = $leftType;}
     :
     t1 = term3 {$leftType = $t1.typ; $line = $t1.line;}
@@ -1023,7 +1023,8 @@ term2 returns [String typ, int line] locals [boolean hasOperator, String leftTyp
 //term2: (term3 addition_operators term2) | term3;
 addition_operators returns [String text, int tk_type, int line]: tk=(TK_SUB | TK_SUM) {$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
-term3 returns [String typ, int line] locals [String leftType]
+term3 returns [String typ, int line, Vector<Long> code] locals [String leftType]
+@init{ $code = new Vector<>(); }
 @after{
     $typ = $leftType;
     $line = $t1.line;
@@ -1075,7 +1076,8 @@ term3 returns [String typ, int line] locals [String leftType]
 //term3: (term4 multiplication_operators term3) | term4;
 multiplication_operators returns [String text, int tk_type, int line]: tk=(TK_PROD | TK_DIV | TK_INTDIV | TK_MODULO) {$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
-term4 returns [String typ, int line]
+term4 returns [String typ, int line, Vector<Long> code]
+@init{ $code = new Vector<>(); }
     :
     (
         o = negation_operators
@@ -1098,15 +1100,16 @@ term4 returns [String typ, int line]
         $line = $t.line;
     }
     |
-    t = term5 {$typ = $t.typ; $line = $t.line;};
+    t = term5 {$typ = $t.typ; $line = $t.line; $code = $t.code;};
 //term4: (negation_operators term4) | term5;
-negation_operators returns [String text, int tk_type]: tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
+negation_operators returns [String text, int tk_type, Vector<Long> code]:
+    tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
 
-term5 returns [String typ, int line]
+term5 returns [String typ, int line, Vector<Long> code]
     :
-    direct_evaluation_expr {$typ = $direct_evaluation_expr.typ; $line = $direct_evaluation_expr.line;}
+    direct_evaluation_expr {$typ = $direct_evaluation_expr.typ; $line = $direct_evaluation_expr.line; $code = $direct_evaluation_expr.code;}
     |
-    TK_LPAR expr {$typ = $expr.typ; $line = $expr.line;} TK_RPAR;
+    TK_LPAR expr {$typ = $expr.typ; $line = $expr.line; $code = $expr.code;} TK_RPAR;
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////// OLD GARBAGE BLOCK //////////////////////////////
