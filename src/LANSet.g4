@@ -18,8 +18,8 @@ static final String FLOAT_TYPE = "real";
 static final String BOOL_TYPE = "boolea";
 static final String STRING_TYPE = "string";
 
-static final String BOOL_TRUE = "cert";
-static final String BOOL_FALSE = "fals";
+static final String BOOL_TRUE = "'cert'";
+static final String BOOL_FALSE = "'fals'";
 
 static final String BYTECODE_VOIDTYPE = "V";
 static final String BYTECODE_CHARTYPE = "C";
@@ -973,6 +973,9 @@ subexpr returns [String typ, int line, Vector<Long> code] locals [boolean hasOpe
             if(!$t2.typ.equals(BOOL_TYPE)){ //check if the right operand is boolean
                 errorSemantic = true;
                 operatorTypeMismatchError($t2.typ, $o.text, $o.line, BOOL_TYPE);
+            }
+            else{ //no error
+
             }
         }
     )*;
