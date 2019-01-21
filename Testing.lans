@@ -15,7 +15,11 @@ programa ProgramaTest
 variables
 	car c;
 	enter n;
+	enter d;
+	enter a;
 	enter e;
+	enter tmp;
+	enter comptador;
 	enter min;
 	enter max;
 	enter debug;
@@ -29,17 +33,39 @@ variables
 	boolea u;
 	boolea dos;
 	boolea tres;
+	boolea esdivisible;
 fvariables
+
+escriureln("Introdueix numero de primers:");
+llegir(a);
+
+n:=2;
+comptador:=0;
+
+mentre comptador < a fer
+	tmp := n % d;
+	esdivisible := tmp <= 0 & tmp >= 0;
+	mentre no esdivisible & (d*d)<n fer
+		d := d+1;
+		tmp := n % d;
+		esdivisible := tmp <= 0 & tmp >= 0;
+	fmentre
+	si no esdivisible | (n <= 2 & n >= 2) llavors
+		escriureln(n);
+		comptador := comptador +1;
+	fsi
+	n := n+2;
+fmentre
 
 //n:=10;
 //reala:=9.1234;
 //reala:=777;
 //escriureln(reala);
-i:=20;
+/*i:=20;
 
 per i de 1 fins 10 fer
 	escriureln(i);
-fper
+fper*/
 
 //escriureln();
 
@@ -79,7 +105,7 @@ mentre tres fer
 	u:=cert;
 	escriureln("iteracio");
 	si no tres llavors
-		escriureln("botifarra (vegana) de pages");
+		escriureln("no tres");
 	fsi
 fmentre
 
