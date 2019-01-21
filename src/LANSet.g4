@@ -454,7 +454,7 @@ basetype_value returns [String text, String typ, int line, Vector<Long> code]
                 value = program.addConstant(BYTECODE_INTTYPE, $tk.text);
                 break;
             case TK_BOOLEAN:
-                value = program.addConstant(BYTECODE_BOOLTYPE, ($tk.text.equals(BOOL_TRUE)?"1":"0"));
+                value = program.addConstant(BYTECODE_BOOLTYPE, ($tk.text.equals(BOOL_TRUE)?"Cert":"Fals"));
                 break;
             case TK_CHARACTER:
                 value = program.addConstant(BYTECODE_CHARTYPE, $tk.text);
