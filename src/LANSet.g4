@@ -934,12 +934,13 @@ tuple_acces returns [String typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER {
 
 vector_acces returns [String typ, int line]: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK {System.out.println("TODO: Vector acces");};
 
-ternary returns [String typ, int line, Vector<Long> code]
-@init{$code = new Vector<>();}
+ternary returns [String typ, int line, Vector<Long> code] locals [boolean localError]
+@init{$code = new Vector<>(); $localError = false;}
     :
     cond=subexpr /* boolean */{
         $line = $cond.line;
         if(!$cond.typ.equals(BOOL_TYPE)){
+            $localError = true;
             errorSemantic=true;
             typeMismatchError($cond.typ, BOOL_TYPE, $cond.line);
         }
@@ -948,21 +949,42 @@ ternary returns [String typ, int line, Vector<Long> code]
     e1=expr {$typ = $e1.typ;}
     TK_COLON
     e2=expr{
-        if($e1.typ.equals(FLOAT_TYPE) && $e2.typ.equals(INT_TYPE)) $typ = FLOAT_TYPE; //(dolar)e2.typ = FLOAT_TYPE; //to real promotion
-        else if($e2.typ.equals(FLOAT_TYPE) && $e1.typ.equals(INT_TYPE)) $typ = FLOAT_TYPE; //(dolar)e1 b.typ = FLOAT_TYPE; //to real promotion
+        boolean e1fcast = false, e2fcast = false;
+
+        if($e1.typ.equals(FLOAT_TYPE) && $e2.typ.equals(INT_TYPE)) {e2fcast = true; $typ = FLOAT_TYPE;} //(dolar)e2.typ = FLOAT_TYPE; //to real promotion
+        else if($e2.typ.equals(FLOAT_TYPE) && $e1.typ.equals(INT_TYPE)) { e1fcast = true; $typ = FLOAT_TYPE; } //(dolar)e1 b.typ = FLOAT_TYPE; //to real promotion
         else if(!$e1.typ.equals($e2.typ)){ //none of both are real
+            $localError = true;
             errorSemantic = true;
             ternaryTypeMismatchError($e1.typ, $e2.typ, $cond.line);
+        }
+
+        if(!$localError){
+            $code.addAll($cond.code);
+            $code.add(program.IFEQ); //if false, jumps to e2 (e1.size()+6)
+
+            Long jump = 2L + $e1.code.size() + 3L + 1L; //if condition is false, jump to e2 (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
+            $code.add(program.nByte(jump,2));
+            $code.add(program.nByte(jump,1));
+            $code.addAll($e1.code);
+            if(e1fcast) $code.add(program.I2F);
+
+            jump = $e1.code.size()+3L; //if we're on the end of e1, skip e2 (3 = goto1 + goto2 + 1)
+            $code.add(program.GOTO);
+            $code.add(program.nByte(jump,2));
+            $code.add(program.nByte(jump,1));
+            $code.addAll($e1.code);
+            if(e2fcast) $code.add(program.I2F);
         }
     }
     ;
 
 //HAZARD ZONE
 subexpr returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator]
-@init{ $hasOperator = false; $code = new Vector<>();}
+@init{ $hasOperator = false;}
 @after{$code.toString();}
     :
-    t1=term1 {$typ = $t1.typ; $line = $t1.line; $code.addAll($t1.code);}
+    t1=term1 {$typ = $t1.typ; $line = $t1.line; $code = $t1.code;}
     (
         o=logic_operators {
             if(!$hasOperator){ //if there's at least one operation, typecheck of t1 is needed
@@ -979,7 +1001,10 @@ subexpr returns [String typ, int line, Vector<Long> code] locals [boolean hasOpe
                 operatorTypeMismatchError($t2.typ, $o.text, $o.line, BOOL_TYPE);
             }
             else{ //no error
+                $code.addAll($t2.code);
 
+                if($o.tk_type == TK_AND) $code.add(program.IAND);
+                else $code.add(program.IOR);
             }
         }
     )*;
@@ -1057,7 +1082,7 @@ term1 returns [String typ, int line, Vector<Long> code] locals [boolean hasOpera
 equality_operator returns [String text, int tk_type, int line]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) {$text = $tk.text; $tk_type = $tk.type; $line = $tk.line;};
 
 term2 returns [String typ, int line, Vector<Long> code] locals [boolean hasOperator, String leftType]
-@init{ $code = new Vector<>(); $hasOperator = false;}
+@init{ $hasOperator = false;}
 @after{$typ = $leftType; $code.toString();}
     :
     t1 = term3 {$leftType = $t1.typ; $line = $t1.line; $code = $t1.code;}
