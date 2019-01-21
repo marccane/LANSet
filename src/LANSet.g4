@@ -18,8 +18,8 @@ static final String FLOAT_TYPE = "real";
 static final String BOOL_TYPE = "boolea";
 static final String STRING_TYPE = "string";
 
-static final String BOOL_TRUE = "'cert'";
-static final String BOOL_FALSE = "'fals'";
+static final String BOOL_TRUE = "cert";
+static final String BOOL_FALSE = "fals";
 
 static final String BYTECODE_VOIDTYPE = "V";
 static final String BYTECODE_CHARTYPE = "C";
