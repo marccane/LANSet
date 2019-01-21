@@ -437,8 +437,38 @@ const_declaration:
         }
     };
 
-basetype_value returns [String text, String typ, int line]: tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL)
-    {$text = $tk.text; $typ=getStringTypeFromTKIndex($tk.type); $line = $tk.line;};
+basetype_value returns [String text, String typ, int line, Vector<Long> code]
+@init{ $code = new Vector<>(); }
+    : tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL) {
+        $text = $tk.text;
+        $typ=getStringTypeFromTKIndex($tk.type);
+        $line = $tk.line;
+
+        Long value = -1L;
+
+        switch($tk.type){
+            case TK_INTEGER:
+                value = program.addConstant(BYTECODE_INTTYPE, $tk.text);
+                break;
+            case TK_BOOLEAN:
+                value = program.addConstant(BYTECODE_BOOLTYPE, $tk.text);
+                break;
+            case TK_CHARACTER:
+                value = program.addConstant(BYTECODE_CHARTYPE, $tk.text);
+                break;
+            case TK_REAL:
+                value = program.addConstant(BYTECODE_FLOATTYPE, $tk.text);
+                break;
+            default:
+                //do nothing
+                break;
+        }
+
+        $code.add(program.LDC_W);
+        $code.add(program.nByte(value,2));
+        $code.add(program.nByte(value,1));
+    }
+;
 
 ///////////////////////////////////////////////////////////////////////////////
   
@@ -792,10 +822,9 @@ writeln_operation returns [Vector<Long> code]
 
 ////////////////////////////// EXPRESSIONS BLOCK //////////////////////////////
 expr returns[String typ, int line, Vector<Long> code]
-@init{$code = new Vector<>();}
 //@after{System.out.println($typ);}
     :
-    ternary {$typ = $ternary.typ; $line = $ternary.line;}
+    ternary {$typ = $ternary.typ; $line = $ternary.line; $code = $ternary.code;}
     |
     subexpr {$typ = $subexpr.typ; $line = $subexpr.line; $code = $subexpr.code;}
     ; //care with priority
@@ -803,7 +832,7 @@ expr returns[String typ, int line, Vector<Long> code]
 direct_evaluation_expr returns[String typ, int line, Vector<Long> code]
 @init{$code = new Vector<>();}
 :
-    cv=constant_value {$typ = $cv.typ; $line = $cv.line;} |
+    cv=constant_value {$typ = $cv.typ; $line = $cv.line; $code = $constant_value.code;} |
     id=TK_IDENTIFIER { //constant or variable
         Registre var = TS.obtenir($id.text);
 
@@ -863,17 +892,28 @@ direct_evaluation_expr returns[String typ, int line, Vector<Long> code]
     function_call {$typ = $function_call.typ; $line = $function_call.line;}
     ;
 
-constant_value returns [String typ, int line]
+constant_value returns [String typ, int line, Vector<Long> code]
+@init{$code = new Vector<>();}
     :
-    b=basetype_value{$typ = $b.typ; $line = $b.line;}
+    b=basetype_value{$typ = $b.typ; $line = $b.line; $code = $basetype_value.code;}
     |
-    s=TK_STRING {$typ = STRING_TYPE; $line = $s.line;}; //For illustrative purposes
+    s=TK_STRING {
+        $typ = STRING_TYPE;
+        $line = $s.line;
+
+        Long str = program.addConstant(BYTECODE_STRINGTYPE, $s.text);
+        $code.add(program.LDC_W);
+        $code.add(program.nByte(str,2));
+        $code.add(program.nByte(str,1));
+    } //For illustrative purposes
+    ;
 
 tuple_acces returns [String typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER {System.out.println("TODO: Tuple acces");};
 
 vector_acces returns [String typ, int line]: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK {System.out.println("TODO: Vector acces");};
 
-ternary returns [String typ, int line]
+ternary returns [String typ, int line, Vector<Long> code]
+@init{$code = new Vector<>();}
     :
     cond=subexpr /* boolean */{
         $line = $cond.line;
@@ -1102,7 +1142,9 @@ term4 returns [String typ, int line, Vector<Long> code]
     |
     t = term5 {$typ = $t.typ; $line = $t.line; $code = $t.code;};
 //term4: (negation_operators term4) | term5;
-negation_operators returns [String text, int tk_type, Vector<Long> code]:
+negation_operators returns [String text, int tk_type, Vector<Long> code]
+@init{ $code = new Vector<>(); }
+:
     tk = (KW_NO | TK_INVERT) {$text = $tk.text; $tk_type = $tk.type;};
 
 term5 returns [String typ, int line, Vector<Long> code]
