@@ -18,6 +18,13 @@ static final String FLOAT_TYPE = "real";
 static final String BOOL_TYPE = "boolea";
 static final String STRING_TYPE = "string";
 
+static final String BYTECODE_VOIDTYPE = "V";
+static final String BYTECODE_CHARTYPE = "C";
+static final String BYTECODE_INTTYPE = "I";
+static final String BYTECODE_FLOATTYPE = "F";
+static final String BYTECODE_BOOLTYPE = "Z";
+static final String BYTECODE_STRINGTYPE = "S";
+
 	//supertypes
 static final String CONSTANT_SUPERTYPE = "constant";
 static final String VARIABLE_SUPERTYPE = "variable";
@@ -50,22 +57,22 @@ public void setLANSClassFile(String classfile){
 }
 
 public String bytecodeType(String type){
-    String idType = "V";
+    String idType = BYTECODE_VOIDTYPE;
     switch(type){
         case CHAR_TYPE:
-            idType = "C";
+            idType = BYTECODE_CHARTYPE;
             break;
         case INT_TYPE:
-            idType = "I";
+            idType = BYTECODE_INTTYPE;
             break;
         case FLOAT_TYPE:
-            idType = "F";
+            idType = BYTECODE_FLOATTYPE;
             break;
         case BOOL_TYPE:
-            idType = "Z";
+            idType = BYTECODE_BOOLTYPE;
             break;
         case STRING_TYPE:
-            idType = "S";
+            idType = BYTECODE_STRINGTYPE;
             break;
         default:
             //do nothing
@@ -509,55 +516,55 @@ conditional returns [Vector<Long> code]
 }
     : KW_IF expr /* boolean */ KW_THEN (sentence{c1Code.addAll($sentence.code);})*
      (KW_ELSE (sentence{c2Code.addAll($sentence.code);})*)? KW_ENDIF{
-        if(!$expr.typ.equals(BOOL_TYPE)){
-            errorSemantic=true;
-            typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
-        }
-        else{
-            $code.addAll($expr.code);
-            $code.add(program.IFEQ); //if false, jumps to else (c1.size()+6)
+            if(!$expr.typ.equals(BOOL_TYPE)){
+                errorSemantic=true;
+                typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
+            }
+            else{ //no error, codegen
+                $code.addAll($expr.code);
+                $code.add(program.IFEQ); //if false, jumps to else (c1.size()+6)
 
-            Long jump = 2L + c1Code.size() + 3L + 1L; //if condition is false, jump to c2 (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
-            $code.add(program.nByte(jump,2));
-            $code.add(program.nByte(jump,1));
-            $code.addAll(c1Code);
+                Long jump = 2L + c1Code.size() + 3L + 1L; //if condition is false, jump to c2 (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
+                $code.add(program.nByte(jump,2));
+                $code.add(program.nByte(jump,1));
+                $code.addAll(c1Code);
 
-            jump = c2Code.size()+3L; //if we're on the end of c1, skip c2 (3 = goto1 + goto2 + 1)
-            $code.add(program.GOTO);
-            $code.add(program.nByte(jump,2));
-            $code.add(program.nByte(jump,1));
-            $code.addAll(c2Code);
-        }
+                jump = c2Code.size()+3L; //if we're on the end of c1, skip c2 (3 = goto1 + goto2 + 1)
+                $code.add(program.GOTO);
+                $code.add(program.nByte(jump,2));
+                $code.add(program.nByte(jump,1));
+                $code.addAll(c2Code);
+            }
      };
 
 for_loop returns [Vector<Long> code]
 @init{ $code = new Vector<>(); }
     : KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */ {
-                Registre var_iter = TS.obtenir($id.text);
-                if(var_iter == null){
-                    errorSemantic = true;
-                    undefinedIdentifierError($id.text, $id.line);
-                }
-                else if(!var_iter.getSupertype().equals(VARIABLE_SUPERTYPE)){
-                    errorSemantic = true;
-                    identifierIsNotAVariableError($id.text, $id.line);
-                }
-                else if(!var_iter.getType().equals(INT_TYPE)){
-                    errorSemantic = true;
-                    typeMismatchError2($id.text, $id.line, var_iter.getType(), INT_TYPE);
-                }
+        Registre var_iter = TS.obtenir($id.text);
+        if(var_iter == null){
+            errorSemantic = true;
+            undefinedIdentifierError($id.text, $id.line);
+        }
+        else if(!var_iter.getSupertype().equals(VARIABLE_SUPERTYPE)){
+            errorSemantic = true;
+            identifierIsNotAVariableError($id.text, $id.line);
+        }
+        else if(!var_iter.getType().equals(INT_TYPE)){
+            errorSemantic = true;
+            typeMismatchError2($id.text, $id.line, var_iter.getType(), INT_TYPE);
+        }
 
-                if(!$expr1.typ.equals(INT_TYPE)){
-                    errorSemantic=true;
-                    typeMismatchError2("*expressio*", $expr1.line, $expr1.typ, INT_TYPE);
-                }
+        if(!$expr1.typ.equals(INT_TYPE)){
+            errorSemantic=true;
+            typeMismatchError2("*expressio*", $expr1.line, $expr1.typ, INT_TYPE);
+        }
 
-                if(!$expr2.typ.equals(INT_TYPE)){
-                    errorSemantic=true;
-                    typeMismatchError2("*expressio*", $expr2.line, $expr2.typ, INT_TYPE);
-                }
+        if(!$expr2.typ.equals(INT_TYPE)){
+            errorSemantic=true;
+            typeMismatchError2("*expressio*", $expr2.line, $expr2.typ, INT_TYPE);
+        }
 
-            } KW_DO sentence* KW_ENDFOR;
+    } KW_DO sentence* KW_ENDFOR;
 
 while_loop returns [Vector<Long> code]
 @init{
@@ -569,7 +576,7 @@ while_loop returns [Vector<Long> code]
             errorSemantic=true;
             typeMismatchError2("*expressio*", $expr.line, $expr.typ, BOOL_TYPE);
         }
-        else{
+        else{ //no error, codegen
             $code.addAll($expr.code);
 
             $code.add(program.IFEQ); //if false, jumps to end of the while (c1.size()+6) (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
@@ -591,27 +598,48 @@ function_call returns [String typ, int line, Vector<Long> code]
 
 read_operation returns [Vector<Long> code]
 @init{ $code = new Vector<>(); }
-    :
-    KW_INPUT
-    TK_LPAR
-    id=TK_IDENTIFIER {
-        //registerBasetypeVariable(FLOAT_TYPE,$id);
+    : KW_INPUT TK_LPAR id=TK_IDENTIFIER TK_RPAR{
         Registre var = TS.obtenir($id.text);
-        //var.putSupertype(TUPLE_SUPERTYPE);
-        //var.putType("lmoile");
 
         if(var == null) { errorSemantic = true; undefinedIdentifierError($id.text, $id.line);}
         else if(!var.getSupertype().equals(VARIABLE_SUPERTYPE)) {
-            errorSemantic = true;
-            identifierIsNotAVariableError($id.text, $id.line);
+           errorSemantic = true;
+           identifierIsNotAVariableError($id.text, $id.line);
         }
         else if(processBaseType(var.getType()).equals(INVALID_TYPE)){ //is not a basetpye
-            errorSemantic = true;
-            nonBasetypeReadingError($id.text, var.getType(), $id.line);
+           errorSemantic = true;
+           nonBasetypeReadingError($id.text, var.getType(), $id.line);
         }
+        else{ // no error, codegen
+            String bcType = bytecodeType(var.getType());
 
-    }
-    TK_RPAR;
+            $code.add(program.INVOKESTATIC);
+
+            if(bcType.equals(BYTECODE_CHARTYPE)){
+                $code.add(program.nByte(program.mGetChar,2));
+                $code.add(program.nByte(program.mGetChar,1));
+                $code.add(program.ISTORE);
+            }
+            else if(bcType.equals(BYTECODE_INTTYPE)){
+                $code.add(program.nByte(program.mGetInt,2));
+                $code.add(program.nByte(program.mGetInt,1));
+                $code.add(program.ISTORE);
+            }
+            else if(bcType.equals(BYTECODE_FLOATTYPE)){
+                $code.add(program.nByte(program.mGetFloat,2));
+                $code.add(program.nByte(program.mGetFloat,1));
+                $code.add(program.FSTORE);
+            }
+            else if(bcType.equals(BYTECODE_BOOLTYPE)){
+                $code.add(program.nByte(program.mGetBoolean,2));
+                $code.add(program.nByte(program.mGetBoolean,1));
+                $code.add(program.ISTORE);
+            }
+
+            $code.add(var.getDir());
+
+        }
+    };
 
 write_operation returns [Vector<Long> code]
 @init{ $code = new Vector<>(); }
