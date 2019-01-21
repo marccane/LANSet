@@ -36,13 +36,16 @@ variables
 	boolea esdivisible;
 fvariables
 
-escriureln("Introdueix numero de primers:");
+escriure("Introdueix numero de primers:");
 llegir(a);
+escriureln(a, " primers:");
+escriureln();
 
-n:=2;
+n:=3;
 comptador:=0;
 
 mentre comptador < a fer
+	d:=2;
 	tmp := n % d;
 	esdivisible := tmp <= 0 & tmp >= 0;
 	mentre no esdivisible & (d*d)<n fer
@@ -52,10 +55,11 @@ mentre comptador < a fer
 	fmentre
 	si no esdivisible | (n <= 2 & n >= 2) llavors
 		escriureln(n);
-		comptador := comptador +1;
+		comptador := comptador + 1;
 	fsi
 	n := n+2;
 fmentre
+
 
 //n:=10;
 //reala:=9.1234;
