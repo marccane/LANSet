@@ -336,7 +336,7 @@ start
     @init{
         program = new Bytecode(classFile);
         lineBreak = program.addConstant(BYTECODE_STRINGTYPE, "\n");
-        Vector<Long> code = new Vector<>(100);
+        Vector<Long> code = new Vector<>(500);
     }
 @after{
         if (!errorSemantic)
@@ -683,7 +683,6 @@ for_loop returns [Vector<Long> code] locals [boolean errorLocal]
             Registre varIndex = TS.obtenir($id.text);
             Long indexPos = varIndex.getDir();
 
-
             forExpr.add(program.ILOAD);
             forExpr.add(indexPos);
             forExpr.addAll($expr2.code);
@@ -803,9 +802,7 @@ write_operation returns [Vector<Long> code]
         }
         else{
             $code.addAll($e.code);
-
             String bcType = bytecodeType($e.typ);
-
             $code.addAll(generateWriteCode(bcType));
         }
     }
@@ -818,9 +815,7 @@ write_operation returns [Vector<Long> code]
             }
             else{
                  $code.addAll($ea.code);
-
                  String bcType = bytecodeType($ea.typ);
-
                  $code.addAll(generateWriteCode(bcType));
             }
         }
@@ -846,9 +841,7 @@ writeln_operation returns [Vector<Long> code]
             }
             else{
                 $code.addAll($e.code);
-
                 String bcType = bytecodeType($e.typ);
-
                 $code.addAll(generateWriteCode(bcType));
             }
         }
@@ -860,9 +853,7 @@ writeln_operation returns [Vector<Long> code]
                 }
                 else{
                      $code.addAll($ea.code);
-
                      String bcType = bytecodeType($ea.typ);
-
                      $code.addAll(generateWriteCode(bcType));
                 }
             }
@@ -986,8 +977,8 @@ ternary returns [String typ, int line, Vector<Long> code] locals [boolean localE
         boolean e1fcast = false, e2fcast = false;
 
         if($e1.typ.equals(FLOAT_TYPE) && $e2.typ.equals(INT_TYPE)) {e2fcast = true; $typ = FLOAT_TYPE;} //(dolar)e2.typ = FLOAT_TYPE; //to real promotion
-        else if($e2.typ.equals(FLOAT_TYPE) && $e1.typ.equals(INT_TYPE)) { e1fcast = true; $typ = FLOAT_TYPE; } //(dolar)e1 b.typ = FLOAT_TYPE; //to real promotion
-        else if(!$e1.typ.equals($e2.typ)){ //none of both are real
+        else if($e1.typ.equals(INT_TYPE) && $e2.typ.equals(FLOAT_TYPE)) { e1fcast = true; $typ = FLOAT_TYPE; } //(dolar)e1 b.typ = FLOAT_TYPE; //to real promotion
+        else if(!$e1.typ.equals($e2.typ)){ //Neither of these are real
             $localError = true;
             errorSemantic = true;
             ternaryTypeMismatchError($e1.typ, $e2.typ, $cond.line);
@@ -995,20 +986,26 @@ ternary returns [String typ, int line, Vector<Long> code] locals [boolean localE
 
         if(!$localError){
             $code.addAll($cond.code);
-            $code.add(program.IFEQ); //if false, jumps to e2 (e1.size()+6)
 
-            Long jump = 2L + $e1.code.size() + 3L + 1L; //if condition is false, jump to e2 (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
+            $code.add(program.IFEQ); //if false, jumps to e2 (e1.size()+6)
+            Long jump = 2L + $e1.code.size() + 1L + 3L + 1L; //if condition is false, jump to e2 (6 = ifjump1+ifjump2+i2f+goto+goto1+goto2+1)
             $code.add(program.nByte(jump,2));
             $code.add(program.nByte(jump,1));
             $code.addAll($e1.code);
-            if(e1fcast) $code.add(program.I2F);
+            if(e1fcast)
+                $code.add(program.I2F);
+            else
+                $code.add(program.NOP);
 
-            jump = $e2.code.size()+3L; //if we're on the end of e1, skip e2 (3 = goto1 + goto2 + 1)
+            jump = 2L + $e2.code.size() + 1L + 1L; //if we're on the end of e1, skip e2 + 4 (gotoinstr + goto1 + goto2 + i2f + 1)
             $code.add(program.GOTO);
             $code.add(program.nByte(jump,2));
             $code.add(program.nByte(jump,1));
             $code.addAll($e2.code);
-            if(e2fcast) $code.add(program.I2F);
+            if(e2fcast)
+                $code.add(program.I2F);
+            else
+                $code.add(program.NOP);
         }
     }
     ;

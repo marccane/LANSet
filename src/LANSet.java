@@ -1,30 +1,31 @@
-import java.io.*;
-
 import org.antlr.v4.runtime.*;
 
+import java.io.File;
 
-// LANSet Compiler.
+// LANSet Compiler
 public class LANSet {
-	static SymTable<Registre> TS = new SymTable<Registre>(1000);
-	static boolean errorSintactic = false;
-	static boolean errorSemantic = false;
 
 	public static void main(String args[]) throws Exception{
-		if(args.length == 0){
-			System.out.println("Es requereix un fitxer LANS");
+
+		String lansSourceFile = "", outputFile = "";
+		if(args.length == 1){
+			lansSourceFile = args[0];
+			String[] lansSourceFileSplitSep = lansSourceFile.split(File.separator);
+			String filenameWithoutPath = lansSourceFileSplitSep[lansSourceFileSplitSep.length-1];
+			System.out.println(filenameWithoutPath);
+			String[] filenameSplit = filenameWithoutPath.split("[.]");
+			System.out.println(filenameSplit.length);
+			outputFile = filenameSplit[0];
+		}
+		else {
+			System.out.println("Wrong number of parameters: Input a lans file");
 			System.exit(0);
 		}
 
-		LANSetLexer lexer = new LANSetLexer(new ANTLRFileStream(args[0]));
+		LANSetLexer lexer = new LANSetLexer(CharStreams.fromFileName(lansSourceFile));
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		LANSetParser p = new LANSetParser(tokens);
-		if(args.length == 2){
-			String classfile = args[1];
-			/*if(!classfile.endsWith(".class"))
-			   classfile = classfile + ".class";*/
-			p.setLANSClassFile(classfile);
-		}
+		p.setLANSClassFile(outputFile);
 		p.start();
 	}
-
 }

@@ -3,5 +3,5 @@ out/
 .idea/
 **/.idea/workspace.xml
 **/.idea/tasks.xml
-output.class
+*.class
 /gitignore
