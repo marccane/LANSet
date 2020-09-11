@@ -1,5 +1,7 @@
 // Josep Suy abril 2007
 
+package LANSet;
+
 import java.util.*;
 
 public class SymTable<R>  {

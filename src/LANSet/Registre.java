@@ -1,4 +1,7 @@
 // Josep Suy abril 2007
+
+package LANSet;
+
 /*
 public class Registre  {
 

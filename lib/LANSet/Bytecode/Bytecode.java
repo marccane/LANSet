@@ -1,5 +1,9 @@
-import java.io.*;
-import java.util.*;
+package LANSet.Bytecode;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Vector;
 
 
 //	Ajuda a la confeccio de codi en Bytecode. Practiques de MEC
@@ -22,7 +26,7 @@ import java.util.*;
 //
 
 
-class Bytecode implements Constants {
+public class Bytecode implements Constants {
 
 //variables auxiliars. Son per inicialitzar el fitxer bytecode
 
@@ -125,7 +129,7 @@ private Long CPCercar(String s) {
 
 
 
-Bytecode (String s) {
+public Bytecode(String s) {
 
 
 	fileName=s;
@@ -139,77 +143,65 @@ Bytecode (String s) {
 	method_count=0L;
 	attribute_count=0L;
 
+	cThis=addClassName(s);
+	this_class=cThis;
+	cObject=addClassName("java/lang/Object");
+	super_class=cObject;
+	cInputStreamReader=addClassName("java/io/InputStreamReader");
+	cInputStream=addClassName("java/io/InputStream");
+	cPrintStream=addClassName("java/io/PrintStream");
+	cBufferedReader=addClassName("java/io/BufferedReader");
+	cFloat=addClassName("java/lang/Float");
+	cInteger=addClassName("java/lang/Integer");
+	cBoolean=addClassName("java/lang/Boolean");
+	cException=addClassName("java/lang/Exception");
+	cSystem=addClassName("java/lang/System");
+	cString=addClassName("java/lang/String");
 
+	mInitObject=addMethodName(cObject,"<init>","()V");
 
-
-
-        cThis=addClassName(s);
-	  this_class=cThis;
-        cObject=addClassName("java/lang/Object");
-	  super_class=cObject;
-        cInputStreamReader=addClassName("java/io/InputStreamReader");
-        cInputStream=addClassName("java/io/InputStream");
-        cPrintStream=addClassName("java/io/PrintStream");
-        cBufferedReader=addClassName("java/io/BufferedReader");
-        cFloat=addClassName("java/lang/Float");
-        cInteger=addClassName("java/lang/Integer");
-        cBoolean=addClassName("java/lang/Boolean");
-        cException=addClassName("java/lang/Exception");
-        cSystem=addClassName("java/lang/System");
-        cString=addClassName("java/lang/String");
-
-
-
-        mInitObject=addMethodName(cObject,"<init>","()V");
-
-        mInit=addMethodName(cThis,"<init>","()V");
-        mPrintString=addMethodName(cPrintStream,"print","(Ljava/lang/String;)V");
-        mPrintLnString=addMethodName(cPrintStream,"println","(Ljava/lang/String;)V");
-        mPrintInt=addMethodName(cPrintStream,"print","(I)V");
-        mPrintFloat=addMethodName(cPrintStream,"print","(F)V");
-        mPrintChar=addMethodName(cPrintStream,"print","(C)V");
-        mPutChar=addMethodName(cThis,"put","(C)V");
-        mPutFloat=addMethodName(cThis,"put","(F)V");
-        mPutInt=addMethodName(cThis,"put","(I)V");
-        mPutBoolean=addMethodName(cThis,"put","(Z)V");
-        mPutString=addMethodName(cThis,"put","(Ljava/lang/String;)V");
-        mPutLnString=addMethodName(cThis,"putln","(Ljava/lang/String;)V");
-        mGetInt=addMethodName(cThis,"getInt","()I");
-        mGetFloat=addMethodName(cThis,"getFloat","()F");
-        mGetChar=addMethodName(cThis,"getChar","()C");
-        mGetBoolean=addMethodName(cThis,"getBoolean","()Z");
-        mGetString=addMethodName(cThis,"getString","()Ljava/lang/String;");
-        mMain=addMethodName(cThis,"main","([Ljava/lang/String;)V");
-        mInitException=addMethodName(cException,"<init>","(Ljava/lang/String;)V");
-        mInitFloat=addMethodName(cFloat,"<init>","(Ljava/lang/String;)V");
-        mInitInputStreamReader=addMethodName(cInputStreamReader,"<init>","(Ljava/io/InputStream;)V");
-        mInitBufferedReader=addMethodName(cBufferedReader,"<init>","(Ljava/io/Reader;)V");
-        mReadLineBufferedReader=addMethodName(cBufferedReader,"readLine","()Ljava/lang/String;");
+	mInit=addMethodName(cThis,"<init>","()V");
+	mPrintString=addMethodName(cPrintStream,"print","(Ljava/lang/String;)V");
+	mPrintLnString=addMethodName(cPrintStream,"println","(Ljava/lang/String;)V");
+	mPrintInt=addMethodName(cPrintStream,"print","(I)V");
+	mPrintFloat=addMethodName(cPrintStream,"print","(F)V");
+	mPrintChar=addMethodName(cPrintStream,"print","(C)V");
+	mPutChar=addMethodName(cThis,"put","(C)V");
+	mPutFloat=addMethodName(cThis,"put","(F)V");
+	mPutInt=addMethodName(cThis,"put","(I)V");
+	mPutBoolean=addMethodName(cThis,"put","(Z)V");
+	mPutString=addMethodName(cThis,"put","(Ljava/lang/String;)V");
+	mPutLnString=addMethodName(cThis,"putln","(Ljava/lang/String;)V");
+	mGetInt=addMethodName(cThis,"getInt","()I");
+	mGetFloat=addMethodName(cThis,"getFloat","()F");
+	mGetChar=addMethodName(cThis,"getChar","()C");
+	mGetBoolean=addMethodName(cThis,"getBoolean","()Z");
+	mGetString=addMethodName(cThis,"getString","()Ljava/lang/String;");
+	mMain=addMethodName(cThis,"main","([Ljava/lang/String;)V");
+	mInitException=addMethodName(cException,"<init>","(Ljava/lang/String;)V");
+	mInitFloat=addMethodName(cFloat,"<init>","(Ljava/lang/String;)V");
+	mInitInputStreamReader=addMethodName(cInputStreamReader,"<init>","(Ljava/io/InputStream;)V");
+	mInitBufferedReader=addMethodName(cBufferedReader,"<init>","(Ljava/io/Reader;)V");
+	mReadLineBufferedReader=addMethodName(cBufferedReader,"readLine","()Ljava/lang/String;");
 	mParseInt=addMethodName(cInteger,"parseInt","(Ljava/lang/String;)I");
 	mParseFloat=addMethodName(cFloat,"parseFloat","(Ljava/lang/String;)F");
 	mValueOfInt=addMethodName(cInteger,"valueOf","(I)Ljava/lang/Integer;");
 	mValueOfFloat=addMethodName(cFloat,"valueOf","(F)Ljava/lang/Float;");
-        mRead=addMethodName(cInputStream,"read","()I");
-        mCharAt=addMethodName(cString,"charAt","(I)C");
+	mRead=addMethodName(cInputStream,"read","()I");
+	mCharAt=addMethodName(cString,"charAt","(I)C");
 
 
 
-        sCert=addConstant("S","Cert");
-        sFals=addConstant("S","Fals");
-        sEmpty=addConstant("S","");
-        
-        aCode=addAttributeName("Code");
-        aExceptions=addAttributeName("Exceptions");
-        aConstantValue=addAttributeName("ConstantValue");
+	sCert=addConstant("S","Cert");
+	sFals=addConstant("S","Fals");
+	sEmpty=addConstant("S","");
 
-        fIn=addFieldName(cSystem,"in","Ljava/io/InputStream;");
-        fOut=addFieldName(cSystem,"out","Ljava/io/PrintStream;");
+	aCode=addAttributeName("Code");
+	aExceptions=addAttributeName("Exceptions");
+	aConstantValue=addAttributeName("ConstantValue");
 
-
-
-
-
-
+	fIn=addFieldName(cSystem,"in","Ljava/io/InputStream;");
+	fOut=addFieldName(cSystem,"out","Ljava/io/PrintStream;");
 
 	
 	Vector<Long> codePutInt=new Vector<Long>(8);
@@ -511,48 +503,46 @@ Bytecode (String s) {
 
 public void write() {
 	try{
-	FileOutputStream f=new FileOutputStream(fileName+".class");
+		FileOutputStream f=new FileOutputStream(fileName+".class");
 
-	Integer aux;
-	int i,aa;
-
-
-	f.write(this.toByte(magic,4));
-	f.write(this.toByte(minor_version,2));
-	f.write(this.toByte(major_version,2));
-	constant_pool_counter=new Long(constant_pool.size()+1);
-	f.write(this.toByte(constant_pool_counter,2));
-	Iterator<cp_info> itercp=constant_pool.iterator();
-	while (itercp.hasNext()) {
-		itercp.next().write(f);
-	}
-	f.write(this.toByte(access_flags,2));
-	f.write(this.toByte(this_class,2));
-	f.write(this.toByte(super_class,2));
-	//interface_count=new Long(interfaces.size());
-	interface_count=0L;
-	f.write(this.toByte(interface_count,2));
-	field_count=new Long(fields.size());
-	f.write(this.toByte(field_count,2));
-	Iterator<field_info> iterf=fields.iterator();
-	while (iterf.hasNext()) {
-		iterf.next().write(f);
-	}
-	method_count=new Long(methods.size());
-	f.write(this.toByte(method_count,2));
-	Iterator<method_info> iterm=methods.iterator();
-	while (iterm.hasNext()) {
-		iterm.next().write(f);
-	}
-	attribute_count=new Long(attributes.size());
-	f.write(this.toByte(attribute_count,2));
-
-	Iterator<attribute_info> itera=attributes.iterator();
-	while (itera.hasNext()) {
-		itera.next().write(f);
-	}
+		Integer aux;
+		int i,aa;
 
 
+		f.write(this.toByte(magic,4));
+		f.write(this.toByte(minor_version,2));
+		f.write(this.toByte(major_version,2));
+		constant_pool_counter=new Long(constant_pool.size()+1);
+		f.write(this.toByte(constant_pool_counter,2));
+		Iterator<cp_info> itercp=constant_pool.iterator();
+		while (itercp.hasNext()) {
+			itercp.next().write(f);
+		}
+		f.write(this.toByte(access_flags,2));
+		f.write(this.toByte(this_class,2));
+		f.write(this.toByte(super_class,2));
+		//interface_count=new Long(interfaces.size());
+		interface_count=0L;
+		f.write(this.toByte(interface_count,2));
+		field_count=new Long(fields.size());
+		f.write(this.toByte(field_count,2));
+		Iterator<field_info> iterf=fields.iterator();
+		while (iterf.hasNext()) {
+			iterf.next().write(f);
+		}
+		method_count=new Long(methods.size());
+		f.write(this.toByte(method_count,2));
+		Iterator<method_info> iterm=methods.iterator();
+		while (iterm.hasNext()) {
+			iterm.next().write(f);
+		}
+		attribute_count=new Long(attributes.size());
+		f.write(this.toByte(attribute_count,2));
+
+		Iterator<attribute_info> itera=attributes.iterator();
+		while (itera.hasNext()) {
+			itera.next().write(f);
+		}
 	}
 	catch (IOException s){}
 

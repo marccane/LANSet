@@ -1,4 +1,4 @@
-// $ANTLR 2.7.7 (20060930): "prova.g" -> "ProvaLexic.java"$
+package LANSet.Bytecode;// $ANTLR 2.7.7 (20060930): "prova.g" -> "ProvaLexic.java"$
 
 
 

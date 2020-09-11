@@ -1,3 +1,5 @@
+package LANSet.Bytecode;
+
 import java.io.*;
 import java.util.*;
 
