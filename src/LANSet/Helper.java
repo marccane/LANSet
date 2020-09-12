@@ -1,149 +1,122 @@
 package LANSet;
 
-import org.antlr.v4.runtime.CharStream;
+import java.util.*;
 
+public class Helper { //TODO pensar un nom decent per aixo
 
-import LANSet.Bytecode.CMethod;
+    private static final Set<LANSetParser.C_TYPE> baseTypes = new HashSet<>(Arrays.asList(
+            LANSetParser.C_TYPE.CHAR_TYPE,
+            LANSetParser.C_TYPE.INT_TYPE,
+            LANSetParser.C_TYPE.FLOAT_TYPE,
+            LANSetParser.C_TYPE.BOOL_TYPE
+    ));
 
-//Extend LANSetLexer as a workaround to get the declarations of the tokens (TK_X) and keywords (KW_X)
-//As a result of this we get a bit of namespace pollution (18 public members)
-//We could also access them directly doing LANSetLexer.TK_X, since they are public static
-public class Helper extends LANSetLexer { //TODO pensar un nom decent per aixo
+    private static final Map<Integer, LANSetParser.C_TYPE> tokenIDToCType = new HashMap<Integer, LANSetParser.C_TYPE>() {{
+        put(LANSetParser.TK_CHARACTER, LANSetParser.C_TYPE.CHAR_TYPE);
+        put(LANSetParser.TK_INTEGER, LANSetParser.C_TYPE.INT_TYPE);
+        put(LANSetParser.TK_REAL, LANSetParser.C_TYPE.FLOAT_TYPE);
+        put(LANSetParser.TK_BOOLEAN, LANSetParser.C_TYPE.BOOL_TYPE);
+        put(LANSetParser.TK_STRING, LANSetParser.C_TYPE.STRING_TYPE);
+    }};
 
-    //TODO FIX THIS
-    //types
-    static final String INVALID_TYPE = "NULL";
-    static final String CHAR_TYPE = "car";
-    static final String INT_TYPE = "enter";
-    static final String FLOAT_TYPE = "real";
-    static final String BOOL_TYPE = "boolea";
-    static final String STRING_TYPE = "string";
+    /*private static final Map<LANSetParser.C_TYPE, String> cTypeToString = new HashMap<LANSetParser.C_TYPE, String>() {{
+        put(LANSetParser.C_TYPE.CHAR_TYPE, LANSetParser.S_CHAR_TYPE);
+        put(LANSetParser.C_TYPE.INT_TYPE, LANSetParser.S_INT_TYPE);
+        put(LANSetParser.C_TYPE.FLOAT_TYPE, LANSetParser.S_FLOAT_TYPE);
+        put(LANSetParser.C_TYPE.BOOL_TYPE, LANSetParser.S_BOOL_TYPE);
+        put(LANSetParser.C_TYPE.STRING_TYPE, LANSetParser.S_STRING_TYPE);
+    }};*/
 
-    static final String BOOL_TRUE = "cert";
-    static final String BOOL_FALSE = "fals";
-
-    static final String BYTECODE_VOIDTYPE = "V";
-    static final String BYTECODE_CHARTYPE = "C";
-    static final String BYTECODE_INTTYPE = "I";
-    static final String BYTECODE_FLOATTYPE = "F";
-    static final String BYTECODE_BOOLTYPE = "Z";
-    static final String BYTECODE_STRINGTYPE = "S";
-
-    //supertypes
-    static final String CONSTANT_SUPERTYPE = "constant";
-    static final String VARIABLE_SUPERTYPE = "variable";
-    static final String ALIAS_SUPERTYPE = "alias";
-    static final String FUNCTION_SUPERTYPE = "funcio";
-    static final String ACTION_SUPERTYPE = "accio";
-    static final String TUPLE_SUPERTYPE = "tupla";
-    static final String VECTOR_SUPERTYPE = "vector";
-
-    public Helper(CharStream _dont_use) throws Exception { //it's obligatory to implement this, don't use
-        super(null);
-        throw new Exception("This constructor must not be used");
-    }
-
-    public static String bytecodeType(String type){
-        String idType = BYTECODE_VOIDTYPE;
+    static String bytecodeType(LANSetParser.C_TYPE type){
+        String idType = LANSetParser.BYTECODE_VOIDTYPE;
         switch(type){
             case CHAR_TYPE:
-                idType = BYTECODE_CHARTYPE;
+                idType = LANSetParser.BYTECODE_CHARTYPE;
                 break;
             case INT_TYPE:
-                idType = BYTECODE_INTTYPE;
+                idType = LANSetParser.BYTECODE_INTTYPE;
                 break;
             case FLOAT_TYPE:
-                idType = BYTECODE_FLOATTYPE;
+                idType = LANSetParser.BYTECODE_FLOATTYPE;
                 break;
             case BOOL_TYPE:
-                idType = BYTECODE_BOOLTYPE;
+                idType = LANSetParser.BYTECODE_BOOLTYPE;
                 break;
             case STRING_TYPE:
-                idType = BYTECODE_STRINGTYPE;
+                idType = LANSetParser.BYTECODE_STRINGTYPE;
                 break;
             default:
-                //do nothing
+                System.err.println("Invalid bytecodeType " + type);
                 break;
         }
 
         return idType;
     }
 
-    public static String processBaseType(String type){
-        String idType = INVALID_TYPE;
-        switch(type){
-            case CHAR_TYPE:
-                idType = CHAR_TYPE;
-                break;
-            case INT_TYPE:
-                idType = INT_TYPE;
-                break;
-            case FLOAT_TYPE:
-                idType = FLOAT_TYPE;
-                break;
-            case BOOL_TYPE:
-                idType = BOOL_TYPE;
-                break;
-            default:
-                //do nothing
-                break;
-        }
-
-        return idType;
+    //Pre: cert
+    //Post: retorna el C_TYPE que correspon a la ID del token (type)
+    static LANSetParser.C_TYPE cTypeFromTokenID(int type){
+        assert(type!=LANSetParser.TK_BASETYPE);
+        return tokenIDToCType.getOrDefault(type, LANSetParser.C_TYPE.INVALID_TYPE);
     }
 
-    public static String getStringTypeFromTKIndex(int index){
-        String res = INVALID_TYPE;
-        if(index == LANSetLexer.TK_INTEGER) res = INT_TYPE;
-        else if(index == LANSetLexer.TK_CHARACTER) res = CHAR_TYPE;
-        else if(index == LANSetLexer.TK_BOOLEAN) res = BOOL_TYPE;
-        else if(index == LANSetLexer.TK_REAL) res = FLOAT_TYPE;
-        else if(index == LANSetLexer.TK_STRING) res = STRING_TYPE; //sha de fer algo mes?
-        return res;
+    /*static String stringFromCType(LANSetParser.C_TYPE type){
+        return cTypeToString.get(type);
+    }*/
+
+    static LANSetParser.C_TYPE processBaseType(LANSetParser.C_TYPE type){
+        if(isBasetype(type))
+            return type;
+        else
+            return LANSetParser.C_TYPE.INVALID_TYPE;
     }
 
-    public static boolean isBasetype(String type){
-        return type.equals(CHAR_TYPE) || type.equals(INT_TYPE) || type.equals(FLOAT_TYPE) || type.equals(BOOL_TYPE);
+    static boolean isBasetype(LANSetParser.C_TYPE type){
+        return baseTypes.contains(type);
     }
 
-    public static void repeatedIdentifierError(String id, int line){
+    static void repeatedIdentifierError(String id, int line){
         System.out.println("Semantic error at line " + line + ": the identifier " + id + " is already in use.");
     }
 
-    public static void undefinedTypeError(String t, int line){
+    static void undefinedTypeError(String t, int line){
         System.out.println("Semantic error at line " + line + ": type " + t + " is not defined.");
     }
 
-    public static void undefinedIdentifierError(String id, int line){
+    static void undefinedIdentifierError(String id, int line){
         System.out.println("Semantic error at line " + line + ": " + id + " is not defined.");
     }
 
-    public static void identifierIsNotAVariableError(String id, int line){
+    static void identifierIsNotAVariableError(String id, int line){
         System.out.println("Semantic error at line " + line + ": " + id + " is not a variable.");
     }
 
-    public static void nonBasetypeReadingError(String id, String type, int line){
+    static void nonBasetypeReadingError(String id, LANSetParser.C_TYPE type, int line){
         System.out.println("Semantic error at line " + line + ": Cannot read variable " + id + ". Read operation does not support reading " + type + " variables.");
     }
 
-    public static void typeMismatchError(String type1, String type2, int line){
+    static void typeMismatchError(LANSetParser.C_TYPE type1, LANSetParser.C_TYPE type2, int line){
         System.out.println("Type mismatch error at line " + line + ": Type " + type1 + " does not match with " + type2);
     }
 
-    public static void typeMismatchError2(String id, int line, String foundType, String expectedType){
+    static void typeMismatchError2(String id, int line, String foundType, LANSetParser.C_TYPE expectedType){
         System.out.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +".");
     }
 
-    public static void writeOperationUnsupportedTypeError(String type, int line){
+    static void writeOperationUnsupportedTypeError(LANSetParser.C_TYPE type, int line){
         System.out.println("Unsupported type " + type + " at line " + line);
     }
 
-    public static void ternaryTypeMismatchError(String t1, String t2, int line){
+    static void ternaryTypeMismatchError(LANSetParser.C_TYPE t1, LANSetParser.C_TYPE t2, int line){
         System.out.println("Type mismatch error at line " + line + ": Type " + t1 + " does not match with " + t2 + ". Both ternary inner expressions must be the same type.");
     }
 
-    public static void operatorTypeMismatchError(String type, String op, int line, String expected){
-        System.out.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expected + " instead.");
+    static void operatorTypeMismatchError(LANSetParser.C_TYPE type, String op, int line, LANSetParser.C_TYPE expectedType){
+        System.out.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
+    }
+
+    static void operatorTypeMismatchError(LANSetParser.C_TYPE type, String op, int line, String expectedType){
+        System.out.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
     }
 
 }
