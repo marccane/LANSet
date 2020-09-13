@@ -7,7 +7,7 @@ grammar LANSet;
 @header{
     import java.util.Vector;
     import LANSet.Bytecode.*;
-    import LANSet.Helper;
+    import LANSet.Companion;
 }
 
 @parser::members{
@@ -134,13 +134,13 @@ grammar LANSet;
     }
 
     public void registerAlias(Token id, Token type){
-        C_TYPE bType = Helper.processBaseType(C_TYPE.fromString(type.getText()));
+        C_TYPE bType = Companion.processBaseType(C_TYPE.fromString(type.getText()));
         Registre r = new Registre(id.getText(), C_SUPERTYPE.ALIAS_SUPERTYPE, bType, id.getLine(), id.getCharPositionInLine());
         TS.inserir(id.getText(), r);
     }
 
     public Registre registerConstant(Token id, Token type){
-        C_TYPE bType = Helper.processBaseType(C_TYPE.fromString(type.getText()));
+        C_TYPE bType = Companion.processBaseType(C_TYPE.fromString(type.getText()));
         Registre r = new Registre(id.getText(), C_SUPERTYPE.CONSTANT_SUPERTYPE, bType, id.getLine(), id.getCharPositionInLine());
         TS.inserir(id.getText(), r);
         return r;
@@ -150,32 +150,72 @@ grammar LANSet;
         return TS.existeix(id);
     }
 
-    public Vector<Long> generateWriteCode(String type){
+    public Vector<Long> generateWriteCode(LANSetParser.C_TYPE type){
         Vector<Long> code = new Vector<>();
 
-        code.add(program.INVOKESTATIC);
+        code.add(Bytecode.INVOKESTATIC);
 
-        if(type.equals(BYTECODE_CHARTYPE)){
-            code.add(program.nByte(program.mPutChar,2));
-            code.add(program.nByte(program.mPutChar,1));
+        switch(type){
+            case CHAR_TYPE:
+                code.add(program.nByte(program.mPutChar,2));
+                code.add(program.nByte(program.mPutChar,1));
+                break;
+            case INT_TYPE:
+                code.add(program.nByte(program.mPutInt,2));
+                code.add(program.nByte(program.mPutInt,1));
+                break;
+            case FLOAT_TYPE:
+                code.add(program.nByte(program.mPutFloat,2));
+                code.add(program.nByte(program.mPutFloat,1));
+                break;
+            case BOOL_TYPE:
+                code.add(program.nByte(program.mPutBoolean,2));
+                code.add(program.nByte(program.mPutBoolean,1));
+                break;
+            case STRING_TYPE:
+                code.add(program.nByte(program.mPutString,2));
+                code.add(program.nByte(program.mPutString,1));
+                break;
+            default:
+                System.err.println("INVALID BYTECODE TYPE");
+                break;
         }
-        else if(type.equals(BYTECODE_INTTYPE)){
-            code.add(program.nByte(program.mPutInt,2));
-            code.add(program.nByte(program.mPutInt,1));
+
+        return code;
+    }
+
+    public Vector<Long> generateReadCode(LANSetParser.C_TYPE type, Long storeDir){
+        Vector<Long> code = new Vector<>();
+
+        code.add(Bytecode.INVOKESTATIC);
+
+        switch(type){
+            case CHAR_TYPE:
+                code.add(program.nByte(program.mGetChar,2));
+                code.add(program.nByte(program.mGetChar,1));
+                code.add(program.ISTORE);
+                break;
+            case INT_TYPE:
+                code.add(program.nByte(program.mGetInt,2));
+                code.add(program.nByte(program.mGetInt,1));
+                code.add(program.ISTORE);
+                break;
+            case FLOAT_TYPE:
+                code.add(program.nByte(program.mGetFloat,2));
+                code.add(program.nByte(program.mGetFloat,1));
+                code.add(program.FSTORE);
+                break;
+            case BOOL_TYPE:
+                code.add(program.nByte(program.mGetBoolean,2));
+                code.add(program.nByte(program.mGetBoolean,1));
+                code.add(program.ISTORE);
+                break;
+            default:
+                System.err.println("INVALID BYTECODE TYPE");
+                break;
         }
-        else if(type.equals(BYTECODE_FLOATTYPE)){
-            code.add(program.nByte(program.mPutFloat,2));
-            code.add(program.nByte(program.mPutFloat,1));
-        }
-        else if(type.equals(BYTECODE_BOOLTYPE)){
-            code.add(program.nByte(program.mPutBoolean,2));
-            code.add(program.nByte(program.mPutBoolean,1));
-        }
-        else if(type.equals(BYTECODE_STRINGTYPE)){
-            code.add(program.nByte(program.mPutString,2));
-            code.add(program.nByte(program.mPutString,1));
-        }
-        else { System.err.println("INVALID BYTECODE TYPE"); }
+
+        code.add(storeDir);
 
         return code;
     }
@@ -336,7 +376,7 @@ type_declaration
         if(!identifierInUse($id.text)) registerAlias($id, $btype);
         else {
             errorSemantic = true;
-            Helper.repeatedIdentifierError($id.text, $id.line);
+            Companion.repeatedIdentifierError($id.text, $id.line);
         }
     }
     |
@@ -387,23 +427,23 @@ const_declaration:
         //System.out.println("Tipus: " + $bt.type + " " + $value.typ + " " + TK_REAL);
 
         if(identifierInUse($id.text)){
-            Helper.repeatedIdentifierError($id.text, $id.line);
+            Companion.repeatedIdentifierError($id.text, $id.line);
             errorSemantic=true;
         }
         else{
             C_TYPE valueType = $value.typ;
             if ($bt.text.equals(valueType.toString())){
                 Registre r = registerConstant($id,$bt);
-                Long dir = program.addConstName(r.getText(), Helper.bytecodeType(r.getType()), $value.text);
+                Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), $value.text);
                 r.putDir(dir);
             }
             else if ($bt.text.equals(C_TYPE.FLOAT_TYPE.toString()) && valueType == C_TYPE.INT_TYPE){
                 Registre r = registerConstant($id,$bt);
-                Long dir = program.addConstName(r.getText(), Helper.bytecodeType(r.getType()), $value.text);
+                Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), $value.text);
                 r.putDir(dir);
             }
             else{
-                Helper.typeMismatchError2($id.text, $id.line, valueType.toString(), C_TYPE.fromString($bt.text));
+                Companion.typeMismatchError2($id.text, $id.line, valueType.toString(), C_TYPE.fromString($bt.text));
                 errorSemantic=true;
             }
         }
@@ -413,7 +453,7 @@ basetype_value returns [String text, C_TYPE typ, int line, Vector<Long> code]
 @init{ $code = new Vector<>(); }
     : tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL) {
         $text = $tk.text;
-        $typ = Helper.cTypeFromTokenID($tk.type);
+        $typ = Companion.cTypeFromTokenID($tk.type);
         $line = $tk.line;
 
         Long value = -1L;
@@ -458,14 +498,14 @@ var_declaration
                 //TS.inserir($type.text, new Registre($type.text));
                 if(!identifierInUse($type.text)){
                     errorSemantic = true;
-                    Helper.undefinedTypeError($type.text, $type.line);
+                    Companion.undefinedTypeError($type.text, $type.line);
                 }
             }
         }
     id = TK_IDENTIFIER {
             if(identifierInUse($id.text)){
                 errorSemantic = true;
-                Helper.repeatedIdentifierError($id.text, $id.line);
+                Companion.repeatedIdentifierError($id.text, $id.line);
             }
             else {
                 if($type.tkType == TK_IDENTIFIER){ //alias, tuple or vector
@@ -527,15 +567,15 @@ assignment returns [Vector<Long> code]
 
         if(var == null){
             errorSemantic = true;
-            Helper.undefinedIdentifierError($lval.ident, $lval.line);
+            Companion.undefinedIdentifierError($lval.ident, $lval.line);
         }
         else if(var.getSupertype()!=C_SUPERTYPE.VARIABLE_SUPERTYPE){
             errorSemantic = true;
-            Helper.identifierIsNotAVariableError($lval.ident, $lval.line); //no es el mes adient perque pot ser tuple o vector...
+            Companion.identifierIsNotAVariableError($lval.ident, $lval.line); //no es el mes adient perque pot ser tuple o vector...
         }
         else if($lval.typ != $e.typ && !canBePromoted){
             errorSemantic = true;
-            Helper.typeMismatchError($lval.typ, $e.typ, $lval.line);
+            Companion.typeMismatchError($lval.typ, $e.typ, $lval.line);
         }
         else{ //lval es un identificador existent, tipus variable i els tipus casen
             if(canBePromoted){ //has to be promoted
@@ -587,7 +627,7 @@ conditional returns [Vector<Long> code]
      (KW_ELSE (sentence{c2Code.addAll($sentence.code);})*)? KW_ENDIF{
             if($expr.typ!=C_TYPE.BOOL_TYPE){
                 errorSemantic=true;
-                Helper.typeMismatchError2("*expressio*", $expr.line, $expr.typ.toString(), C_TYPE.BOOL_TYPE);
+                Companion.typeMismatchError2("*expressio*", $expr.line, $expr.typ.toString(), C_TYPE.BOOL_TYPE);
             }
             else{ //no error, codegen
                 $code.addAll($expr.code);
@@ -618,29 +658,29 @@ for_loop returns [Vector<Long> code] locals [boolean errorLocal]
         if(var_iter == null){
             $errorLocal = true;
             errorSemantic = true;
-            Helper.undefinedIdentifierError($id.text, $id.line);
+            Companion.undefinedIdentifierError($id.text, $id.line);
         }
         else if(var_iter.getSupertype()!=C_SUPERTYPE.VARIABLE_SUPERTYPE){
             $errorLocal = true;
             errorSemantic = true;
-            Helper.identifierIsNotAVariableError($id.text, $id.line);
+            Companion.identifierIsNotAVariableError($id.text, $id.line);
         }
         else if(var_iter.getType()!=C_TYPE.INT_TYPE){
             $errorLocal = true;
             errorSemantic = true;
-            Helper.typeMismatchError2($id.text, $id.line, var_iter.getType().toString(), C_TYPE.INT_TYPE);
+            Companion.typeMismatchError2($id.text, $id.line, var_iter.getType().toString(), C_TYPE.INT_TYPE);
         }
 
         if($expr1.typ!=C_TYPE.INT_TYPE){
             $errorLocal = true;
             errorSemantic=true;
-            Helper.typeMismatchError2("*expressio*", $expr1.line, $expr1.typ.toString(), C_TYPE.INT_TYPE);
+            Companion.typeMismatchError2("*expressio*", $expr1.line, $expr1.typ.toString(), C_TYPE.INT_TYPE);
         }
 
         if($expr2.typ!=C_TYPE.INT_TYPE){
             $errorLocal = true;
             errorSemantic=true;
-            Helper.typeMismatchError2("*expressio*", $expr2.line, $expr2.typ.toString(), C_TYPE.INT_TYPE);
+            Companion.typeMismatchError2("*expressio*", $expr2.line, $expr2.typ.toString(), C_TYPE.INT_TYPE);
         }
 
     } KW_DO (sentence {c1Code.addAll($sentence.code);} )* KW_ENDFOR{
@@ -688,7 +728,7 @@ while_loop returns [Vector<Long> code]
     : KW_WHILE expr /* boolean */ KW_DO (sentence {c1Code.addAll($sentence.code);} )* KW_ENDWHILE {
         if($expr.typ!=C_TYPE.BOOL_TYPE){
             errorSemantic=true;
-            Helper.typeMismatchError2("*expressio*", $expr.line, $expr.typ.toString(), C_TYPE.BOOL_TYPE);
+            Companion.typeMismatchError2("*expressio*", $expr.line, $expr.typ.toString(), C_TYPE.BOOL_TYPE);
         }
         else{ //no error, codegen
             $code.addAll($expr.code);
@@ -715,17 +755,18 @@ read_operation returns [Vector<Long> code]
     : KW_INPUT TK_LPAR id=TK_IDENTIFIER TK_RPAR{
         Registre var = TS.obtenir($id.text);
 
-        if(var == null) { errorSemantic = true; Helper.undefinedIdentifierError($id.text, $id.line);}
+        if(var == null) { errorSemantic = true; Companion.undefinedIdentifierError($id.text, $id.line);}
         else if(var.getSupertype()!=C_SUPERTYPE.VARIABLE_SUPERTYPE) {
            errorSemantic = true;
-           Helper.identifierIsNotAVariableError($id.text, $id.line);
+           Companion.identifierIsNotAVariableError($id.text, $id.line);
         }
-        else if(Helper.processBaseType(var.getType())==C_TYPE.INVALID_TYPE){ //is not a basetpye
+        else if(Companion.processBaseType(var.getType())==C_TYPE.INVALID_TYPE){ //is not a basetpye
            errorSemantic = true;
-           Helper.nonBasetypeReadingError($id.text, var.getType(), $id.line);
+           Companion.nonBasetypeReadingError($id.text, var.getType(), $id.line);
         }
         else{ // no error, codegen
-            String bcType = Helper.bytecodeType(var.getType());
+            $code.addAll(generateReadCode(var.getType(), var.getDir()));
+            /*String bcType = Companion.bytecodeType(var.getType());
 
             $code.add(program.INVOKESTATIC);
 
@@ -751,7 +792,7 @@ read_operation returns [Vector<Long> code]
             }
             else { System.err.println("INVALID BYTECODE TYPE"); }
 
-            $code.add(var.getDir());
+            $code.add(var.getDir());*/
 
         }
     };
@@ -762,27 +803,25 @@ write_operation returns [Vector<Long> code]
     KW_OUTPUT
     TK_LPAR
     e=expr {
-        if(!(Helper.isBasetype($e.typ) || $e.typ==C_TYPE.STRING_TYPE)){
+        if(!(Companion.isBasetype($e.typ) || $e.typ==C_TYPE.STRING_TYPE)){
             errorSemantic = true;
-            Helper.writeOperationUnsupportedTypeError($e.typ, $e.line);
+            Companion.writeOperationUnsupportedTypeError($e.typ, $e.line);
         }
         else{
             $code.addAll($e.code);
-            String bcType = Helper.bytecodeType($e.typ);
-            $code.addAll(generateWriteCode(bcType));
+            $code.addAll(generateWriteCode($e.typ));
         }
     }
     (
         TK_COMMA
         ea=expr{
-            if(!(Helper.isBasetype($ea.typ) || $ea.typ==C_TYPE.STRING_TYPE)){
+            if(!(Companion.isBasetype($ea.typ) || $ea.typ==C_TYPE.STRING_TYPE)){
                 errorSemantic = true;
-                Helper.writeOperationUnsupportedTypeError($ea.typ, $ea.line);
+                Companion.writeOperationUnsupportedTypeError($ea.typ, $ea.line);
             }
             else{
                  $code.addAll($ea.code);
-                 String bcType = Helper.bytecodeType($ea.typ);
-                 $code.addAll(generateWriteCode(bcType));
+                 $code.addAll(generateWriteCode($ea.typ));
             }
         }
     )*
@@ -794,33 +833,31 @@ writeln_operation returns [Vector<Long> code]
     $code.add(program.LDC_W);
     $code.add(program.nByte(lineBreak,2));
     $code.add(program.nByte(lineBreak,1));
-    $code.addAll(generateWriteCode(BYTECODE_STRINGTYPE));
+    $code.addAll(generateWriteCode(C_TYPE.STRING_TYPE));
 }
     :
     KW_OUTPUTLN
     TK_LPAR
     (
         e=expr{
-            if(!(Helper.isBasetype($e.typ) || $e.typ==C_TYPE.STRING_TYPE)){
+            if(!(Companion.isBasetype($e.typ) || $e.typ==C_TYPE.STRING_TYPE)){
                 errorSemantic = true;
-                Helper.writeOperationUnsupportedTypeError($e.typ, $e.line);
+                Companion.writeOperationUnsupportedTypeError($e.typ, $e.line);
             }
             else{
                 $code.addAll($e.code);
-                String bcType = Helper.bytecodeType($e.typ);
-                $code.addAll(generateWriteCode(bcType));
+                $code.addAll(generateWriteCode($e.typ));
             }
         }
         (
             TK_COMMA ea=expr{
-                if(!(Helper.isBasetype($ea.typ) || $ea.typ==C_TYPE.STRING_TYPE)){
+                if(!(Companion.isBasetype($ea.typ) || $ea.typ==C_TYPE.STRING_TYPE)){
                     errorSemantic = true;
-                    Helper.writeOperationUnsupportedTypeError($ea.typ, $ea.line);
+                    Companion.writeOperationUnsupportedTypeError($ea.typ, $ea.line);
                 }
                 else{
                      $code.addAll($ea.code);
-                     String bcType = Helper.bytecodeType($ea.typ);
-                     $code.addAll(generateWriteCode(bcType));
+                     $code.addAll(generateWriteCode($ea.typ));
                 }
             }
         )*
@@ -851,14 +888,14 @@ direct_evaluation_expr returns[C_TYPE typ, int line, Vector<Long> code]
         $line = $id.line;
 
         if(var == null){
-            Helper.undefinedIdentifierError($id.text, $id.line);
+            Companion.undefinedIdentifierError($id.text, $id.line);
             $typ = C_TYPE.INVALID_TYPE;
             errorSemantic = true;
         }
         else if(var.getSupertype()==C_SUPERTYPE.VARIABLE_SUPERTYPE){
             C_TYPE varType = var.getType();
 
-            if(Helper.isBasetype(varType)){
+            if(Companion.isBasetype(varType)){
                 $typ = varType;
                 switch(varType){
                     case CHAR_TYPE:
@@ -934,7 +971,7 @@ ternary returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean localE
         if($cond.typ!=C_TYPE.BOOL_TYPE){
             $localError = true;
             errorSemantic=true;
-            Helper.typeMismatchError($cond.typ, C_TYPE.BOOL_TYPE, $cond.line);
+            Companion.typeMismatchError($cond.typ, C_TYPE.BOOL_TYPE, $cond.line);
         }
     }
     TK_QMARK
@@ -948,7 +985,7 @@ ternary returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean localE
         else if($e1.typ != $e2.typ){ //Neither of these are real
             $localError = true;
             errorSemantic = true;
-            Helper.ternaryTypeMismatchError($e1.typ, $e2.typ, $cond.line);
+            Companion.ternaryTypeMismatchError($e1.typ, $e2.typ, $cond.line);
         }
 
         if(!$localError){
@@ -989,14 +1026,14 @@ subexpr returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpe
                 $hasOperator = true;
                 if($t1.typ!=C_TYPE.BOOL_TYPE){
                     errorSemantic = true;
-                    Helper.operatorTypeMismatchError($t1.typ, $o.text, $o.line, C_TYPE.BOOL_TYPE);
+                    Companion.operatorTypeMismatchError($t1.typ, $o.text, $o.line, C_TYPE.BOOL_TYPE);
                 }
             }
         }
         t2=term1{
             if($t2.typ!=C_TYPE.BOOL_TYPE){ //check if the right operand is boolean
                 errorSemantic = true;
-                Helper.operatorTypeMismatchError($t2.typ, $o.text, $o.line, C_TYPE.BOOL_TYPE);
+                Companion.operatorTypeMismatchError($t2.typ, $o.text, $o.line, C_TYPE.BOOL_TYPE);
             }
             else{ //no error
                 $code.addAll($t2.code);
@@ -1020,9 +1057,9 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
             if(!$hasOperator){ //first left operand found, typecheck needed
                 $hasOperator = true;
                 if($o.tk_type == TK_EQUALS || $o.tk_type == TK_NEQUALS ) { // == or !=
-                    if( !(Helper.isBasetype($leftType)) ){ //if the operator isn't a basic type
+                    if( !(Companion.isBasetype($leftType)) ){ //if the operator isn't a basic type
                         errorSemantic = true;
-                        Helper.operatorTypeMismatchError($t1.typ, $o.text, $o.line, "basic type");
+                        Companion.operatorTypeMismatchError($t1.typ, $o.text, $o.line, "basic type");
                         //impossible to propagate a "less restrictive" type, so let's propagate the original one.
                     }
                     //otherwise, leftType should be propagated
@@ -1030,7 +1067,7 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
                 else{ //other operations only work on integer or real numbers
                     if( !($leftType==C_TYPE.INT_TYPE || $leftType==C_TYPE.FLOAT_TYPE) ){ //
                         errorSemantic = true;
-                        Helper.operatorTypeMismatchError($t1.typ, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
+                        Companion.operatorTypeMismatchError($t1.typ, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                         $leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
                     }
                     //otherwise, leftType should be propagated
@@ -1041,9 +1078,9 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
             boolean t1fcast = false, t2fcast = false;
 
             if($o.tk_type == TK_EQUALS || $o.tk_type == TK_NEQUALS ) { // == or !=
-                if( !(Helper.isBasetype($t2.typ)) ){ //if the operator isn't a basic type
+                if( !(Companion.isBasetype($t2.typ)) ){ //if the operator isn't a basic type
                     errorSemantic = true;
-                    Helper.operatorTypeMismatchError($t1.typ, $o.text, $o.line, "basic type");
+                    Companion.operatorTypeMismatchError($t1.typ, $o.text, $o.line, "basic type");
                     //impossible to propagate a "less restrictive" type, so let's propagate the original one.
                 }
                 else if($leftType==C_TYPE.INT_TYPE || $t2.typ==C_TYPE.INT_TYPE){
@@ -1069,7 +1106,7 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
                     }
                     else if( !($leftType==C_TYPE.INT_TYPE && $t2.typ==C_TYPE.INT_TYPE) ){ //error, leftType and t2 types doesn't match
                         errorSemantic = true;
-                        Helper.typeMismatchError($leftType, $t2.typ, $o.line);
+                        Companion.typeMismatchError($leftType, $t2.typ, $o.line);
                     }
                     else{ //both integers
 
@@ -1077,7 +1114,7 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
                 }
                 else if( $leftType != $t2.typ ){
                     errorSemantic = true;
-                    Helper.typeMismatchError($leftType, $t2.typ, $o.line);
+                    Companion.typeMismatchError($leftType, $t2.typ, $o.line);
                 }
                 else{ //both equals but not integers (bytecode integers)
 
@@ -1088,7 +1125,7 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
             else{ //other operations only work on integer or real numbers
                 if( !($t2.typ==C_TYPE.INT_TYPE || $t2.typ==C_TYPE.FLOAT_TYPE) ){
                     errorSemantic = true;
-                    Helper.operatorTypeMismatchError($leftType, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
+                    Companion.operatorTypeMismatchError($leftType, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                 }
                 else{ //if its integer or real
                     if($t2.typ==C_TYPE.FLOAT_TYPE) {
@@ -1167,7 +1204,7 @@ term2 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
                 $hasOperator = true;
                 if( !($leftType==C_TYPE.INT_TYPE || $leftType==C_TYPE.FLOAT_TYPE) ){ //if is neither an integer or a real number
                     errorSemantic = true;
-                    Helper.operatorTypeMismatchError($t1.typ, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
+                    Companion.operatorTypeMismatchError($t1.typ, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                     //$leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
                 }
             }
@@ -1199,7 +1236,7 @@ term2 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
             }
             else{ //typing error
                 errorSemantic = true;
-                Helper.operatorTypeMismatchError($t2.typ, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
+                Companion.operatorTypeMismatchError($t2.typ, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                 $leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
             }
         }
@@ -1222,11 +1259,11 @@ term3 returns [C_TYPE typ, int line, Vector<Long> code] locals [C_TYPE leftType]
             if( ($o.tk_type == TK_INTDIV || $o.tk_type == TK_MODULO) ){ // integer division or modulo
                 if( $t2.typ!=C_TYPE.INT_TYPE ){ //if t2 it's not an integer
                     errorSemantic = true;
-                    Helper.operatorTypeMismatchError($t2.typ, $o.text, $o.line, C_TYPE.INT_TYPE);
+                    Companion.operatorTypeMismatchError($t2.typ, $o.text, $o.line, C_TYPE.INT_TYPE);
                 }
                 else if( $leftType!=C_TYPE.INT_TYPE ){ //if left operand is not an integer
                     errorSemantic = true;
-                    Helper.operatorTypeMismatchError($leftType, $o.text, $o.line, C_TYPE.INT_TYPE);
+                    Companion.operatorTypeMismatchError($leftType, $o.text, $o.line, C_TYPE.INT_TYPE);
                 }
                 else{ //no error
                     $code.addAll($t2.code); //right operand
@@ -1243,13 +1280,13 @@ term3 returns [C_TYPE typ, int line, Vector<Long> code] locals [C_TYPE leftType]
                 if( !($t2.typ==C_TYPE.FLOAT_TYPE || $t2.typ==C_TYPE.INT_TYPE) ){
                     errorSemantic = true;
                     errorLocal = true;
-                    Helper.operatorTypeMismatchError($t2.typ, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
+                    Companion.operatorTypeMismatchError($t2.typ, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                 }
 
                 if( !($leftType==C_TYPE.FLOAT_TYPE || $leftType==C_TYPE.INT_TYPE) ){ //if left operand is not an integer or a real number
                     errorSemantic = true;
                     errorLocal = true;
-                    Helper.operatorTypeMismatchError($leftType, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
+                    Companion.operatorTypeMismatchError($leftType, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                 }
 
                 if($o.tk_type == TK_DIV) {
@@ -1298,12 +1335,12 @@ term4 returns [C_TYPE typ, int line, Vector<Long> code]
     ) {
         if( $o.tk_type == TK_INVERT && !($t.typ==C_TYPE.INT_TYPE || $t.typ==C_TYPE.FLOAT_TYPE) ){ //if not inverting an integer or a real
             errorSemantic = true;
-            Helper.operatorTypeMismatchError($t.typ, $o.text, $t.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
+            Companion.operatorTypeMismatchError($t.typ, $o.text, $t.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
             $typ = C_TYPE.INT_TYPE; //propagate the (less restrictive) operation type, whether there's an error or not, to avoid error propagation.
         }
         else if ( $o.tk_type == KW_NO && !($t.typ==C_TYPE.BOOL_TYPE) ){ //if not negating a boolean
             errorSemantic = true;
-            Helper.operatorTypeMismatchError($t.typ, $o.text, $t.line, C_TYPE.BOOL_TYPE);
+            Companion.operatorTypeMismatchError($t.typ, $o.text, $t.line, C_TYPE.BOOL_TYPE);
             $typ = C_TYPE.BOOL_TYPE; //propagate the operation type, whether there's an error or not, to avoid error propagation.
         }
         else{ //no error
