@@ -1,10 +1,11 @@
 package LANSet;
 
-import LANSet.Bytecode.Bytecode;
-
 import java.util.*;
 
-public class Companion { //TODO pensar un nom decent per aixo
+public class Companion {
+
+    Companion(){
+    }
 
     private static final Set<LANSetParser.C_TYPE> baseTypes = new HashSet<>(Arrays.asList(
             LANSetParser.C_TYPE.CHAR_TYPE,
@@ -54,8 +55,6 @@ public class Companion { //TODO pensar un nom decent per aixo
 
         return idType;
     }
-
-
 
     //Pre: cert
     //Post: retorna el C_TYPE que correspon a la ID del token (type)

@@ -106,14 +106,13 @@ grammar LANSet;
         }
     }
 
-    SymTable<Registre> TS = new SymTable<Registre>(1000);
-    Bytecode program;
-    Long lineBreak;
-    Long nVar = 0L;
-    boolean errorSintactic = false;
-    boolean errorSemantic = false;
+    private SymTable<Registre> TS = new SymTable<Registre>(1000);
+    private Bytecode program;
+    private Long lineBreak;
+    private Long nVar = 0L;
+    private boolean errorSemantic = false;
 
-    String classFile = "";
+    private String classFile = "";
 
     @Override
     public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException e)
@@ -121,7 +120,6 @@ grammar LANSet;
         //Si volem conservar el comportament inicial
         super.notifyErrorListeners(offendingToken,msg,e);
         //Codi personalitzat
-        errorSintactic=true;
     }
 
     //non static methods
@@ -309,7 +307,7 @@ TK_GREATER: '>';
 TK_LESSEQ: '<=';
 TK_GREATEREQ: '>=';
 TK_EQUALS: '==';
-TK_NEQUALS: '=!';
+TK_NEQUALS: '!=';
 
 TK_OR: '|';
 TK_AND: '&';
@@ -766,34 +764,6 @@ read_operation returns [Vector<Long> code]
         }
         else{ // no error, codegen
             $code.addAll(generateReadCode(var.getType(), var.getDir()));
-            /*String bcType = Companion.bytecodeType(var.getType());
-
-            $code.add(program.INVOKESTATIC);
-
-            if(bcType.equals(BYTECODE_CHARTYPE)){
-                $code.add(program.nByte(program.mGetChar,2));
-                $code.add(program.nByte(program.mGetChar,1));
-                $code.add(program.ISTORE);
-            }
-            else if(bcType.equals(BYTECODE_INTTYPE)){
-                $code.add(program.nByte(program.mGetInt,2));
-                $code.add(program.nByte(program.mGetInt,1));
-                $code.add(program.ISTORE);
-            }
-            else if(bcType.equals(BYTECODE_FLOATTYPE)){
-                $code.add(program.nByte(program.mGetFloat,2));
-                $code.add(program.nByte(program.mGetFloat,1));
-                $code.add(program.FSTORE);
-            }
-            else if(bcType.equals(BYTECODE_BOOLTYPE)){
-                $code.add(program.nByte(program.mGetBoolean,2));
-                $code.add(program.nByte(program.mGetBoolean,1));
-                $code.add(program.ISTORE);
-            }
-            else { System.err.println("INVALID BYTECODE TYPE"); }
-
-            $code.add(var.getDir());*/
-
         }
     };
 
@@ -810,6 +780,8 @@ write_operation returns [Vector<Long> code]
         else{
             $code.addAll($e.code);
             $code.addAll(generateWriteCode($e.typ));
+
+            //$code = companion.write_operation($e.typ, $e.line, $e.code);
         }
     }
     (
@@ -1065,7 +1037,7 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
                     //otherwise, leftType should be propagated
                 }
                 else{ //other operations only work on integer or real numbers
-                    if( !($leftType==C_TYPE.INT_TYPE || $leftType==C_TYPE.FLOAT_TYPE) ){ //
+                    if( !($leftType==C_TYPE.INT_TYPE || $leftType==C_TYPE.FLOAT_TYPE) ){
                         errorSemantic = true;
                         Companion.operatorTypeMismatchError($t1.typ, $o.text, $o.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                         $leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
@@ -1073,6 +1045,7 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
                     //otherwise, leftType should be propagated
                 }
             }
+            else{ System.err.println("FAIG ALGO, NO EM BORRIS (hasOperator)");}
         }
         t2 = term2{
             boolean t1fcast = false, t2fcast = false;
@@ -1104,24 +1077,25 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
 
                         $leftType = C_TYPE.FLOAT_TYPE; //unnecessary assignment
                     }
-                    else if( !($leftType==C_TYPE.INT_TYPE && $t2.typ==C_TYPE.INT_TYPE) ){ //error, leftType and t2 types doesn't match
+                    else if( !($leftType==C_TYPE.INT_TYPE && $t2.typ==C_TYPE.INT_TYPE) ){ //error, leftType and t2 types doesn't match //cane: aquest error no es pot trigerejar mai
                         errorSemantic = true;
                         Companion.typeMismatchError($leftType, $t2.typ, $o.line);
                     }
                     else{ //both integers
-
+                        System.err.println("NO IMPLEMENTAT!");
                     }
                 }
                 else if( $leftType != $t2.typ ){
                     errorSemantic = true;
                     Companion.typeMismatchError($leftType, $t2.typ, $o.line);
                 }
-                else{ //both equals but not integers (bytecode integers)
-
+                else{ //both equals but not integers (bytecode integers) (cane: aka both are float, car or bool)
+                    System.err.println("NO IMPLEMENTAT!");
                 }
 
                 $leftType = C_TYPE.BOOL_TYPE;
-            }
+            } //end == or !=
+
             else{ //other operations only work on integer or real numbers
                 if( !($t2.typ==C_TYPE.INT_TYPE || $t2.typ==C_TYPE.FLOAT_TYPE) ){
                     errorSemantic = true;
@@ -1161,7 +1135,6 @@ term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
                         else if($o.tk_type == TK_LESSEQ) $code.add(program.IF_ICMPLE);
                         else if($o.tk_type == TK_GREATER) $code.add(program.IF_ICMPGT);
                         else $code.add(program.IF_ICMPGE); //GREATEREQ
-
                     }
 
                     Long jump = 8L; //jump to true
@@ -1208,6 +1181,7 @@ term2 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpera
                     //$leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
                 }
             }
+            else{ System.err.println("FAIG ALGO, NO EM BORRIS (hasOperator)");}
         }
         t2 = term3{
             if($t2.typ==C_TYPE.FLOAT_TYPE){ //if t2 is float type, integer promotion may be needed
