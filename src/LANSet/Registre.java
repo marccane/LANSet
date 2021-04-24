@@ -3,8 +3,8 @@ package LANSet;
 class Registre {
 
     private String text;
-    private LANSetParser.C_SUPERTYPE supertype;
-    private LANSetParser.C_TYPE type;
+    private C_SUPERTYPE supertype;
+    private C_TYPE type;
 
     private int line;
     private int pos;
@@ -15,29 +15,29 @@ class Registre {
 
     Registre() {
         text = "";
-        supertype = LANSetParser.C_SUPERTYPE.INVALID_SUPERTYPE;
-        type = LANSetParser.C_TYPE.INVALID_TYPE;
+        supertype = C_SUPERTYPE.INVALID_SUPERTYPE;
+        type = C_TYPE.INVALID_TYPE;
         line = -1;
         pos = -1;
     }
 
     Registre(String te) {
         text = te;
-		supertype = LANSetParser.C_SUPERTYPE.INVALID_SUPERTYPE;
-		type = LANSetParser.C_TYPE.INVALID_TYPE;
+		supertype = C_SUPERTYPE.INVALID_SUPERTYPE;
+		type = C_TYPE.INVALID_TYPE;
         line = -1;
         pos = -1;
     }
 
-    Registre(String te, LANSetParser.C_SUPERTYPE st) {
+    Registre(String te, C_SUPERTYPE st) {
         text = te;
         supertype = st;
-		type = LANSetParser.C_TYPE.INVALID_TYPE;
+		type = C_TYPE.INVALID_TYPE;
         line = -1;
         pos = -1;
     }
 
-    Registre(String te, LANSetParser.C_SUPERTYPE st, LANSetParser.C_TYPE t) {
+    Registre(String te, C_SUPERTYPE st, C_TYPE t) {
         text = te;
         supertype = st;
         type = t;
@@ -45,7 +45,7 @@ class Registre {
         pos = -1;
     }
 
-    Registre(String te, LANSetParser.C_SUPERTYPE st, LANSetParser.C_TYPE t, int l) {
+    Registre(String te, C_SUPERTYPE st, C_TYPE t, int l) {
         text = te;
         supertype = st;
         type = t;
@@ -53,7 +53,7 @@ class Registre {
         pos = -1;
     }
 
-    Registre(String te, LANSetParser.C_SUPERTYPE st, LANSetParser.C_TYPE t, int l, int p) {
+    Registre(String te, C_SUPERTYPE st, C_TYPE t, int l, int p) {
         text = te;
         supertype = st;
         type = t;
@@ -65,11 +65,11 @@ class Registre {
         return (text);
     }
 
-	LANSetParser.C_SUPERTYPE getSupertype() {
+	C_SUPERTYPE getSupertype() {
         return (supertype);
     }
 
-    LANSetParser.C_TYPE getType() {
+    C_TYPE getType() {
         return (type);
     }
 
@@ -93,7 +93,7 @@ class Registre {
         text = te;
     }
 
-    void putType(LANSetParser.C_TYPE t) {
+    void putType(C_TYPE t) {
         type = t;
     }
 
@@ -109,7 +109,7 @@ class Registre {
         intval = i;
     }
 
-    void putSupertype(LANSetParser.C_SUPERTYPE st) {
+    void putSupertype(C_SUPERTYPE st) {
         supertype = st;
     }
 

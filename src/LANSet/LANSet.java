@@ -1,6 +1,7 @@
 package LANSet;
 
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.File;
 
@@ -29,12 +30,11 @@ public class LANSet {
 
 		LANSetLexer lexer = new LANSetLexer(CharStreams.fromFileName(lansSourceFile));
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
-		LANSetParser p = new LANSetParser(tokens);
-		p.setLANSClassFile(outputFile);
-		try {
-			p.start();
-		} catch(Exception e){
-			e.printStackTrace();
-		}
+		LANSetParser parser = new LANSetParser(tokens);
+		ParseTree tree = parser.start();
+
+		LANSetBaseVisitorImpl visitor = new LANSetBaseVisitorImpl();
+		//p.setLANSClassFile(outputFile);
+		visitor.visit(tree);
 	}
 }

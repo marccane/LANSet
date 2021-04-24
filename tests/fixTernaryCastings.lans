@@ -34,7 +34,7 @@ fvariables
 
 //e := (cert)?1:2;
 //r := (cert)?(1.2):(2.5);
-r2 := (fals)?(1):(2.5);
+r2 := cert ? 1 : 2.5;
 
 //escriure( cert ? 1.2 : 2 );
 escriureln( r2 );

@@ -1,0 +1,16 @@
+tipus
+ftipus
+
+constants
+fconstants
+
+programa ProgramaTest
+
+si cert llavors
+    escriure(2);
+    si fals llavors
+        escriure(1);
+    fsi
+fsi
+
+fprograma
