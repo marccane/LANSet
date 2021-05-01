@@ -4,13 +4,6 @@
 
 grammar LANSet;
 
-@header{
-    import java.util.Vector;
-    import LANSet.Bytecode.*;
-}
-
-@parser::members{}
-
 //////////////////// FRAGMENTS ////////////////////
 
 fragment DIGIT: '0'..'9';
@@ -118,10 +111,6 @@ TK_MULTICOMMENT: '/*' (.)*? '*/' -> skip;
 
 SPACES: (' ' | '\n' | '\r' | '\t') -> skip;
 
-///////////////////////////////////////////////////
-
-inici: (~EOF)+ ; //Lexer testing rule
-
 ////////////////////////////////// MAIN RULE //////////////////////////////////
 
 start //locals []
@@ -173,7 +162,7 @@ const_declaration_block: KW_CONSTBLOCK (const_declaration TK_SEMICOLON)* KW_ENDC
 
 const_declaration: bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT value=basetype_value ;
 
-basetype_value returns [String text, C_TYPE typ, int line, Vector<Long> code]
+basetype_value returns [String text, C_TYPE typ, int line]
     :   tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL) ;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -182,7 +171,7 @@ basetype_value returns [String text, C_TYPE typ, int line, Vector<Long> code]
 
 var_declaration_block: KW_VARIABLEBLOCK (var_declaration TK_SEMICOLON)* KW_ENDVARIABLEBLOCK;
 
-var_declaration: t=type id=TK_IDENTIFIER ;
+var_declaration: type id=TK_IDENTIFIER ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -206,7 +195,7 @@ function_definition: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RPA
 
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
 
-sentence returns [Vector<Long> code]
+sentence
         :   assignment TK_SEMICOLON             #sentenceAssignment
         |   conditional                         #sentenceConditional
         |   for_loop                            #sentenceFor
@@ -217,7 +206,7 @@ sentence returns [Vector<Long> code]
         |   writeln_operation TK_SEMICOLON      #sentenceWriteln
         ;
 
-assignment returns [Vector<Long> code]
+assignment
     :   lval=lvalue TK_ASSIGNMENT e=expr ; //lvalue or expr
 
 lvalue returns[C_TYPE typ, int line, String ident]
@@ -226,22 +215,25 @@ lvalue returns[C_TYPE typ, int line, String ident]
     |   id=TK_IDENTIFIER
     ;
 
-conditional returns [Vector<Long> code]
-    : KW_IF expr /* boolean */ KW_THEN (sentence)* (KW_ELSE (sentence)*)? KW_ENDIF ;
+else_sentence //TODO: explore if there's an alternative way to do this (giving a name to each sentence doesn't result in a list...)
+    : sentence;
 
-for_loop returns [Vector<Long> code] locals [boolean errorLocal]
+conditional
+    : KW_IF expr /* boolean */ KW_THEN (sentence)* (KW_ELSE (else_sentence)*)? KW_ENDIF ;
+
+for_loop locals [boolean errorLocal]
     : KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */  KW_DO (sentence)* KW_ENDFOR ;
 
-while_loop returns [Vector<Long> code]
-    : KW_WHILE expr /* boolean */ KW_DO (sentence  )* KW_ENDWHILE ;
+while_loop
+    : KW_WHILE expr /* boolean  */ KW_DO (sentence  )* KW_ENDWHILE ;
 
-function_call returns [C_TYPE typ, int line, Vector<Long> code]
+function_call returns [C_TYPE typ, int line]
     : TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR ;
 
-read_operation returns [Vector<Long> code]
+read_operation
     : KW_INPUT TK_LPAR id=TK_IDENTIFIER TK_RPAR;
 
-write_operation returns [Vector<Long> code]
+write_operation
     : KW_OUTPUT TK_LPAR
     e=expr 
     (
@@ -250,7 +242,7 @@ write_operation returns [Vector<Long> code]
     )*
     TK_RPAR;
 
-writeln_operation returns [Vector<Long> code]
+writeln_operation
     : KW_OUTPUTLN TK_LPAR
     (
         e=expr
@@ -264,12 +256,12 @@ writeln_operation returns [Vector<Long> code]
 ///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////// EXPRESSIONS BLOCK //////////////////////////////
-expr returns[C_TYPE typ, int line, Vector<Long> code]
+expr returns[C_TYPE typ, int line]
     :   ternary
     |   subexpr
     ; //care with priority
 
-direct_evaluation_expr returns[C_TYPE typ, int line, Vector<Long> code]
+direct_evaluation_expr returns[C_TYPE typ, int line]
     :   cv=constant_value       #directEvaluationCv
     |   id=TK_IDENTIFIER        #directEvaluationId
     |   tuple_acces             #directEvaluationTuple
@@ -277,7 +269,7 @@ direct_evaluation_expr returns[C_TYPE typ, int line, Vector<Long> code]
     |   function_call           #directEvaluationFunction
     ;
 
-constant_value returns [C_TYPE typ, int line, Vector<Long> code]
+constant_value returns [C_TYPE typ, int line]
     :   b=basetype_value
     |   s=TK_STRING  //For illustrative purposes
     ;
@@ -286,15 +278,15 @@ tuple_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER ;
 
 vector_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK ;
 
-ternary returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean localError]
+ternary returns [C_TYPE typ, int line] locals [boolean localError]
     :   cond=subexpr /* boolean */ TK_QMARK e1=expr TK_COLON e2=expr ;
 
 //HAZARD ZONE
-subexpr returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOperator]
+subexpr returns [C_TYPE typ, int line]
     :
     t1=term1
     (
-        o=logic_operators 
+        lo=logic_operators
         t2=term1
     )*
     ;
@@ -302,47 +294,47 @@ subexpr returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOpe
 //operation: (term1 logic_operators operation) | term1;
 logic_operators returns [String text, int tk_type, int line]: tk=(TK_AND | TK_OR);
 
-term1 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOperator, C_TYPE leftType]
+term1 returns [C_TYPE typ, int line] locals [boolean hasOperator, C_TYPE leftType]
     :
     t1 = term2 
     (
-        o = equality_operator
-        t2 = term2
+        equality_operator
+        term2
     )*
     ;
 
 //term1: (term2 equality_operator term1) | term2;
 equality_operator returns [String text, int tk_type, int line]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) ;
 
-term2 returns [C_TYPE typ, int line, Vector<Long> code] locals [boolean hasOperator, C_TYPE leftType]
+term2 returns [C_TYPE typ, int line] locals [boolean hasOperator, C_TYPE leftType]
     :
     t1 = term3 
     (
-        o = addition_operators
-        t2 = term3
+        addition_operators
+        term3
     )*
     ;
 
 //term2: (term3 addition_operators term2) | term3;
 addition_operators returns [String text, int tk_type, int line]: tk=(TK_SUB | TK_SUM) ;
 
-term3 returns [C_TYPE typ, int line, Vector<Long> code] locals [C_TYPE leftType]
+term3 returns [C_TYPE typ, int line] locals [C_TYPE leftType]
     :
     t1 = term4 
     (
-        o = multiplication_operators
-        t2 = term4
+        multiplication_operators
+        term4
     )*
     ;
 
 //term3: (term4 multiplication_operators term3) | term4;
 multiplication_operators returns [String text, int tk_type, int line]: tk=(TK_PROD | TK_DIV | TK_INTDIV | TK_MODULO) ;
 
-term4 returns [C_TYPE typ, int line, Vector<Long> code]
+term4 returns [C_TYPE typ, int line]
     :
     (
-        o = negation_operators
-        t = term5
+        negation_operators
+        term5
     ) 
     |   t = term5
     ;
@@ -350,7 +342,7 @@ term4 returns [C_TYPE typ, int line, Vector<Long> code]
 negation_operators returns [String text, int tk_type]:
     tk = (KW_NO | TK_INVERT) ;
 
-term5 returns [C_TYPE typ, int line, Vector<Long> code]
+term5 returns [C_TYPE typ, int line]
     :   direct_evaluation_expr
     |   TK_LPAR expr TK_RPAR
     ;
