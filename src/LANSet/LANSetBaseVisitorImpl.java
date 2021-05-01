@@ -12,43 +12,43 @@ import java.util.Vector;
 import static LANSet.LANSetLexer.*;
 import static LANSet.LANSetParser.TK_IDENTIFIER;
 
-public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
+public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     //TODO investigate
-    public returnStruct visitTerminal(TerminalNode node) {
+    public ReturnStruct visitTerminal(TerminalNode node) {
         return this.defaultResult();
     }
 
     @Override
     //TODO investigate
-    public returnStruct visitErrorNode(ErrorNode node) {
+    public ReturnStruct visitErrorNode(ErrorNode node) {
         return this.defaultResult();
     }
 
     @Override
-    public returnStruct defaultResult(){
-        return new returnStruct();
+    public ReturnStruct defaultResult(){
+        return new ReturnStruct();
     }
 
     @Override
-    protected returnStruct aggregateResult(returnStruct aggregate, returnStruct nextResult) {
+    protected ReturnStruct aggregateResult(ReturnStruct aggregate, ReturnStruct nextResult) {
         nextResult.code.addAll(aggregate.code);
         return nextResult;
     }
 
     @Override
-    protected boolean shouldVisitNextChild(RuleNode node, returnStruct currentResult) {
+    protected boolean shouldVisitNextChild(RuleNode node, ReturnStruct currentResult) {
         return true; //TODO: Can we optimize?
     }
 
     @Override
-    public returnStruct visitStart(LANSetParser.StartContext ctx) {
+    public ReturnStruct visitStart(LANSetParser.StartContext ctx) {
         System.out.println("Hola, " +  ctx.prog_id.getText());
 
         for(int i=0; i<ctx.getChildCount(); i++){
             ParseTree pt = ctx.getChild(i);
-            returnStruct rs = visit(pt);
+            ReturnStruct rs = visit(pt);
             code.addAll(rs.code);
         }
 
@@ -62,7 +62,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
     }
 
     @Override
-    public returnStruct visitType_declaration_block(LANSetParser.Type_declaration_blockContext ctx) {
+    public ReturnStruct visitType_declaration_block(LANSetParser.Type_declaration_blockContext ctx) {
         System.out.println("visitType_declaration_block");
         return visitChildren(ctx);
         /*if(ctx != null){ //perquè apareix com a opcional en algun lloc
@@ -73,43 +73,43 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
     }
 
     @Override
-    public returnStruct visitType_declaration(LANSetParser.Type_declarationContext ctx) {
+    public ReturnStruct visitType_declaration(LANSetParser.Type_declarationContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitVector_definition(LANSetParser.Vector_definitionContext ctx) {
+    public ReturnStruct visitVector_definition(LANSetParser.Vector_definitionContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitTuple_definition(LANSetParser.Tuple_definitionContext ctx) {
+    public ReturnStruct visitTuple_definition(LANSetParser.Tuple_definitionContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitFunc_declaration_block(LANSetParser.Func_declaration_blockContext ctx) {
+    public ReturnStruct visitFunc_declaration_block(LANSetParser.Func_declaration_blockContext ctx) {
         System.out.println("visitFunc_declaration_block");
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitAction_declaration(LANSetParser.Action_declarationContext ctx) {
+    public ReturnStruct visitAction_declaration(LANSetParser.Action_declarationContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitFunction_declaration(LANSetParser.Function_declarationContext ctx) {
+    public ReturnStruct visitFunction_declaration(LANSetParser.Function_declarationContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitFormal_parameters(LANSetParser.Formal_parametersContext ctx) {
+    public ReturnStruct visitFormal_parameters(LANSetParser.Formal_parametersContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitType(LANSetParser.TypeContext ctx) {
+    public ReturnStruct visitType(LANSetParser.TypeContext ctx) {
         ctx.tkType = ctx.typ.getType();
         ctx.text = ctx.typ.getText();
         ctx.line = ctx.typ.getLine();
@@ -117,29 +117,29 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
     }
 
     @Override
-    public returnStruct visitConst_declaration_block(LANSetParser.Const_declaration_blockContext ctx) {
+    public ReturnStruct visitConst_declaration_block(LANSetParser.Const_declaration_blockContext ctx) {
         System.out.println("visitConst_declaration_block");
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitConst_declaration(LANSetParser.Const_declarationContext ctx) {
+    public ReturnStruct visitConst_declaration(LANSetParser.Const_declarationContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitBasetype_value(LANSetParser.Basetype_valueContext ctx) {
+    public ReturnStruct visitBasetype_value(LANSetParser.Basetype_valueContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitVar_declaration_block(LANSetParser.Var_declaration_blockContext ctx) {
+    public ReturnStruct visitVar_declaration_block(LANSetParser.Var_declaration_blockContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitVar_declaration(LANSetParser.Var_declarationContext ctx) {
-        returnStruct rs = visitChildren(ctx);
+    public ReturnStruct visitVar_declaration(LANSetParser.Var_declarationContext ctx) {
+        ReturnStruct rs = visitChildren(ctx);
         if(ctx.type().tkType == TK_IDENTIFIER) {
             System.out.println("TODO: alias, tuple or vector variable detected");
             if(!identifierInUse(ctx.type().text)){
@@ -159,39 +159,39 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
     }
 
     @Override
-    public returnStruct visitFunc_implementation_block(LANSetParser.Func_implementation_blockContext ctx) {
+    public ReturnStruct visitFunc_implementation_block(LANSetParser.Func_implementation_blockContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitAction_definition(LANSetParser.Action_definitionContext ctx) {
+    public ReturnStruct visitAction_definition(LANSetParser.Action_definitionContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitFunction_definition(LANSetParser.Function_definitionContext ctx) {
+    public ReturnStruct visitFunction_definition(LANSetParser.Function_definitionContext ctx) {
         return visitChildren(ctx);
     }
 
     /*@Override
-    public returnStruct visitSentence(LANSetParser.SentenceContext ctx) {
+    public ReturnStruct visitSentence(LANSetParser.SentenceContext ctx) {
         return visitChildren(ctx);
     }*/
 
     @Override
-    public returnStruct visitAssignment(LANSetParser.AssignmentContext ctx) {
+    public ReturnStruct visitAssignment(LANSetParser.AssignmentContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitLvalue(LANSetParser.LvalueContext ctx) {
+    public ReturnStruct visitLvalue(LANSetParser.LvalueContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitConditional(LANSetParser.ConditionalContext ctx) {
+    public ReturnStruct visitConditional(LANSetParser.ConditionalContext ctx) {
         System.out.println("Condicional " + ctx.expr().getText());
-        returnStruct rs = new returnStruct();
+        ReturnStruct rs = new ReturnStruct();
         Vector<Long> c1Code = new Vector<>(), c2Code = new Vector<>();
 
         for (LANSetParser.SentenceContext sentence: ctx.sentence())
@@ -224,72 +224,72 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
     }
 
     @Override
-    public returnStruct visitFor_loop(LANSetParser.For_loopContext ctx) {
+    public ReturnStruct visitFor_loop(LANSetParser.For_loopContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitWhile_loop(LANSetParser.While_loopContext ctx) {
+    public ReturnStruct visitWhile_loop(LANSetParser.While_loopContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitFunction_call(LANSetParser.Function_callContext ctx) {
+    public ReturnStruct visitFunction_call(LANSetParser.Function_callContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitRead_operation(LANSetParser.Read_operationContext ctx) {
+    public ReturnStruct visitRead_operation(LANSetParser.Read_operationContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitWrite_operation(LANSetParser.Write_operationContext ctx) {
+    public ReturnStruct visitWrite_operation(LANSetParser.Write_operationContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitWriteln_operation(LANSetParser.Writeln_operationContext ctx) {
+    public ReturnStruct visitWriteln_operation(LANSetParser.Writeln_operationContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitExpr(LANSetParser.ExprContext ctx) {
+    public ReturnStruct visitExpr(LANSetParser.ExprContext ctx) {
         return visitChildren(ctx); //Ok
     }
 
     /*@Override
-    public returnStruct visitDirect_evaluation_expr(LANSetParser.Direct_evaluation_exprContext ctx) {
+    public ReturnStruct visitDirect_evaluation_expr(LANSetParser.Direct_evaluation_exprContext ctx) {
         return visitChildren(ctx);
     }*/
 
     @Override
-    public returnStruct visitConstant_value(LANSetParser.Constant_valueContext ctx) {
+    public ReturnStruct visitConstant_value(LANSetParser.Constant_valueContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitTuple_acces(LANSetParser.Tuple_accesContext ctx) {
+    public ReturnStruct visitTuple_acces(LANSetParser.Tuple_accesContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitVector_acces(LANSetParser.Vector_accesContext ctx) {
+    public ReturnStruct visitVector_acces(LANSetParser.Vector_accesContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitTernary(LANSetParser.TernaryContext ctx) {
+    public ReturnStruct visitTernary(LANSetParser.TernaryContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitSubexpr(LANSetParser.SubexprContext ctx) {
+    public ReturnStruct visitSubexpr(LANSetParser.SubexprContext ctx) {
         boolean hasOperator = false;
-        returnStruct rs = visit(ctx.t1);
+        ReturnStruct rs = visit(ctx.t1);
         ctx.typ = ctx.t1.typ;
         ctx.line = ctx.t1.line;
-        //returnStruct rs = visitChildren(ctx);
+        //ReturnStruct rs = visitChildren(ctx);
         for(int i=0;i<ctx.logic_operators().size();i++){
             LANSetParser.Logic_operatorsContext operator = ctx.logic_operators(i);
             visit(operator);
@@ -301,7 +301,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
                 }
             }
             LANSetParser.Term1Context t2 = ctx.term1(i+1);
-            returnStruct rsT2 = visit(t2);
+            ReturnStruct rsT2 = visit(t2);
             if(ctx.t1.typ!=C_TYPE.BOOL_TYPE){ //check if the right operand is boolean
                 errorSemantic = true;
                 Companion.operatorTypeMismatchError(t2.typ, operator.text, operator.line, C_TYPE.BOOL_TYPE);
@@ -319,16 +319,16 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
     }
 
     @Override
-    public returnStruct visitLogic_operators(LANSetParser.Logic_operatorsContext ctx) {
+    public ReturnStruct visitLogic_operators(LANSetParser.Logic_operatorsContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitTerm1(LANSetParser.Term1Context ctx) {
+    public ReturnStruct visitTerm1(LANSetParser.Term1Context ctx) {
         boolean hasOperator = false;
         C_TYPE leftType;
 
-        returnStruct rs = visit(ctx.t1);
+        ReturnStruct rs = visit(ctx.t1);
         ctx.typ = ctx.t1.typ;
         ctx.line = ctx.t1.line;
         leftType = ctx.t1.typ;
@@ -358,7 +358,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
             else{ System.err.println("FAIG ALGO, NO EM BORRIS (hasOperator)");}
 
             LANSetParser.Term2Context t2 = ctx.term2(i+1);
-            returnStruct rsT2 = visit(t2);
+            ReturnStruct rsT2 = visit(t2);
 
             //Todo: simplify, clean or simply rewrite
             //region gatell
@@ -475,55 +475,55 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
     }
 
     @Override
-    public returnStruct visitEquality_operator(LANSetParser.Equality_operatorContext ctx) {
+    public ReturnStruct visitEquality_operator(LANSetParser.Equality_operatorContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitTerm2(LANSetParser.Term2Context ctx) {
+    public ReturnStruct visitTerm2(LANSetParser.Term2Context ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitAddition_operators(LANSetParser.Addition_operatorsContext ctx) {
+    public ReturnStruct visitAddition_operators(LANSetParser.Addition_operatorsContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitTerm3(LANSetParser.Term3Context ctx) {
+    public ReturnStruct visitTerm3(LANSetParser.Term3Context ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitMultiplication_operators(LANSetParser.Multiplication_operatorsContext ctx) {
+    public ReturnStruct visitMultiplication_operators(LANSetParser.Multiplication_operatorsContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitTerm4(LANSetParser.Term4Context ctx) {
+    public ReturnStruct visitTerm4(LANSetParser.Term4Context ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitNegation_operators(LANSetParser.Negation_operatorsContext ctx) {
+    public ReturnStruct visitNegation_operators(LANSetParser.Negation_operatorsContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public returnStruct visitTerm5(LANSetParser.Term5Context ctx) {
+    public ReturnStruct visitTerm5(LANSetParser.Term5Context ctx) {
         return visitChildren(ctx);
     }
 
     private int visitCount = 0;
     @Override
-    public returnStruct visit(ParseTree parseTree) {
+    public ReturnStruct visit(ParseTree parseTree) {
         visitCount++;
         return parseTree.accept(this);
     }
 
     /*int visitCount = 0;
     @Override
-    public returnStruct visit(ParseTree parseTree) {
+    public ReturnStruct visit(ParseTree parseTree) {
         visitCount++;
         //System.out.println("Soc un node qualsevol");
         //return visit(parseTree);
@@ -531,17 +531,17 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<returnStruct>{
     }
 
     @Override
-    public returnStruct visitChildren(RuleNode ruleNode) {
+    public ReturnStruct visitChildren(RuleNode ruleNode) {
         return visitChildren(ruleNode);
     }
 
     @Override
-    public returnStruct visitTerminal(TerminalNode terminalNode) {
+    public ReturnStruct visitTerminal(TerminalNode terminalNode) {
         return visitTerminal(terminalNode);
     }
 
     @Override
-    public returnStruct visitErrorNode(ErrorNode errorNode) {
+    public ReturnStruct visitErrorNode(ErrorNode errorNode) {
         return visitErrorNode(errorNode);
     }*/
 
