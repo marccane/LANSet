@@ -3,7 +3,6 @@ package LANSet;
 import java.util.List;
 import java.util.Vector;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -47,11 +46,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         return rs;
     }
 
-    /*@Override
-    public ReturnStruct visitType_declaration_block(LANSetParser.Type_declaration_blockContext ctx) {
-        return visitChildren(ctx);
-    }*/
-
     @Override
     public ReturnStruct visitType_declaration(LANSetParser.Type_declarationContext ctx) {
 
@@ -86,11 +80,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         return visitChildren(ctx);
     }
 
-    /*@Override
-    public ReturnStruct visitFunc_declaration_block(LANSetParser.Func_declaration_blockContext ctx) {
-        return visitChildren(ctx);
-    }*/
-
     @Override
     public ReturnStruct visitAction_declaration(LANSetParser.Action_declarationContext ctx) {
         return visitChildren(ctx);
@@ -114,15 +103,9 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         return visitChildren(ctx);
     }
 
-    /*@Override
-    public ReturnStruct visitConst_declaration_block(LANSetParser.Const_declaration_blockContext ctx) {
-        return visitChildren(ctx);
-    }*/
-
     @Override
     public ReturnStruct visitConst_declaration(LANSetParser.Const_declarationContext ctx) {
-        ReturnStruct rs = visit(ctx.value); //OJO!!! jo entenc que només cal visitar les regles i que els tokens ja tindràn els valors correctes sense haver-los de visitar
-        //System.out.println("Tipus: " + $bt.type + " " + $value.typ + " " + TK_REAL);
+        ReturnStruct rs = visit(ctx.value);
 
         if(identifierInUse(ctx.id.getText())){
             Companion.repeatedIdentifierError(ctx.id.getText(), ctx.id.getLine());
@@ -150,12 +133,11 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     public ReturnStruct visitBasetype_value(LANSetParser.Basetype_valueContext ctx) {
+        Long value = -1L;
         ReturnStruct rs = new ReturnStruct();
         ctx.text = ctx.tk.getText();
         ctx.typ = Companion.cTypeFromTokenID(ctx.tk.getType());
         ctx.line = ctx.tk.getLine();
-
-        Long value = -1L;
 
         switch(ctx.tk.getType()){
             case TK_INTEGER:
@@ -171,8 +153,8 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 value = program.addConstant(BYTECODE_FLOATTYPE, ctx.tk.getText());
                 break;
             default:
-                System.err.println("Basetype_value default case. This should not happen");
                 errorSemantic = true;
+                System.err.println("Basetype_value default case. This should not happen");
                 break;
         }
 
@@ -181,12 +163,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         rs.code.add(program.nByte(value,1));
         return rs;
     }
-
-    /*
-    @Override
-    public ReturnStruct visitVar_declaration_block(LANSetParser.Var_declaration_blockContext ctx) {
-        return visitChildren(ctx);
-    }*/
 
     @Override
     public ReturnStruct visitVar_declaration(LANSetParser.Var_declarationContext ctx) {
@@ -209,11 +185,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         return rs;
     }
 
-    /*@Override
-    public ReturnStruct visitFunc_implementation_block(LANSetParser.Func_implementation_blockContext ctx) {
-        return visitChildren(ctx);
-    }*/
-
     @Override
     public ReturnStruct visitAction_definition(LANSetParser.Action_definitionContext ctx) {
         return visitChildren(ctx);
@@ -230,7 +201,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         ReturnStruct rsExpr = visit(ctx.e);
         rsLval.code.addAll(rsExpr.code);
 
-        Registre var = TS.obtenir(ctx.lval.ident);
+        Registre var = TS.obtenir(ctx.lval.ident); //Todo: this is redundant, we could return the register from the lval evaluation and move the error checking appropiately
         boolean canBePromoted = (ctx.lval.typ==C_TYPE.FLOAT_TYPE && ctx.e.typ==C_TYPE.INT_TYPE);
 
         if(var == null){
@@ -276,7 +247,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             System.err.println("TODO: vector as an lvalue");
         }
         else{
-            //registerBasetypeVariable(C_TYPE.FLOAT_TYPE,$id); //debug
             Registre r = TS.obtenir(ctx.id.getText());
             ctx.typ = (r == null) ? C_TYPE.INVALID_TYPE : r.getType();
             ctx.line = ctx.id.getLine();
@@ -288,7 +258,8 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     @Override
     public ReturnStruct visitConditional(LANSetParser.ConditionalContext ctx) {
         ReturnStruct rs = visit(ctx.expr());
-        Vector<Long> c1Code = new Vector<>(), c2Code = new Vector<>();
+        Vector<Long> c1Code = new Vector<>();
+        Vector<Long> c2Code = new Vector<>();
 
         for (LANSetParser.SentenceContext sentence: ctx.sentence())
             c1Code.addAll(visit(sentence).code);
@@ -324,7 +295,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         Vector<Long> c1Code = new Vector<>();
         Vector<Long> forExpr = new Vector<>();
 
-        assert ctx.expr().size() == 2; //can be removed, ctx.expr being an array doesn't make a lot of sense to me but iguess theres not many ways to represent this when you don't name the var
         ReturnStruct expr1Rs = visit(ctx.expr1);
         ReturnStruct expr2Rs = visit(ctx.expr2);
 
@@ -437,7 +407,10 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         ReturnStruct rs = new ReturnStruct();
         Registre var = TS.obtenir(ctx.id.getText());
 
-        if(var == null) { errorSemantic = true; Companion.undefinedIdentifierError(ctx.id.getText(), ctx.id.getLine());}
+        if(var == null) {
+            errorSemantic = true;
+            Companion.undefinedIdentifierError(ctx.id.getText(), ctx.id.getLine());
+        }
         else if(var.getSupertype()!=C_SUPERTYPE.VARIABLE_SUPERTYPE) {
             errorSemantic = true;
             Companion.identifierIsNotAVariableError(ctx.id.getText(), ctx.id.getLine());
@@ -762,7 +735,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                         Companion.operatorTypeMismatchError(ctx.t1.typ, operator.text, operator.line, "basic type");
                         //impossible to propagate a "less restrictive" type, so let's propagate the original one.
                     } else if (leftType == C_TYPE.INT_TYPE || t2.typ == C_TYPE.INT_TYPE) {
-                        if (t2.typ == C_TYPE.FLOAT_TYPE) { //leftType == C_TYPE.INT_TYPE (implicació)
+                        if (t2.typ == C_TYPE.FLOAT_TYPE) { //leftType == C_TYPE.INT_TYPE (implication)
 
                             rs.code.add(program.I2F);
                             rs.code.addAll(rsT2.code);
@@ -771,7 +744,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                             //falta canviar segons si es == o !=
 
                             leftType = C_TYPE.FLOAT_TYPE;
-                        } else if (leftType == C_TYPE.FLOAT_TYPE) { //t2.typ == C_TYPE.INT_TYPE (implicació)
+                        } else if (leftType == C_TYPE.FLOAT_TYPE) { //t2.typ == C_TYPE.INT_TYPE (implication)
 
                             rs.code.addAll(rsT2.code);
                             rs.code.add(program.I2F);
@@ -859,7 +832,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                     leftType = C_TYPE.BOOL_TYPE;
                 }
             }
-
         }
         //@after
         ctx.typ = leftType;
@@ -1136,18 +1108,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         return true; //TODO: Can we optimize?
     }
 
-    //java generics suck
-    private ReturnStruct visit(List<ParserRuleContext> prcList) {
-        ReturnStruct result = this.defaultResult();
-
-        for(ParserRuleContext prc : prcList) {
-            ReturnStruct childResult = visit(prc);
-            result = this.aggregateResult(result, childResult);
-        }
-
-        return result;
-    }
-
     //Warning: zona radioactiva
     //todo moure?
     private SymTable<Registre> TS = new SymTable<Registre>(100);
@@ -1159,16 +1119,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     //constants
     private static final Long mainStackSize = 500L;
-
-    //TODO: comprovar si aixo servia per algo
-    /*
-    @Override
-    public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException e)
-    {
-        //Si volem conservar el comportament inicial
-        super.notifyErrorListeners(offendingToken,msg,e);
-        //Codi personalitzat
-    }*/
 
     //non static methods
     private void registerBasetypeVariable(C_TYPE type, Token id){
