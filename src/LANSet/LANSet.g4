@@ -1,5 +1,5 @@
 /*  LANS Lexer and Parser
-*   MADE BY: Marc Cane Salamia and Enric Rodr�guez Galan
+*   MADE BY: Marc Cane Salamia and Enric Rodriguez Galan
 */
 
 grammar LANSet;
@@ -64,7 +64,7 @@ KW_OUTPUTLN: 'escriureln';
 
 ////////////////// GENERAL TOKENS /////////////////
 
-TK_BASETYPE: 'car' | 'enter' | 'real' | 'boolea'; //If it's a custom type, it will be an TK_IDENTIFIER (careful)
+TK_BASETYPE: 'car' | 'enter' | 'real' | 'boolea';
 
 TK_INTEGER: '1'..'9' DIGIT* | '0' ;
 TK_CHARACTER: '\'' SINGLE_CHAR '\'' ;
@@ -113,7 +113,7 @@ SPACES: (' ' | '\n' | '\r' | '\t') -> skip;
 
 ////////////////////////////////// MAIN RULE //////////////////////////////////
 
-start //locals []
+start
     :  type_declaration_block?
        func_declaration_block
        const_declaration_block?
@@ -121,11 +121,11 @@ start //locals []
        var_declaration_block?
        (sentence)*
        KW_ENDPROGRAM
-       func_implementation_block;
+       func_implementation_block ;
 
 /////////////////////////// TYPE DECLARATION BLOCK ////////////////////////////
 
-type_declaration_block: KW_TYPEBLOCK (type_declaration TK_SEMICOLON)* KW_ENDTYPEBLOCK;
+type_declaration_block: KW_TYPEBLOCK (type_declaration TK_SEMICOLON)* KW_ENDTYPEBLOCK ;
 
 type_declaration
     :   id=TK_IDENTIFIER TK_COLON btype=TK_BASETYPE
@@ -133,10 +133,10 @@ type_declaration
     |   id=TK_IDENTIFIER TK_COLON tuple_definition
     ;
 
-vector_definition: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)?;
+vector_definition: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)? ;
 
 tuple_definition
-    :   KW_TUPLE (TK_BASETYPE TK_IDENTIFIER TK_SEMICOLON)+ KW_ENDTUPLE;
+    :   KW_TUPLE (TK_BASETYPE TK_IDENTIFIER TK_SEMICOLON)+ KW_ENDTUPLE ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -152,7 +152,7 @@ function_declaration: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RP
 formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)* ;
 
 type returns [int tkType, String text, int line]
-    :   typ = (TK_BASETYPE | TK_IDENTIFIER) ; //Be careful with this
+    :   typ = (TK_BASETYPE | TK_IDENTIFIER) ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -196,14 +196,14 @@ function_definition: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RPA
 /////////////////////////////// SENTENCES BLOCK ///////////////////////////////
 
 sentence
-        :   assignment TK_SEMICOLON             #sentenceAssignment
-        |   conditional                         #sentenceConditional
-        |   for_loop                            #sentenceFor
-        |   while_loop                          #sentenceWhile
-        |   function_call TK_SEMICOLON          #sentenceFunction
-        |   read_operation TK_SEMICOLON         #sentenceAction
-        |   write_operation TK_SEMICOLON        #sentenceWrite
-        |   writeln_operation TK_SEMICOLON      #sentenceWriteln
+        :   assignment TK_SEMICOLON
+        |   conditional
+        |   for_loop
+        |   while_loop
+        |   function_call TK_SEMICOLON
+        |   read_operation TK_SEMICOLON
+        |   write_operation TK_SEMICOLON
+        |   writeln_operation TK_SEMICOLON
         ;
 
 assignment
@@ -221,26 +221,26 @@ else_sentence //TODO: explore if there's an alternative way to do this (giving a
 conditional
     : KW_IF expr /* boolean */ KW_THEN (sentence)* (KW_ELSE (else_sentence)*)? KW_ENDIF ;
 
-for_loop locals [boolean errorLocal]
+for_loop
     : KW_FOR id=TK_IDENTIFIER KW_FROM expr1=expr /* integer */ KW_TO expr2=expr /* integer */  KW_DO (sentence)* KW_ENDFOR ;
 
 while_loop
-    : KW_WHILE expr /* boolean  */ KW_DO (sentence  )* KW_ENDWHILE ;
+    : KW_WHILE expr /* boolean  */ KW_DO (sentence)* KW_ENDWHILE ;
 
 function_call returns [C_TYPE typ, int line]
     : TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR ;
 
 read_operation
-    : KW_INPUT TK_LPAR id=TK_IDENTIFIER TK_RPAR;
+    : KW_INPUT TK_LPAR id=TK_IDENTIFIER TK_RPAR ;
 
 write_operation
     : KW_OUTPUT TK_LPAR
-    e=expr 
+    e=expr
     (
         TK_COMMA
         ea=expr
     )*
-    TK_RPAR;
+    TK_RPAR ;
 
 writeln_operation
     : KW_OUTPUTLN TK_LPAR
@@ -251,15 +251,16 @@ writeln_operation
             ea=expr
         )*
     )?
-    TK_RPAR;
+    TK_RPAR ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////// EXPRESSIONS BLOCK //////////////////////////////
+
 expr returns[C_TYPE typ, int line]
     :   ternary
     |   subexpr
-    ; //care with priority
+    ;
 
 direct_evaluation_expr returns[C_TYPE typ, int line]
     :   cv=constant_value       #directEvaluationCv
@@ -271,7 +272,7 @@ direct_evaluation_expr returns[C_TYPE typ, int line]
 
 constant_value returns [C_TYPE typ, int line]
     :   b=basetype_value
-    |   s=TK_STRING  //For illustrative purposes
+    |   s=TK_STRING
     ;
 
 tuple_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER ;
@@ -279,7 +280,9 @@ tuple_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER ;
 vector_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK ;
 
 ternary returns [C_TYPE typ, int line] locals [boolean localError]
-    :   cond=subexpr /* boolean */ TK_QMARK e1=expr TK_COLON e2=expr ;
+    :
+    condition=subexpr /* boolean */ TK_QMARK e1=expr TK_COLON e2=expr
+    ;
 
 //HAZARD ZONE
 subexpr returns [C_TYPE typ, int line]
@@ -290,23 +293,26 @@ subexpr returns [C_TYPE typ, int line]
         t2=term1
     )*
     ;
-
 //operation: (term1 logic_operators operation) | term1;
+
 logic_operators returns [String text, int tk_type, int line]: tk=(TK_AND | TK_OR);
 
-term1 returns [C_TYPE typ, int line] locals [boolean hasOperator, C_TYPE leftType]
+term1 returns [C_TYPE typ, int line]
     :
-    t1 = term2 
+    t1 = term2
     (
         equality_operator
         term2
     )*
     ;
-
 //term1: (term2 equality_operator term1) | term2;
-equality_operator returns [String text, int tk_type, int line]: tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ) ;
 
-term2 returns [C_TYPE typ, int line] locals [boolean hasOperator, C_TYPE leftType]
+equality_operator returns [String text, int tk_type, int line]
+    :
+    tk=(TK_EQUALS | TK_NEQUALS | TK_LESS | TK_LESSEQ | TK_GREATER | TK_GREATEREQ)
+    ;
+
+term2 returns [C_TYPE typ, int line]
     :
     t1 = term3 
     (
@@ -314,11 +320,11 @@ term2 returns [C_TYPE typ, int line] locals [boolean hasOperator, C_TYPE leftTyp
         term3
     )*
     ;
-
 //term2: (term3 addition_operators term2) | term3;
+
 addition_operators returns [String text, int tk_type, int line]: tk=(TK_SUB | TK_SUM) ;
 
-term3 returns [C_TYPE typ, int line] locals [C_TYPE leftType]
+term3 returns [C_TYPE typ, int line]
     :
     t1 = term4 
     (
@@ -326,19 +332,17 @@ term3 returns [C_TYPE typ, int line] locals [C_TYPE leftType]
         term4
     )*
     ;
-
 //term3: (term4 multiplication_operators term3) | term4;
+
 multiplication_operators returns [String text, int tk_type, int line]: tk=(TK_PROD | TK_DIV | TK_INTDIV | TK_MODULO) ;
 
 term4 returns [C_TYPE typ, int line]
     :
-    (
-        negation_operators
-        term5
-    ) 
-    |   t = term5
+    (negation_operators term5)
+    | term5
     ;
 //term4: (negation_operators term4) | term5;
+
 negation_operators returns [String text, int tk_type]:
     tk = (KW_NO | TK_INVERT) ;
 

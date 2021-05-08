@@ -4,10 +4,7 @@ import java.util.*;
 
 import static LANSet.BytecodeWriter.*;
 
-public class Companion {
-
-    Companion(){
-    }
+abstract class Companion {
 
     private static final Set<C_TYPE> baseTypes = new HashSet<>(Arrays.asList(
             C_TYPE.CHAR_TYPE,
@@ -81,47 +78,47 @@ public class Companion {
     }
 
     static void repeatedIdentifierError(String id, int line){
-        System.out.println("Semantic error at line " + line + ": the identifier " + id + " is already in use.");
+        System.err.println("Semantic error at line " + line + ": the identifier " + id + " is already in use.");
     }
 
     static void undefinedTypeError(String t, int line){
-        System.out.println("Semantic error at line " + line + ": type " + t + " is not defined.");
+        System.err.println("Semantic error at line " + line + ": type " + t + " is not defined.");
     }
 
     static void undefinedIdentifierError(String id, int line){
-        System.out.println("Semantic error at line " + line + ": " + id + " is not defined.");
+        System.err.println("Semantic error at line " + line + ": " + id + " is not defined.");
     }
 
     static void identifierIsNotAVariableError(String id, int line){
-        System.out.println("Semantic error at line " + line + ": " + id + " is not a variable.");
+        System.err.println("Semantic error at line " + line + ": " + id + " is not a variable.");
     }
 
     static void nonBasetypeReadingError(String id, C_TYPE type, int line){
-        System.out.println("Semantic error at line " + line + ": Cannot read variable " + id + ". Read operation does not support reading " + type + " variables.");
+        System.err.println("Semantic error at line " + line + ": Cannot read variable " + id + ". Read operation does not support reading " + type + " variables.");
     }
 
     static void typeMismatchError(C_TYPE type1, C_TYPE type2, int line){
-        System.out.println("Type mismatch error at line " + line + ": Type " + type1 + " does not match with " + type2);
+        System.err.println("Type mismatch error at line " + line + ": Type " + type1 + " does not match with " + type2);
     }
 
     static void typeMismatchError2(String id, int line, String foundType, C_TYPE expectedType){
-        System.out.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +".");
+        System.err.println("Semantic error: variable " + id + " in line " + line + " is type " + foundType + " but should be " + expectedType +".");
     }
 
     static void writeOperationUnsupportedTypeError(C_TYPE type, int line){
-        System.out.println("Unsupported type " + type + " at line " + line);
+        System.err.println("Unsupported type " + type + " at line " + line);
     }
 
     static void ternaryTypeMismatchError(C_TYPE t1, C_TYPE t2, int line){
-        System.out.println("Type mismatch error at line " + line + ": Type " + t1 + " does not match with " + t2 + ". Both ternary inner expressions must be the same type.");
+        System.err.println("Type mismatch error at line " + line + ": Type " + t1 + " does not match with " + t2 + ". Both ternary inner expressions must be the same type.");
     }
 
     static void operatorTypeMismatchError(C_TYPE type, String op, int line, C_TYPE expectedType){
-        System.out.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
+        System.err.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
     }
 
     static void operatorTypeMismatchError(C_TYPE type, String op, int line, String expectedType){
-        System.out.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
+        System.err.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
     }
 
 }

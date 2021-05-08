@@ -6,15 +6,14 @@ import java.util.Vector;
 
 class BytecodeWriter {
 
-    Bytecode program; //aixo és necessari perquè la classe Bytecode necessita ser instanciada per accedir a metodes que podrien ser estatica
+    private Bytecode program; //aixo és necessari perquè la classe Bytecode necessita ser instanciada per accedir a metodes que podrien ser estatica
     //Si no fos per aixo, aquesta classe podria ser estatica
-    //Companion companion;
 
-    BytecodeWriter(Bytecode program /*, Companion companion*/){
+    BytecodeWriter(Bytecode program){
         this.program = program;
-        //this.companion = companion;
     }
 
+    //todo move to constants? We should eventually get rid of this class
     //bytecode types
     static final String BYTECODE_VOIDTYPE = "V";
     static final String BYTECODE_CHARTYPE = "C";
@@ -23,7 +22,7 @@ class BytecodeWriter {
     static final String BYTECODE_BOOLTYPE = "Z";
     static final String BYTECODE_STRINGTYPE = "S";
 
-    private Vector<Long> generateReadCode(C_TYPE type, Long storeDir){
+    Vector<Long> generateReadCode(C_TYPE type, Long storeDir){
         Vector<Long> code = new Vector<>();
 
         code.add(Bytecode.INVOKESTATIC);
@@ -50,6 +49,7 @@ class BytecodeWriter {
                 code.add(program.ISTORE);
                 break;
             default:
+                //TODO semanticError = true;
                 System.err.println("INVALID BYTECODE TYPE");
                 break;
         }
@@ -58,7 +58,7 @@ class BytecodeWriter {
         return code;
     }
 
-    private Vector<Long> generateWriteCode(C_TYPE type){
+    Vector<Long> generateWriteCode(C_TYPE type){
         Vector<Long> code = new Vector<>();
 
         code.add(Bytecode.INVOKESTATIC);
@@ -85,6 +85,7 @@ class BytecodeWriter {
                 code.add(program.nByte(program.mPutString,1));
                 break;
             default:
+                //TODO semanticError = true;
                 System.err.println("INVALID BYTECODE TYPE");
                 break;
         }
@@ -92,12 +93,4 @@ class BytecodeWriter {
         return code;
     }
 
-    Vector<Long> write_operation(C_TYPE eType, int eLine, Vector<Long> eCode){
-        Vector<Long> code = new Vector<>();
-
-        code.addAll(eCode);
-        code.addAll(generateWriteCode(eType));
-
-        return code;
-    }
 }
