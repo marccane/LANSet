@@ -202,13 +202,13 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         rsLval.code.addAll(rsExpr.code);
 
         Registre var = TS.obtenir(ctx.lval.ident); //Todo: this is redundant, we could return the register from the lval evaluation and move the error checking appropiately
-        boolean canBePromoted = (ctx.lval.typ==C_TYPE.FLOAT_TYPE && ctx.e.typ==C_TYPE.INT_TYPE);
+        boolean canBePromoted = (ctx.lval.typ == C_TYPE.FLOAT_TYPE && ctx.e.typ == C_TYPE.INT_TYPE);
 
         if(var == null){
             errorSemantic = true;
             Companion.undefinedIdentifierError(ctx.lval.ident, ctx.lval.line);
         }
-        else if(var.getSupertype()!=C_SUPERTYPE.VARIABLE_SUPERTYPE){
+        else if(var.getSupertype() != C_SUPERTYPE.VARIABLE_SUPERTYPE){
             errorSemantic = true;
             Companion.identifierIsNotAVariableError(ctx.lval.ident, ctx.lval.line); //no es el mes adient perque pot ser tuple o vector...
         }
@@ -303,21 +303,21 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             errorSemantic = true;
             Companion.undefinedIdentifierError(ctx.id.getText(), ctx.id.getLine());
         }
-        else if(var_iter.getSupertype()!=C_SUPERTYPE.VARIABLE_SUPERTYPE){
+        else if(var_iter.getSupertype() != C_SUPERTYPE.VARIABLE_SUPERTYPE){
             errorSemantic = true;
             Companion.identifierIsNotAVariableError(ctx.id.getText(), ctx.id.getLine());
         }
-        else if(var_iter.getType()!=C_TYPE.INT_TYPE){
+        else if(var_iter.getType() != C_TYPE.INT_TYPE){
             errorSemantic = true;
             Companion.typeMismatchError2(ctx.id.getText(), ctx.id.getLine(), var_iter.getType().toString(), C_TYPE.INT_TYPE);
         }
 
-        if(ctx.expr1.typ!=C_TYPE.INT_TYPE){
+        if(ctx.expr1.typ != C_TYPE.INT_TYPE){
             errorSemantic=true;
             Companion.typeMismatchError2("*expressio*", ctx.expr1.line, ctx.expr1.typ.toString(), C_TYPE.INT_TYPE);
         }
 
-        if(ctx.expr2.typ!=C_TYPE.INT_TYPE){
+        if(ctx.expr2.typ != C_TYPE.INT_TYPE){
             errorSemantic=true;
             Companion.typeMismatchError2("*expressio*", ctx.expr2.line, ctx.expr2.typ.toString(), C_TYPE.INT_TYPE);
         }
@@ -375,7 +375,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             c1Code.addAll(sentenceRs.code);
         }
 
-        if(ctx.expr().typ!=C_TYPE.BOOL_TYPE){
+        if(ctx.expr().typ != C_TYPE.BOOL_TYPE){
             errorSemantic=true;
             Companion.typeMismatchError2("*expressio*", ctx.expr().line, ctx.expr().typ.toString(), C_TYPE.BOOL_TYPE);
         }
@@ -411,11 +411,11 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             errorSemantic = true;
             Companion.undefinedIdentifierError(ctx.id.getText(), ctx.id.getLine());
         }
-        else if(var.getSupertype()!=C_SUPERTYPE.VARIABLE_SUPERTYPE) {
+        else if(var.getSupertype() != C_SUPERTYPE.VARIABLE_SUPERTYPE) {
             errorSemantic = true;
             Companion.identifierIsNotAVariableError(ctx.id.getText(), ctx.id.getLine());
         }
-        else if(Companion.processBaseType(var.getType())==C_TYPE.INVALID_TYPE){ //is not a basetype
+        else if(Companion.processBaseType(var.getType()) == C_TYPE.INVALID_TYPE){ //is not a basetype
             errorSemantic = true;
             Companion.nonBasetypeReadingError(ctx.id.getText(), var.getType(), ctx.id.getLine());
         }
@@ -430,7 +430,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         ReturnStruct rs = new ReturnStruct();
         for (LANSetParser.ExprContext expr: expressions) {
             ReturnStruct rsExpr = visit(expr);
-            if(!(Companion.isBasetype(expr.typ) || expr.typ==C_TYPE.STRING_TYPE)){
+            if(!(Companion.isBasetype(expr.typ) || expr.typ == C_TYPE.STRING_TYPE)){
                 errorSemantic = true;
                 Companion.writeOperationUnsupportedTypeError(expr.typ, expr.line);
             }
@@ -515,13 +515,13 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 /*Registre t = TS.obtenir(var.getType()); //existence validation is not needed.
                 C_SUPERTYPE st = t.getSupertype();
 
-                if(st==C_SUPERTYPE.ALIAS_SUPERTYPE) ctx.typ = t.getType();
+                if(st == C_SUPERTYPE.ALIAS_SUPERTYPE) ctx.typ = t.getType();
                 else ctx.typ = varType;*/
 
                 ctx.typ = varType;
             }
         }
-        else if (var.getSupertype()==C_SUPERTYPE.CONSTANT_SUPERTYPE){
+        else if (var.getSupertype() == C_SUPERTYPE.CONSTANT_SUPERTYPE){
             ctx.typ = var.getType();
 
             Long constDir = var.getDir();
@@ -596,7 +596,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     public ReturnStruct visitTernary(LANSetParser.TernaryContext ctx) {
         ReturnStruct rs = visit(ctx.condition);
         ctx.line = ctx.condition.line;
-        if(ctx.condition.typ!=C_TYPE.BOOL_TYPE){
+        if(ctx.condition.typ != C_TYPE.BOOL_TYPE){
             errorSemantic=true;
             Companion.typeMismatchError(ctx.condition.typ, C_TYPE.BOOL_TYPE, ctx.condition.line);
         }
@@ -607,11 +607,11 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         ReturnStruct rsE2 = visit(ctx.e2);
         boolean e1fcast = false, e2fcast = false;
 
-        if(ctx.e1.typ==C_TYPE.FLOAT_TYPE && ctx.e2.typ==C_TYPE.INT_TYPE) {
+        if(ctx.e1.typ == C_TYPE.FLOAT_TYPE && ctx.e2.typ == C_TYPE.INT_TYPE) {
             e2fcast = true;
             ctx.typ = C_TYPE.FLOAT_TYPE;
         } //(dolar)e2.typ = C_TYPE.FLOAT_TYPE; //to real promotion
-        else if(ctx.e1.typ==C_TYPE.INT_TYPE && ctx.e2.typ==C_TYPE.FLOAT_TYPE) {
+        else if(ctx.e1.typ == C_TYPE.INT_TYPE && ctx.e2.typ == C_TYPE.FLOAT_TYPE) {
             e1fcast = true;
             ctx.typ = C_TYPE.FLOAT_TYPE;
         } //(dolar)e1 b.typ = C_TYPE.FLOAT_TYPE; //to real promotion
@@ -663,7 +663,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             }
             LANSetParser.Term1Context t2 = ctx.term1(i+1);
             ReturnStruct rsT2 = visit(t2);
-            if(ctx.t1.typ!=C_TYPE.BOOL_TYPE){ //check if the right operand is boolean
+            if(ctx.t1.typ != C_TYPE.BOOL_TYPE){ //check if the right operand is boolean
                 errorSemantic = true;
                 Companion.operatorTypeMismatchError(t2.typ, operator.text, operator.line, C_TYPE.BOOL_TYPE);
             }
@@ -711,7 +711,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                     //otherwise, leftType should be propagated
                 }
                 else{ //other operations only work on integer or real numbers
-                    if( !(leftType==C_TYPE.INT_TYPE || leftType==C_TYPE.FLOAT_TYPE) ){
+                    if( !(leftType == C_TYPE.INT_TYPE || leftType == C_TYPE.FLOAT_TYPE) ){
                         errorSemantic = true;
                         Companion.operatorTypeMismatchError(ctx.t1.typ, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                         leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
@@ -861,7 +861,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
             if(!hasOperator){ //first left operand found, typecheck needed
                 hasOperator = true;
-                if( !(leftType==C_TYPE.INT_TYPE || leftType==C_TYPE.FLOAT_TYPE) ){ //if is neither an integer or a real number
+                if( !(leftType == C_TYPE.INT_TYPE || leftType == C_TYPE.FLOAT_TYPE) ){ //if is neither an integer or a real number
                     errorSemantic = true;
                     Companion.operatorTypeMismatchError(ctx.t1.typ, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                     //$leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
@@ -872,9 +872,9 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             LANSetParser.Term3Context t2 = ctx.term3(i + 1);
             ReturnStruct rsT2 = visit(t2);
 
-            if(t2.typ==C_TYPE.FLOAT_TYPE){ //if t2 is float type, integer promotion may be needed
+            if(t2.typ == C_TYPE.FLOAT_TYPE){ //if t2 is float type, integer promotion may be needed
 
-                if(leftType==C_TYPE.INT_TYPE) rs.code.add(program.I2F);
+                if(leftType == C_TYPE.INT_TYPE) rs.code.add(program.I2F);
                 rs.code.addAll(rsT2.code); //right operand
 
                 if(operator.tk_type == TK_SUM) rs.code.add(program.FADD);
@@ -882,11 +882,11 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
                 leftType = C_TYPE.FLOAT_TYPE;
             }
-            else if (t2.typ==C_TYPE.INT_TYPE){ //if t2 is integer, the result depends on leftType.
+            else if (t2.typ == C_TYPE.INT_TYPE){ //if t2 is integer, the result depends on leftType.
 
                 rs.code.addAll(rsT2.code); //right operand
 
-                if(leftType==C_TYPE.FLOAT_TYPE){
+                if(leftType == C_TYPE.FLOAT_TYPE){
                     rs.code.add(program.I2F);
                     if(operator.tk_type == TK_SUM) rs.code.add(program.FADD);
                     else rs.code.add(program.FSUB);
@@ -928,11 +928,11 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             ReturnStruct rsT2 = visit(t2);
 
             if( (operator.tk_type == TK_INTDIV || operator.tk_type == TK_MODULO) ){ // integer division or modulo
-                if( t2.typ!=C_TYPE.INT_TYPE ){ //if t2 it's not an integer
+                if( t2.typ != C_TYPE.INT_TYPE ){ //if t2 it's not an integer
                     errorSemantic = true;
                     Companion.operatorTypeMismatchError(t2.typ, operator.text, operator.line, C_TYPE.INT_TYPE);
                 }
-                else if( leftType!=C_TYPE.INT_TYPE ){ //if left operand is not an integer
+                else if( leftType != C_TYPE.INT_TYPE ){ //if left operand is not an integer
                     errorSemantic = true;
                     Companion.operatorTypeMismatchError(leftType, operator.text, operator.line, C_TYPE.INT_TYPE);
                 }
@@ -948,13 +948,13 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             else{ //real division and multiplication
                 boolean errorLocal = false;
 
-                if( !(t2.typ==C_TYPE.FLOAT_TYPE || t2.typ==C_TYPE.INT_TYPE) ){
+                if( !(t2.typ == C_TYPE.FLOAT_TYPE || t2.typ == C_TYPE.INT_TYPE) ){
                     errorSemantic = true;
                     errorLocal = true;
                     Companion.operatorTypeMismatchError(t2.typ, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                 }
 
-                if( !(leftType==C_TYPE.FLOAT_TYPE || leftType==C_TYPE.INT_TYPE) ){ //if left operand is not an integer or a real number
+                if( !(leftType == C_TYPE.FLOAT_TYPE || leftType == C_TYPE.INT_TYPE) ){ //if left operand is not an integer or a real number
                     errorSemantic = true;
                     errorLocal = true;
                     Companion.operatorTypeMismatchError(leftType, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
@@ -962,15 +962,15 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
                 if(operator.tk_type == TK_DIV) {
 
-                    if(leftType==C_TYPE.INT_TYPE) rs.code.add(program.I2F);
+                    if(leftType == C_TYPE.INT_TYPE) rs.code.add(program.I2F);
                     rs.code.addAll(rsT2.code); //right operand
-                    if(t2.typ==C_TYPE.INT_TYPE) rs.code.add(program.I2F);
+                    if(t2.typ == C_TYPE.INT_TYPE) rs.code.add(program.I2F);
                     rs.code.add(program.FDIV);
 
                     leftType = C_TYPE.FLOAT_TYPE; //division always spits a real number.
                 }
                 else{ //multiplication
-                    if(t2.typ==C_TYPE.INT_TYPE && leftType==C_TYPE.INT_TYPE) {
+                    if(t2.typ == C_TYPE.INT_TYPE && leftType == C_TYPE.INT_TYPE) {
                         rs.code.addAll(rsT2.code); //right operand
                         rs.code.add(program.IMUL);
 
@@ -978,9 +978,9 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                     }
                     else if(!errorLocal){
 
-                        if(leftType==C_TYPE.INT_TYPE) rs.code.add(program.I2F);
+                        if(leftType == C_TYPE.INT_TYPE) rs.code.add(program.I2F);
                         rs.code.addAll(rsT2.code); //right operand
-                        if(t2.typ==C_TYPE.INT_TYPE) rs.code.add(program.I2F);
+                        if(t2.typ == C_TYPE.INT_TYPE) rs.code.add(program.I2F);
                         rs.code.add(program.FMUL);
 
                         leftType = C_TYPE.FLOAT_TYPE; //at least one of them is real, and the other is real or integer
@@ -1012,12 +1012,12 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         LANSetParser.Negation_operatorsContext operator = ctx.negation_operators();
         if(operator != null){
             visit(operator);
-            if( operator.tk_type == TK_INVERT && !(term5.typ==C_TYPE.INT_TYPE || term5.typ==C_TYPE.FLOAT_TYPE) ){ //if not inverting an integer or a real
+            if( operator.tk_type == TK_INVERT && !(term5.typ == C_TYPE.INT_TYPE || term5.typ == C_TYPE.FLOAT_TYPE) ){ //if not inverting an integer or a real
                 errorSemantic = true;
                 Companion.operatorTypeMismatchError(term5.typ, operator.text, term5.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                 ctx.typ = C_TYPE.INT_TYPE; //propagate the (less restrictive) operation type, whether there's an error or not, to avoid error propagation.
             }
-            else if ( operator.tk_type == KW_NO && !(term5.typ==C_TYPE.BOOL_TYPE) ){ //if not negating a boolean
+            else if ( operator.tk_type == KW_NO && !(term5.typ == C_TYPE.BOOL_TYPE) ){ //if not negating a boolean
                 errorSemantic = true;
                 Companion.operatorTypeMismatchError(term5.typ, operator.text, term5.line, C_TYPE.BOOL_TYPE);
                 ctx.typ = C_TYPE.BOOL_TYPE; //propagate the operation type, whether there's an error or not, to avoid error propagation.
@@ -1031,7 +1031,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                     rs.code.add(program.IXOR); //1 xor any = !any
                 }
                 else{ //KW_INVERT
-                    if(term5.typ==C_TYPE.INT_TYPE) rs.code.add(program.INEG);
+                    if(term5.typ == C_TYPE.INT_TYPE) rs.code.add(program.INEG);
                     else rs.code.add(program.FNEG);
                 }
             }

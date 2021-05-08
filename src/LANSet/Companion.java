@@ -58,7 +58,7 @@ abstract class Companion {
     //Pre: cert
     //Post: retorna el C_TYPE que correspon a la ID del token (type)
     static C_TYPE cTypeFromTokenID(int type){
-        assert(type!=LANSetParser.TK_BASETYPE);
+        assert(type != LANSetParser.TK_BASETYPE);
         return tokenIDToCType.getOrDefault(type, C_TYPE.INVALID_TYPE);
     }
 
