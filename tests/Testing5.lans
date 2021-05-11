@@ -1,0 +1,58 @@
+programa ProgramaTest
+variables
+	enter i;
+
+fvariables
+
+escriureln(7 == 7);
+escriureln(7 != 8);
+escriureln(7 > 6);
+escriureln(7 >= 6);
+escriureln(7 >= 7);
+escriureln(6 < 7);
+escriureln(6 <= 7);
+escriureln(7 <= 7);
+
+escriureln("Falsos:");
+
+escriureln(7 != 7);
+escriureln(7 == 8);
+escriureln(7 < 6);
+escriureln(7 < 7);
+escriureln(7 <= 6);
+escriureln(6 > 7);
+escriureln(7 > 7);
+escriureln(6 >= 7);
+
+/////////////////////
+escriureln(7.0 == 7.0);
+escriureln(7.0 != 8);
+escriureln(7.0 > 6);
+escriureln(7.0 >= 6);
+escriureln(7.0 >= 7.0);
+escriureln(6 < 7.0);
+escriureln(6 <= 7.0);
+escriureln(7.0 <= 7.0);
+
+escriureln("Falsos:");
+
+escriureln(7.0 != 7.0);
+escriureln(7.0 == 8);
+escriureln(7.0 < 6);
+escriureln(7.0 < 7.0);
+escriureln(7.0 <= 6);
+escriureln(6 > 7.0);
+escriureln(7.0 > 7.0);
+escriureln(6 >= 7.0);
+
+escriureln('a' == 'a');
+escriureln('a' != 'a');
+escriureln('a' == 'b');
+escriureln('a' != 'b');
+
+escriureln(cert == cert);
+escriureln(cert != fals);
+escriureln(cert == fals);
+escriureln(cert != cert);
+
+fprograma

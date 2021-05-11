@@ -77,6 +77,10 @@ abstract class Companion {
         return baseTypes.contains(type);
     }
 
+    static boolean isNumberType(C_TYPE t){
+        return t == C_TYPE.INT_TYPE || t == C_TYPE.FLOAT_TYPE;
+    }
+
     static void repeatedIdentifierError(String id, int line){
         System.err.println("Semantic error at line " + line + ": the identifier " + id + " is already in use.");
     }
@@ -119,6 +123,10 @@ abstract class Companion {
 
     static void operatorTypeMismatchError(C_TYPE type, String op, int line, String expectedType){
         System.err.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
+    }
+
+    static void comparisonNotAllowed(int line, C_TYPE t1, C_TYPE t2){
+        System.err.println(String.format("Error at line %d. Comparation between type %s and %s is not allowed.", line, t1, t2));
     }
 
 }

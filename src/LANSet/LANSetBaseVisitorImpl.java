@@ -50,7 +50,9 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     public ReturnStruct visitType_declaration(LANSetParser.Type_declarationContext ctx) {
 
         if(ctx.btype != null) {
-            if (!identifierInUse(ctx.id.getText())) registerAlias(ctx.id, ctx.btype);
+            if (!identifierInUse(ctx.id.getText())) {
+                registerAlias(ctx.id, ctx.btype);
+            }
             else {
                 errorSemantic = true;
                 Companion.repeatedIdentifierError(ctx.id.getText(), ctx.id.getLine());
@@ -67,7 +69,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             System.err.println("Type declaration error");
         }
 
-        return null; //hem de retornar algo?
+        return new ReturnStruct();
     }
 
     @Override
@@ -647,15 +649,13 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     public ReturnStruct visitSubexpr(LANSetParser.SubexprContext ctx) {
-        boolean hasOperator = false;
         ReturnStruct rs = visit(ctx.t1);
         ctx.typ = ctx.t1.typ;
         ctx.line = ctx.t1.line;
         for(int i=0;i<ctx.logic_operators().size();i++){
             LANSetParser.Logic_operatorsContext operator = ctx.logic_operators(i);
             visit(operator);
-            if(!hasOperator){ //if there's at least one operation, typecheck of t1 is needed
-                hasOperator = true;
+            if(i == 0){ //if there's at least one operation, typecheck of t1 is needed
                 if(ctx.t1.typ != C_TYPE.BOOL_TYPE){
                     errorSemantic = true;
                     Companion.operatorTypeMismatchError(ctx.t1.typ, operator.text, operator.line, C_TYPE.BOOL_TYPE);
@@ -687,154 +687,136 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         return null;
     }
 
+    //Pre: left term is already at the top of the operand stack
+    private void compareIntegerTypes(ReturnStruct rs, LANSetParser.Equality_operatorContext operator, ReturnStruct rsRightTerm){
+        rs.code.addAll(rsRightTerm.code);
+        switch(operator.tk_type){
+            case TK_EQUALS:
+                rs.code.add(program.IF_ICMPEQ);
+                break;
+            case TK_NEQUALS:
+                rs.code.add(program.IF_ICMPNE);
+                break;
+            case TK_LESS:
+                rs.code.add(program.IF_ICMPLT);
+                break;
+            case TK_LESSEQ:
+                rs.code.add(program.IF_ICMPLE);
+                break;
+            case TK_GREATER:
+                rs.code.add(program.IF_ICMPGT);
+                break;
+            case TK_GREATEREQ:
+                rs.code.add(program.IF_ICMPGE);
+                break;
+            default:
+                System.err.println("Switch default case operator.tk_type");
+                break;
+        }
+
+        bytecodeWriter.addLong(rs.code, 7L);
+        rs.code.add(program.ICONST_0);
+        rs.code.add(program.GOTO);
+        bytecodeWriter.addLong(rs.code, 4L);
+        rs.code.add(program.ICONST_1);
+    }
+
     @Override
     public ReturnStruct visitTerm1(LANSetParser.Term1Context ctx) {
-        boolean hasOperator = false;
-        C_TYPE leftType;
+        C_TYPE resultType;
 
-        ReturnStruct rs = visit(ctx.t1);
-        ctx.typ = ctx.t1.typ;
-        ctx.line = ctx.t1.line;
-        leftType = ctx.t1.typ;
+        LANSetParser.Term2Context leftTerm = ctx.leftTerm;
+        ReturnStruct rs = visit(leftTerm);
+        //ctx.typ = leftTerm.typ;
+        ctx.line = leftTerm.line;
+        resultType = leftTerm.typ;
 
-        for(int i=0;i<ctx.equality_operator().size();i++){
-            LANSetParser.Equality_operatorContext operator = ctx.equality_operator(i);
+        LANSetParser.Equality_operatorContext operator = ctx.equality_operator();
+        if(operator != null){
+            resultType = C_TYPE.BOOL_TYPE;
             visit(operator);
-            if(!hasOperator){ //first left operand found, typecheck needed
-                hasOperator = true;
-                if(operator.tk_type == TK_EQUALS || operator.tk_type == TK_NEQUALS ) { // == or !=
-                    if( !(Companion.isBasetype(leftType)) ){ //if the operator isn't a basic type
-                        errorSemantic = true;
-                        Companion.operatorTypeMismatchError(ctx.t1.typ, operator.text, operator.line, "basic type");
-                        //impossible to propagate a "less restrictive" type, so let's propagate the original one.
-                    }
-                    //otherwise, leftType should be propagated
+            if(operator.tk_type == TK_EQUALS || operator.tk_type == TK_NEQUALS) { // == or !=
+                if(!Companion.isBasetype(leftTerm.typ)){ //if the operator isn't a basic type
+                    errorSemantic = true;
+                    Companion.operatorTypeMismatchError(leftTerm.typ, operator.text, operator.line, "basic type");
+                    //impossible to propagate a "less restrictive" type, so let's propagate the original one.
                 }
-                else{ //other operations only work on integer or real numbers
-                    if( !(leftType == C_TYPE.INT_TYPE || leftType == C_TYPE.FLOAT_TYPE) ){
-                        errorSemantic = true;
-                        Companion.operatorTypeMismatchError(ctx.t1.typ, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
-                        leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
+                //otherwise, leftType should be propagated
+            }
+            //other operations only work on integer or real numbers
+            else if(!Companion.isNumberType(leftTerm.typ)){
+                errorSemantic = true;
+                Companion.operatorTypeMismatchError(leftTerm.typ, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
+                //resultType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
+            }
+            //otherwise, leftType should be propagated
+
+            LANSetParser.Term2Context rightTerm = ctx.rightTerm;
+            ReturnStruct rsRightTerm = visit(rightTerm);
+
+            boolean leftTermIsNumber = Companion.isNumberType(leftTerm.typ);
+            boolean rightTermIsNumber = Companion.isNumberType(rightTerm.typ);
+            boolean atLeastOneIsNumber = leftTermIsNumber || rightTermIsNumber;
+            boolean bothAreNumbers = leftTermIsNumber && rightTermIsNumber;
+            if(atLeastOneIsNumber && !bothAreNumbers){
+                errorSemantic = true;
+                Companion.comparisonNotAllowed(leftTerm.line, leftTerm.typ, rightTerm.typ);
+            }
+            else if(atLeastOneIsNumber){ //bothAreNumbers is implied
+                if (leftTerm.typ == C_TYPE.INT_TYPE && rightTerm.typ == C_TYPE.INT_TYPE) {
+                    compareIntegerTypes(rs, operator, rsRightTerm);
+                }
+                else{
+                    if(leftTerm.typ != C_TYPE.FLOAT_TYPE) rs.code.add(program.I2F);
+                    rs.code.addAll(rsRightTerm.code);
+                    if(rightTerm.typ != C_TYPE.FLOAT_TYPE) rs.code.add(program.I2F);
+
+                    if(operator.tk_type == TK_GREATER || operator.tk_type == TK_GREATEREQ)
+                        rs.code.add(program.FCMPG);
+                    else
+                        rs.code.add(program.FCMPL);
+
+                    switch(operator.tk_type){
+                        case TK_EQUALS:
+                            rs.code.add(program.IFEQ);
+                            break;
+                        case TK_NEQUALS:
+                            rs.code.add(program.IFNE);
+                            break;
+                        case TK_LESS:
+                            rs.code.add(program.IFLT);
+                            break;
+                        case TK_LESSEQ:
+                            rs.code.add(program.IFLE);
+                            break;
+                        case TK_GREATER:
+                            rs.code.add(program.IFGT);
+                            break;
+                        case TK_GREATEREQ:
+                            rs.code.add(program.IFGE);
+                            break;
+                        default:
+                            System.err.println("Switch default case operator.tk_type");
+                            break;
                     }
-                    //otherwise, leftType should be propagated
+
+                    bytecodeWriter.addLong(rs.code, 7L);
+                    rs.code.add(program.ICONST_0);
+                    rs.code.add(program.GOTO);
+                    bytecodeWriter.addLong(rs.code, 4L);
+                    rs.code.add(program.ICONST_1);
                 }
             }
-            else{ System.err.println("FAIG ALGO, NO EM BORRIS (hasOperator)");}
-
-            LANSetParser.Term2Context t2 = ctx.term2(i+1);
-            ReturnStruct rsT2 = visit(t2);
-
-            //Todo: simplify, clean or simply rewrite
-            //region gatell
-            {
-                boolean t1fcast = false, t2fcast = false;
-
-                if (operator.tk_type == TK_EQUALS || operator.tk_type == TK_NEQUALS) { // == or !=
-                    if (!(Companion.isBasetype(t2.typ))) { //if the operator isn't a basic type
-                        errorSemantic = true;
-                        Companion.operatorTypeMismatchError(ctx.t1.typ, operator.text, operator.line, "basic type");
-                        //impossible to propagate a "less restrictive" type, so let's propagate the original one.
-                    } else if (leftType == C_TYPE.INT_TYPE || t2.typ == C_TYPE.INT_TYPE) {
-                        if (t2.typ == C_TYPE.FLOAT_TYPE) { //leftType == C_TYPE.INT_TYPE (implication)
-
-                            rs.code.add(program.I2F);
-                            rs.code.addAll(rsT2.code);
-                            rs.code.add(program.FCMPL);
-
-                            //falta canviar segons si es == o !=
-
-                            leftType = C_TYPE.FLOAT_TYPE;
-                        } else if (leftType == C_TYPE.FLOAT_TYPE) { //t2.typ == C_TYPE.INT_TYPE (implication)
-
-                            rs.code.addAll(rsT2.code);
-                            rs.code.add(program.I2F);
-                            rs.code.add(program.FCMPL);
-
-                            //falta canviar segons si es == o !=
-
-                            leftType = C_TYPE.FLOAT_TYPE; //unnecessary assignment
-                        } else if (!(leftType == C_TYPE.INT_TYPE && t2.typ == C_TYPE.INT_TYPE)) { //error, leftType and t2 types doesn't match //cane: aquest error no es pot trigerejar mai
-                            errorSemantic = true;
-                            Companion.typeMismatchError(leftType, t2.typ, operator.line);
-                        } else { //both integers
-                            errorSemantic = true;
-                            System.err.println("NO IMPLEMENTAT! linia=" + operator.line);
-                        }
-                    } else if (leftType != t2.typ) {
-                        errorSemantic = true;
-                        Companion.typeMismatchError(leftType, t2.typ, operator.line);
-                    } else { //both equals but not integers (bytecode integers) (cane: aka both are float, car or bool)
-                        errorSemantic = true;
-                        System.err.println("NO IMPLEMENTAT! linia=" + operator.line);
-                    }
-
-                    leftType = C_TYPE.BOOL_TYPE;
-                } //end == or !=
-
-                else { //other operations only work on integer or real numbers
-                    if (!(t2.typ == C_TYPE.INT_TYPE || t2.typ == C_TYPE.FLOAT_TYPE)) {
-                        errorSemantic = true;
-                        Companion.operatorTypeMismatchError(leftType, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
-                    } else { //if its integer or real
-                        if (t2.typ == C_TYPE.FLOAT_TYPE) {
-
-                            if (leftType == C_TYPE.INT_TYPE) rs.code.add(program.I2F);
-                            rs.code.addAll(rsT2.code);
-                            rs.code.add(program.FCMPL);
-
-                            if (operator.tk_type == TK_LESS) rs.code.add(program.IFLT);
-                            else if (operator.tk_type == TK_LESSEQ) rs.code.add(program.IFLE);
-                            else if (operator.tk_type == TK_GREATER) rs.code.add(program.IFGT);
-                            else rs.code.add(program.IFGE); //GREATEREQ
-
-                            leftType = C_TYPE.FLOAT_TYPE; //integer promotion if needed
-                        } else if (leftType == C_TYPE.FLOAT_TYPE) { //otherwise promotion depends on leftType, so no changes needed
-
-                            rs.code.addAll(rsT2.code);
-                            rs.code.add(program.I2F);
-                            rs.code.add(program.FCMPL);
-
-                            if (operator.tk_type == TK_LESS) rs.code.add(program.IFLT);
-                            else if (operator.tk_type == TK_LESSEQ) rs.code.add(program.IFLE);
-                            else if (operator.tk_type == TK_GREATER) rs.code.add(program.IFGT);
-                            else rs.code.add(program.IFGE); //GREATEREQ
-
-                            //leftType is automatically propagated
-                        } else { //both are integers
-                            rs.code.addAll(rsT2.code);
-
-                            if (operator.tk_type == TK_LESS) rs.code.add(program.IF_ICMPLT);
-                            else if (operator.tk_type == TK_LESSEQ) rs.code.add(program.IF_ICMPLE);
-                            else if (operator.tk_type == TK_GREATER) rs.code.add(program.IF_ICMPGT);
-                            else rs.code.add(program.IF_ICMPGE); //GREATEREQ
-                        }
-
-                        Long jump = 8L; //jump to true
-                        rs.code.add(program.nByte(jump, 2));
-                        rs.code.add(program.nByte(jump, 1));
-
-                        //section of code dedicated only to compare two numbers //
-
-                        rs.code.add(program.BIPUSH);
-                        rs.code.add(0L); //put a 0
-
-                        jump = 5L; //bipush length
-                        rs.code.add(program.GOTO);
-                        rs.code.add(program.nByte(jump, 2));
-                        rs.code.add(program.nByte(jump, 1));
-
-                        rs.code.add(program.BIPUSH);
-                        rs.code.add(1L); //put a 1
-
-                        //////////////////////////////////////////////////////////
-                    }
-
-                    leftType = C_TYPE.BOOL_TYPE;
-                }
+            else if(leftTerm.typ == rightTerm.typ){
+                compareIntegerTypes(rs, operator, rsRightTerm);
+            }
+            else{
+                errorSemantic = true;
+                Companion.comparisonNotAllowed(leftTerm.line, leftTerm.typ, rightTerm.typ);
             }
         }
         //@after
-        ctx.typ = leftType;
+        ctx.typ = resultType;
         return rs;
     }
 
@@ -848,7 +830,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     public ReturnStruct visitTerm2(LANSetParser.Term2Context ctx) {
-        boolean hasOperator = false;
         C_TYPE leftType;
 
         ReturnStruct rs = visit(ctx.t1);
@@ -859,15 +840,13 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             LANSetParser.Addition_operatorsContext operator = ctx.addition_operators(i);
             visit(operator);
 
-            if(!hasOperator){ //first left operand found, typecheck needed
-                hasOperator = true;
+            if(i == 0){ //first left operand found, typecheck needed
                 if( !(leftType == C_TYPE.INT_TYPE || leftType == C_TYPE.FLOAT_TYPE) ){ //if is neither an integer or a real number
                     errorSemantic = true;
                     Companion.operatorTypeMismatchError(ctx.t1.typ, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                     //$leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
                 }
             }
-            else{ System.err.println("FAIG ALGO, NO EM BORRIS (hasOperator)");}
 
             LANSetParser.Term3Context t2 = ctx.term3(i + 1);
             ReturnStruct rsT2 = visit(t2);

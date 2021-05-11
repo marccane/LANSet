@@ -73,7 +73,6 @@ TK_REAL: DECIMAL | DECIMAL 'E' ('-')? DIGIT+ ;
 TK_STRING: '"' SINGLE_CHAR* '"';
 
 TK_IDENTIFIER: LETTER ('_' | LETTER | DIGIT)*;
-//TK_VECTOR: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)?; //Made in Parser
 
 TK_ASSIGNMENT: ':=';
 
@@ -152,7 +151,7 @@ function_declaration: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RP
 formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)* ;
 
 type returns [int tkType, String text, int line]
-    :   typ = (TK_BASETYPE | TK_IDENTIFIER) ;
+    :   typ=(TK_BASETYPE | TK_IDENTIFIER) ;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -277,14 +276,13 @@ constant_value returns [C_TYPE typ, int line]
 
 tuple_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER ;
 
-vector_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_LBRACK subexpr /*integer expr*/ TK_RBRACK ;
+vector_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_LBRACK expr /*integer expr*/ TK_RBRACK ;
 
 ternary returns [C_TYPE typ, int line] locals [boolean localError]
     :
     condition=subexpr /* boolean */ TK_QMARK e1=expr TK_COLON e2=expr
     ;
 
-//HAZARD ZONE
 subexpr returns [C_TYPE typ, int line]
     :
     t1=term1
@@ -293,19 +291,17 @@ subexpr returns [C_TYPE typ, int line]
         t2=term1
     )*
     ;
-//operation: (term1 logic_operators operation) | term1;
 
 logic_operators returns [String text, int tk_type, int line]: tk=(TK_AND | TK_OR);
 
 term1 returns [C_TYPE typ, int line]
     :
-    t1 = term2
+    leftTerm=term2
     (
         equality_operator
-        term2
-    )*
+        rightTerm=term2
+    )?
     ;
-//term1: (term2 equality_operator term1) | term2;
 
 equality_operator returns [String text, int tk_type, int line]
     :
@@ -314,25 +310,23 @@ equality_operator returns [String text, int tk_type, int line]
 
 term2 returns [C_TYPE typ, int line]
     :
-    t1 = term3 
+    t1=term3
     (
         addition_operators
         term3
     )*
     ;
-//term2: (term3 addition_operators term2) | term3;
 
 addition_operators returns [String text, int tk_type, int line]: tk=(TK_SUB | TK_SUM) ;
 
 term3 returns [C_TYPE typ, int line]
     :
-    t1 = term4 
+    t1=term4
     (
         multiplication_operators
         term4
     )*
     ;
-//term3: (term4 multiplication_operators term3) | term4;
 
 multiplication_operators returns [String text, int tk_type, int line]: tk=(TK_PROD | TK_DIV | TK_INTDIV | TK_MODULO) ;
 
@@ -341,10 +335,9 @@ term4 returns [C_TYPE typ, int line]
     (negation_operators term5)
     | term5
     ;
-//term4: (negation_operators term4) | term5;
 
 negation_operators returns [String text, int tk_type]:
-    tk = (KW_NO | TK_INVERT) ;
+    tk=(KW_NO | TK_INVERT) ;
 
 term5 returns [C_TYPE typ, int line]
     :   direct_evaluation_expr

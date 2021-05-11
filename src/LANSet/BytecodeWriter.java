@@ -22,6 +22,15 @@ class BytecodeWriter {
     static final String BYTECODE_BOOLTYPE = "Z";
     static final String BYTECODE_STRINGTYPE = "S";
 
+    void addLong(Vector<Long> code, Long l){
+        code.add(program.nByte(l,2));
+        code.add(program.nByte(l,1));
+    }
+
+    void addLong(ReturnStruct rs, Long l){
+        addLong(rs.code, l);
+    }
+
     Vector<Long> generateReadCode(C_TYPE type, Long storeDir){
         Vector<Long> code = new Vector<>();
 
