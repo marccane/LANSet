@@ -1,60 +1,71 @@
 package LANSet;
 
-import LANSet.Bytecode.Bytecode;
-
 import java.util.Vector;
 
-class BytecodeWriter {
+import LANSet.Bytecode.Bytecode;
 
-    private Bytecode program; //aixo és necessari perquè la classe Bytecode necessita ser instanciada per accedir a metodes que podrien ser estatica
-    //Si no fos per aixo, aquesta classe podria ser estatica
+import static LANSet.LANSetLexer.*;
+
+//TODO This class should become fully static at some point
+class BytecodeWriter {
+    
+    private Bytecode program;
 
     BytecodeWriter(Bytecode program){
         this.program = program;
     }
 
-    //todo move to constants? We should eventually get rid of this class
-    //bytecode types
-    static final String BYTECODE_VOIDTYPE = "V";
-    static final String BYTECODE_CHARTYPE = "C";
-    static final String BYTECODE_INTTYPE = "I";
-    static final String BYTECODE_FLOATTYPE = "F";
-    static final String BYTECODE_BOOLTYPE = "Z";
-    static final String BYTECODE_STRINGTYPE = "S";
-
     void addLong(Vector<Long> code, Long l){
         code.add(program.nByte(l,2));
         code.add(program.nByte(l,1));
     }
-
-    void addLong(ReturnStruct rs, Long l){
-        addLong(rs.code, l);
+    
+    //Post: code contains the bytecode to create the boolean result of the comparison
+    private void addComparisonGlueCode(Vector<Long> code){
+        addLong(code, 7L);
+        code.add(program.ICONST_0);
+        code.add(program.GOTO);
+        addLong(code, 4L);
+        code.add(program.ICONST_1);
+    } 
+    
+    //Pre: left term is already at the top of the operand stack
+    void compareIntegerTypes(Vector<Long> code, LANSetParser.Equality_operatorContext operator, Vector<Long> rightTermCode){
+        code.addAll(rightTermCode);
+        code.add(compareIntInstructions[operator.tk_type-TK_EQUALS]);
+        addComparisonGlueCode(code);
     }
 
+    //Pre: both floats are already at the top of the operand stack
+    void compareFloatTypes(Vector<Long> code, LANSetParser.Equality_operatorContext operator){
+        if(operator.tk_type == TK_GREATER || operator.tk_type == TK_GREATEREQ)
+            code.add(program.FCMPG);
+        else
+            code.add(program.FCMPL);
+
+        code.add(compareFloatInstructions[operator.tk_type-TK_EQUALS]);
+        addComparisonGlueCode(code);
+    }
+    
     Vector<Long> generateReadCode(C_TYPE type, Long storeDir){
         Vector<Long> code = new Vector<>();
-
         code.add(Bytecode.INVOKESTATIC);
 
         switch(type){
             case CHAR_TYPE:
-                code.add(program.nByte(program.mGetChar,2));
-                code.add(program.nByte(program.mGetChar,1));
+                addLong(code, program.mGetChar);
                 code.add(program.ISTORE);
                 break;
             case INT_TYPE:
-                code.add(program.nByte(program.mGetInt,2));
-                code.add(program.nByte(program.mGetInt,1));
+                addLong(code, program.mGetInt);
                 code.add(program.ISTORE);
                 break;
             case FLOAT_TYPE:
-                code.add(program.nByte(program.mGetFloat,2));
-                code.add(program.nByte(program.mGetFloat,1));
+                addLong(code, program.mGetFloat);
                 code.add(program.FSTORE);
                 break;
             case BOOL_TYPE:
-                code.add(program.nByte(program.mGetBoolean,2));
-                code.add(program.nByte(program.mGetBoolean,1));
+                addLong(code, program.mGetBoolean);
                 code.add(program.ISTORE);
                 break;
             default:
@@ -69,29 +80,23 @@ class BytecodeWriter {
 
     Vector<Long> generateWriteCode(C_TYPE type){
         Vector<Long> code = new Vector<>();
-
         code.add(Bytecode.INVOKESTATIC);
 
         switch(type){
             case CHAR_TYPE:
-                code.add(program.nByte(program.mPutChar,2));
-                code.add(program.nByte(program.mPutChar,1));
+                addLong(code, program.mPutChar);
                 break;
             case INT_TYPE:
-                code.add(program.nByte(program.mPutInt,2));
-                code.add(program.nByte(program.mPutInt,1));
+                addLong(code, program.mPutInt);
                 break;
             case FLOAT_TYPE:
-                code.add(program.nByte(program.mPutFloat,2));
-                code.add(program.nByte(program.mPutFloat,1));
+                addLong(code, program.mPutFloat);
                 break;
             case BOOL_TYPE:
-                code.add(program.nByte(program.mPutBoolean,2));
-                code.add(program.nByte(program.mPutBoolean,1));
+                addLong(code, program.mPutBoolean);
                 break;
             case STRING_TYPE:
-                code.add(program.nByte(program.mPutString,2));
-                code.add(program.nByte(program.mPutString,1));
+                addLong(code, program.mPutString);
                 break;
             default:
                 //TODO semanticError = true;
@@ -101,5 +106,11 @@ class BytecodeWriter {
 
         return code;
     }
+
+    //Final attributes
+    private final Long[] compareIntInstructions = {program.IF_ICMPEQ, program.IF_ICMPNE, program.IF_ICMPLT,
+            program.IF_ICMPLE, program.IF_ICMPGT, program.IF_ICMPGE};
+    private final Long[] compareFloatInstructions = {program.IFEQ, program.IFNE, program.IFLT, program.IFLE,
+            program.IFGT, program.IFGE};
 
 }

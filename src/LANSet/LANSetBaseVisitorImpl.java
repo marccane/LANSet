@@ -687,69 +687,30 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         return null;
     }
 
-    //Pre: left term is already at the top of the operand stack
-    private void compareIntegerTypes(ReturnStruct rs, LANSetParser.Equality_operatorContext operator, ReturnStruct rsRightTerm){
-        rs.code.addAll(rsRightTerm.code);
-        switch(operator.tk_type){
-            case TK_EQUALS:
-                rs.code.add(program.IF_ICMPEQ);
-                break;
-            case TK_NEQUALS:
-                rs.code.add(program.IF_ICMPNE);
-                break;
-            case TK_LESS:
-                rs.code.add(program.IF_ICMPLT);
-                break;
-            case TK_LESSEQ:
-                rs.code.add(program.IF_ICMPLE);
-                break;
-            case TK_GREATER:
-                rs.code.add(program.IF_ICMPGT);
-                break;
-            case TK_GREATEREQ:
-                rs.code.add(program.IF_ICMPGE);
-                break;
-            default:
-                System.err.println("Switch default case operator.tk_type");
-                break;
-        }
-
-        bytecodeWriter.addLong(rs.code, 7L);
-        rs.code.add(program.ICONST_0);
-        rs.code.add(program.GOTO);
-        bytecodeWriter.addLong(rs.code, 4L);
-        rs.code.add(program.ICONST_1);
-    }
-
     @Override
     public ReturnStruct visitTerm1(LANSetParser.Term1Context ctx) {
-        C_TYPE resultType;
 
         LANSetParser.Term2Context leftTerm = ctx.leftTerm;
         ReturnStruct rs = visit(leftTerm);
-        //ctx.typ = leftTerm.typ;
         ctx.line = leftTerm.line;
-        resultType = leftTerm.typ;
+        ctx.typ = leftTerm.typ;
 
         LANSetParser.Equality_operatorContext operator = ctx.equality_operator();
         if(operator != null){
-            resultType = C_TYPE.BOOL_TYPE;
             visit(operator);
-            if(operator.tk_type == TK_EQUALS || operator.tk_type == TK_NEQUALS) { // == or !=
-                if(!Companion.isBasetype(leftTerm.typ)){ //if the operator isn't a basic type
+            ctx.typ = C_TYPE.BOOL_TYPE;
+            //Todo: We should be able to simplify checking, some it's likely redundant
+            if(operator.tk_type == TK_EQUALS || operator.tk_type == TK_NEQUALS){
+                if(!Companion.isBasetype(leftTerm.typ)){
                     errorSemantic = true;
                     Companion.operatorTypeMismatchError(leftTerm.typ, operator.text, operator.line, "basic type");
-                    //impossible to propagate a "less restrictive" type, so let's propagate the original one.
                 }
-                //otherwise, leftType should be propagated
             }
-            //other operations only work on integer or real numbers
-            else if(!Companion.isNumberType(leftTerm.typ)){
+            else if(!Companion.isNumberType(leftTerm.typ)){ //other operations only work on integer or real numbers
                 errorSemantic = true;
-                Companion.operatorTypeMismatchError(leftTerm.typ, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
-                //resultType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
+                Companion.operatorTypeMismatchError(leftTerm.typ, operator.text, operator.line,
+                        C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
             }
-            //otherwise, leftType should be propagated
 
             LANSetParser.Term2Context rightTerm = ctx.rightTerm;
             ReturnStruct rsRightTerm = visit(rightTerm);
@@ -764,59 +725,25 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             }
             else if(atLeastOneIsNumber){ //bothAreNumbers is implied
                 if (leftTerm.typ == C_TYPE.INT_TYPE && rightTerm.typ == C_TYPE.INT_TYPE) {
-                    compareIntegerTypes(rs, operator, rsRightTerm);
+                    bytecodeWriter.compareIntegerTypes(rs.code, operator, rsRightTerm.code);
                 }
                 else{
                     if(leftTerm.typ != C_TYPE.FLOAT_TYPE) rs.code.add(program.I2F);
                     rs.code.addAll(rsRightTerm.code);
                     if(rightTerm.typ != C_TYPE.FLOAT_TYPE) rs.code.add(program.I2F);
 
-                    if(operator.tk_type == TK_GREATER || operator.tk_type == TK_GREATEREQ)
-                        rs.code.add(program.FCMPG);
-                    else
-                        rs.code.add(program.FCMPL);
-
-                    switch(operator.tk_type){
-                        case TK_EQUALS:
-                            rs.code.add(program.IFEQ);
-                            break;
-                        case TK_NEQUALS:
-                            rs.code.add(program.IFNE);
-                            break;
-                        case TK_LESS:
-                            rs.code.add(program.IFLT);
-                            break;
-                        case TK_LESSEQ:
-                            rs.code.add(program.IFLE);
-                            break;
-                        case TK_GREATER:
-                            rs.code.add(program.IFGT);
-                            break;
-                        case TK_GREATEREQ:
-                            rs.code.add(program.IFGE);
-                            break;
-                        default:
-                            System.err.println("Switch default case operator.tk_type");
-                            break;
-                    }
-
-                    bytecodeWriter.addLong(rs.code, 7L);
-                    rs.code.add(program.ICONST_0);
-                    rs.code.add(program.GOTO);
-                    bytecodeWriter.addLong(rs.code, 4L);
-                    rs.code.add(program.ICONST_1);
+                    bytecodeWriter.compareFloatTypes(rs.code, operator);
                 }
             }
             else if(leftTerm.typ == rightTerm.typ){
-                compareIntegerTypes(rs, operator, rsRightTerm);
+                bytecodeWriter.compareIntegerTypes(rs.code, operator, rsRightTerm.code);
             }
             else{
                 errorSemantic = true;
                 Companion.comparisonNotAllowed(leftTerm.line, leftTerm.typ, rightTerm.typ);
             }
         }
-        //@after
-        ctx.typ = resultType;
+
         return rs;
     }
 
@@ -881,7 +808,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
             }
         }
-        //@after
+
         ctx.typ = leftType;
         return rs;
     }
@@ -991,12 +918,12 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         LANSetParser.Negation_operatorsContext operator = ctx.negation_operators();
         if(operator != null){
             visit(operator);
-            if( operator.tk_type == TK_INVERT && !(term5.typ == C_TYPE.INT_TYPE || term5.typ == C_TYPE.FLOAT_TYPE) ){ //if not inverting an integer or a real
+            if(operator.tk_type == TK_INVERT && !(term5.typ == C_TYPE.INT_TYPE || term5.typ == C_TYPE.FLOAT_TYPE)){ //if not inverting an integer or a real
                 errorSemantic = true;
                 Companion.operatorTypeMismatchError(term5.typ, operator.text, term5.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                 ctx.typ = C_TYPE.INT_TYPE; //propagate the (less restrictive) operation type, whether there's an error or not, to avoid error propagation.
             }
-            else if ( operator.tk_type == KW_NO && !(term5.typ == C_TYPE.BOOL_TYPE) ){ //if not negating a boolean
+            else if (operator.tk_type == KW_NO && !(term5.typ == C_TYPE.BOOL_TYPE)){ //if not negating a boolean
                 errorSemantic = true;
                 Companion.operatorTypeMismatchError(term5.typ, operator.text, term5.line, C_TYPE.BOOL_TYPE);
                 ctx.typ = C_TYPE.BOOL_TYPE; //propagate the operation type, whether there's an error or not, to avoid error propagation.
@@ -1087,8 +1014,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         return true; //TODO: Can we optimize?
     }
 
-    //Warning: zona radioactiva
-    //todo moure?
+    //TODO move some variables?
     private SymTable<Registre> TS = new SymTable<Registre>(100);
     private Bytecode program;
     private BytecodeWriter bytecodeWriter;

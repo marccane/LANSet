@@ -84,12 +84,13 @@ TK_DIV: '/';
 TK_INTDIV: '\\';
 TK_MODULO: '%';
 
-TK_LESS: '<';
-TK_GREATER: '>';
-TK_LESSEQ: '<=';
-TK_GREATEREQ: '>=';
+//Do *not* reorder the comparison operators
 TK_EQUALS: '==';
 TK_NEQUALS: '!=';
+TK_LESS: '<';
+TK_LESSEQ: '<=';
+TK_GREATER: '>';
+TK_GREATEREQ: '>=';
 
 TK_OR: '|';
 TK_AND: '&';
@@ -331,13 +332,9 @@ term3 returns [C_TYPE typ, int line]
 multiplication_operators returns [String text, int tk_type, int line]: tk=(TK_PROD | TK_DIV | TK_INTDIV | TK_MODULO) ;
 
 term4 returns [C_TYPE typ, int line]
-    :
-    (negation_operators term5)
-    | term5
-    ;
+    :   negation_operators? term5 ;
 
-negation_operators returns [String text, int tk_type]:
-    tk=(KW_NO | TK_INVERT) ;
+negation_operators returns [String text, int tk_type]: tk=(KW_NO | TK_INVERT) ;
 
 term5 returns [C_TYPE typ, int line]
     :   direct_evaluation_expr

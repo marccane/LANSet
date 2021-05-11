@@ -2,7 +2,7 @@ package LANSet;
 
 import java.util.*;
 
-import static LANSet.BytecodeWriter.*;
+import static LANSet.Constants.*;
 
 abstract class Companion {
 
@@ -118,11 +118,11 @@ abstract class Companion {
     }
 
     static void operatorTypeMismatchError(C_TYPE type, String op, int line, C_TYPE expectedType){
-        System.err.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
+        System.err.println("Type mismatch error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
     }
 
     static void operatorTypeMismatchError(C_TYPE type, String op, int line, String expectedType){
-        System.err.println("Type mismatch Error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
+        System.err.println("Type mismatch error at line " + line + ": operator \'" + op + "\' does not work with \'" + type + "\' expressions. Expected " + expectedType + " instead.");
     }
 
     static void comparisonNotAllowed(int line, C_TYPE t1, C_TYPE t2){
