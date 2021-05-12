@@ -13,7 +13,6 @@ import LANSet.Bytecode.Bytecode;
 
 import static LANSet.Constants.*;
 import static LANSet.LANSetLexer.*;
-import static LANSet.BytecodeWriter.*;
 
 public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
@@ -149,7 +148,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 value = program.addConstant(BYTECODE_BOOLTYPE, ctx.tk.getText().equals(BOOL_TRUE)?"Cert":"Fals");
                 break;
             case TK_CHARACTER:
-                value = program.addConstant(BYTECODE_CHARTYPE, ctx.tk.getText());
+                value = program.addConstant(BYTECODE_CHARTYPE, ctx.tk.getText().substring(1,2));
                 break;
             case TK_REAL:
                 value = program.addConstant(BYTECODE_FLOATTYPE, ctx.tk.getText());
@@ -390,7 +389,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             rs.code.add(program.nByte(jump,1));
             rs.code.addAll(c1Code);
 
-            jump = 0L-(rs.code.size()); //jump to first instruction of expr, so -(c1.size + expr.code.size + 3) and also actual rs.code.size
+            jump = 0L-rs.code.size(); //jump to first instruction of expr, so -(c1.size + expr.code.size + 3) and also actual rs.code.size
             rs.code.add(program.GOTO);
             rs.code.add(program.nByte(jump,2));
             rs.code.add(program.nByte(jump,1));
