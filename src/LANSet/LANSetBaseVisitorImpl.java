@@ -223,16 +223,11 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             }
             C_TYPE lvalVarType = var.getType();
 
-            switch(lvalVarType){ //tipus basics
-                case CHAR_TYPE: //mhhhhh
-                case BOOL_TYPE: //mhhhhh
-                case INT_TYPE:
-                    rsLval.code.add(program.ISTORE);
-                    break;
-                case FLOAT_TYPE:
-                    rsLval.code.add(program.FSTORE);
-                    break;
-            }
+            if(lvalVarType == C_TYPE.FLOAT_TYPE)
+                rsLval.code.add(program.FSTORE);
+            else
+                rsLval.code.add(program.ISTORE);
+
             Long lvalVarDir = var.getDir();
             rsLval.code.add(lvalVarDir); //index (long? hauria de ser byte?)
         }
@@ -265,7 +260,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         for (LANSetParser.SentenceContext sentence: ctx.sentence())
             c1Code.addAll(visit(sentence).code);
         for (LANSetParser.Else_sentenceContext sentence: ctx.else_sentence())
-            c2Code.addAll(visit(sentence).code); //espero que entri a la sentencia real i retorni el valor correctament...
+            c2Code.addAll(visit(sentence).code);
 
         if(ctx.expr().typ != C_TYPE.BOOL_TYPE){
             errorSemantic=true;
@@ -499,16 +494,11 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
             if(Companion.isBasetype(varType)){
                 ctx.typ = varType;
-                switch(varType){
-                    case CHAR_TYPE: //mhhhhh
-                    case BOOL_TYPE: //mhhhhh
-                    case INT_TYPE:
-                        rs.code.add(program.ILOAD);
-                        break;
-                    case FLOAT_TYPE:
-                        rs.code.add(program.FLOAD);
-                        break;
-                }
+                if(varType == C_TYPE.FLOAT_TYPE)
+                    rs.code.add(program.FLOAD);
+                else
+                    rs.code.add(program.ILOAD);
+
                 Long varDir = var.getDir();
                 rs.code.add(varDir); //index (long? hauria de ser byte?)
             }
@@ -766,13 +756,12 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             LANSetParser.Addition_operatorsContext operator = ctx.addition_operators(i);
             visit(operator);
 
-            if(i == 0){ //first left operand found, typecheck needed
-                if( !(leftType == C_TYPE.INT_TYPE || leftType == C_TYPE.FLOAT_TYPE) ){ //if is neither an integer or a real number
+            if(i == 0) //first left operand found, typecheck needed
+                if(!Companion.isNumberType(leftType)){
                     errorSemantic = true;
                     Companion.operatorTypeMismatchError(ctx.t1.typ, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                     //$leftType = C_TYPE.INT_TYPE; //typing error, propagate less restrictive type in order to continue semantic analysis
                 }
-            }
 
             LANSetParser.Term3Context t2 = ctx.term3(i + 1);
             ReturnStruct rsT2 = visit(t2);
@@ -853,20 +842,19 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             else{ //real division and multiplication
                 boolean errorLocal = false;
 
-                if( !(t2.typ == C_TYPE.FLOAT_TYPE || t2.typ == C_TYPE.INT_TYPE) ){
+                if(!Companion.isNumberType(t2.typ)){
                     errorSemantic = true;
                     errorLocal = true;
                     Companion.operatorTypeMismatchError(t2.typ, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                 }
 
-                if( !(leftType == C_TYPE.FLOAT_TYPE || leftType == C_TYPE.INT_TYPE) ){ //if left operand is not an integer or a real number
+                if(!Companion.isNumberType(leftType)){
                     errorSemantic = true;
                     errorLocal = true;
                     Companion.operatorTypeMismatchError(leftType, operator.text, operator.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
                 }
 
                 if(operator.tk_type == TK_DIV) {
-
                     if(leftType == C_TYPE.INT_TYPE) rs.code.add(program.I2F);
                     rs.code.addAll(rsT2.code); //right operand
                     if(t2.typ == C_TYPE.INT_TYPE) rs.code.add(program.I2F);
@@ -917,36 +905,29 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         LANSetParser.Negation_operatorsContext operator = ctx.negation_operators();
         if(operator != null){
             visit(operator);
-            if(operator.tk_type == TK_INVERT && !(term5.typ == C_TYPE.INT_TYPE || term5.typ == C_TYPE.FLOAT_TYPE)){ //if not inverting an integer or a real
+            if(operator.tk_type == TK_INVERT && !Companion.isNumberType(term5.typ)){
                 errorSemantic = true;
                 Companion.operatorTypeMismatchError(term5.typ, operator.text, term5.line, C_TYPE.INT_TYPE + " or " + C_TYPE.FLOAT_TYPE);
-                ctx.typ = C_TYPE.INT_TYPE; //propagate the (less restrictive) operation type, whether there's an error or not, to avoid error propagation.
             }
-            else if (operator.tk_type == KW_NO && !(term5.typ == C_TYPE.BOOL_TYPE)){ //if not negating a boolean
+            else if (operator.tk_type == KW_NO && term5.typ != C_TYPE.BOOL_TYPE){
                 errorSemantic = true;
                 Companion.operatorTypeMismatchError(term5.typ, operator.text, term5.line, C_TYPE.BOOL_TYPE);
-                ctx.typ = C_TYPE.BOOL_TYPE; //propagate the operation type, whether there's an error or not, to avoid error propagation.
             }
-            else{ //no error
-                ctx.typ = term5.typ;
-
-                if(operator.tk_type == KW_NO){ //if we're inverting a boolean expression
-                    rs.code.add(program.BIPUSH);
-                    rs.code.add(1L); //put a 1
+            else{
+                if(operator.tk_type == KW_NO){
+                    rs.code.add(program.ICONST_1);
                     rs.code.add(program.IXOR); //1 xor any = !any
                 }
                 else{ //KW_INVERT
-                    if(term5.typ == C_TYPE.INT_TYPE) rs.code.add(program.INEG);
-                    else rs.code.add(program.FNEG);
+                    if(term5.typ == C_TYPE.INT_TYPE)
+                        rs.code.add(program.INEG);
+                    else
+                        rs.code.add(program.FNEG);
                 }
             }
-
-            ctx.line = term5.line;
         }
-        else{
-            ctx.typ = term5.typ;
-            ctx.line = term5.line;
-        }
+        ctx.typ = term5.typ;
+        ctx.line = term5.line;
         return rs;
     }
 
