@@ -1,9 +1,12 @@
 package LANSet;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import LANSet.Bytecode.Bytecode;
 
+import static LANSet.Bytecode.Constants.*;
 import static LANSet.LANSetLexer.*;
 
 //TODO This class should become fully static at some point
@@ -45,6 +48,19 @@ class BytecodeWriter {
 
         code.add(compareFloatInstructions[operator.tk_type-TK_EQUALS]);
         addComparisonGlueCode(code);
+    }
+
+    void initVector(Vector<Long> code, C_TYPE type, int size){
+        if(size <= 0){
+            //TODO errorSemantic = true;
+            System.err.println("Vector size must be a positive integer but was " + size);
+        }
+        else {
+            code.add(program.BIPUSH);
+            code.add(Integer.toUnsignedLong(size));
+            code.add(program.NEWARRAY);
+            code.add(CTypeToJVMTypeID.get(type));
+        }
     }
     
     Vector<Long> generateReadCode(C_TYPE type, Long storeDir){
@@ -110,7 +126,17 @@ class BytecodeWriter {
     //Final attributes
     private final Long[] compareIntInstructions = {program.IF_ICMPEQ, program.IF_ICMPNE, program.IF_ICMPLT,
             program.IF_ICMPLE, program.IF_ICMPGT, program.IF_ICMPGE};
+
     private final Long[] compareFloatInstructions = {program.IFEQ, program.IFNE, program.IFLT, program.IFLE,
             program.IFGT, program.IFGE};
+
+    private static final Map<C_TYPE, Long> CTypeToJVMTypeID = new HashMap<C_TYPE, Long>() {{
+        //put(C_TYPE.BOOL_TYPE, T_BOOLEAN); //TODO eventually use the real types
+        //put(C_TYPE.CHAR_TYPE, T_CHAR);
+        put(C_TYPE.BOOL_TYPE, T_INT);
+        put(C_TYPE.CHAR_TYPE, T_INT);
+        put(C_TYPE.INT_TYPE, T_INT);
+        put(C_TYPE.FLOAT_TYPE, T_FLOAT);
+    }};
 
 }

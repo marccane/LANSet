@@ -3,6 +3,7 @@ package LANSet;
 import java.util.*;
 
 import static LANSet.Constants.*;
+import static LANSet.LANSetLexer.*;
 
 abstract class Companion {
 
@@ -14,19 +15,19 @@ abstract class Companion {
     ));
 
     private static final Map<Integer, C_TYPE> tokenIDToCType = new HashMap<Integer, C_TYPE>() {{
-        put(LANSetParser.TK_CHARACTER, C_TYPE.CHAR_TYPE);
-        put(LANSetParser.TK_INTEGER, C_TYPE.INT_TYPE);
-        put(LANSetParser.TK_REAL, C_TYPE.FLOAT_TYPE);
-        put(LANSetParser.TK_BOOLEAN, C_TYPE.BOOL_TYPE);
-        put(LANSetParser.TK_STRING, C_TYPE.STRING_TYPE);
+        put(TK_CHARACTER, C_TYPE.CHAR_TYPE);
+        put(TK_INTEGER, C_TYPE.INT_TYPE);
+        put(TK_REAL, C_TYPE.FLOAT_TYPE);
+        put(TK_BOOLEAN, C_TYPE.BOOL_TYPE);
+        put(TK_STRING, C_TYPE.STRING_TYPE);
     }};
 
     /*private static final Map<C_TYPE, String> cTypeToString = new HashMap<C_TYPE, String>() {{
-        put(C_TYPE.CHAR_TYPE, LANSetParser.S_CHAR_TYPE);
-        put(C_TYPE.INT_TYPE, LANSetParser.S_INT_TYPE);
-        put(C_TYPE.FLOAT_TYPE, LANSetParser.S_FLOAT_TYPE);
-        put(C_TYPE.BOOL_TYPE, LANSetParser.S_BOOL_TYPE);
-        put(C_TYPE.STRING_TYPE, LANSetParser.S_STRING_TYPE);
+        put(C_TYPE.CHAR_TYPE, S_CHAR_TYPE);
+        put(C_TYPE.INT_TYPE, S_INT_TYPE);
+        put(C_TYPE.FLOAT_TYPE, S_FLOAT_TYPE);
+        put(C_TYPE.BOOL_TYPE, S_BOOL_TYPE);
+        put(C_TYPE.STRING_TYPE, S_STRING_TYPE);
     }};*/
 
     static String bytecodeType(C_TYPE type){
@@ -55,10 +56,13 @@ abstract class Companion {
         return idType;
     }
 
-    //Pre: cert
+    //Pre: type is an ANTLR token id
     //Post: retorna el C_TYPE que correspon a la ID del token (type)
     static C_TYPE cTypeFromTokenID(int type){
-        assert(type != LANSetParser.TK_BASETYPE);
+        if(type == TK_BASETYPE) {
+            //TODO errorSemantic = true;
+            System.err.println("ERROR in cTypeFromTokenID, type == TK_BASETYPE");
+        }
         return tokenIDToCType.getOrDefault(type, C_TYPE.INVALID_TYPE);
     }
 

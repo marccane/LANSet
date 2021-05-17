@@ -1,17 +1,18 @@
 package LANSet;
 
+//TODO this could just be a java "struct"
 class Registre {
 
-    private String text;
+    private String text;  //isn't this completely useless? It's always the key of the dictionary
     private C_SUPERTYPE supertype;
     private C_TYPE type;
 
     private int line;
     private int pos;
     private int intval;
-
-    private Long dir;
-
+    private Long dir = Long.MAX_VALUE;
+    int vecSize; //i'm not making more getter/setters
+    Registre parent;
 
     Registre() {
         text = "";
@@ -61,6 +62,15 @@ class Registre {
         pos = p;
     }
 
+    Registre(String te, C_SUPERTYPE st, C_TYPE t, int l, int p, int vecSize) {
+        text = te;
+        supertype = st;
+        type = t;
+        line = l;
+        pos = p;
+        this.vecSize = vecSize;
+    }
+
     String getText() {
         return (text);
     }
@@ -86,7 +96,10 @@ class Registre {
     }
 
     Long getDir() {
-        return (dir);
+        if(dir == Long.MAX_VALUE) //not pretty but should ease development
+            //TODO errorSemantic = true;
+            System.err.println("Get of uninitialized direction");
+        return dir;
     }
 
     void putText(String te) {

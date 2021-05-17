@@ -106,8 +106,9 @@ TK_COMMA: ',';
 TK_DOT: '.';
 TK_QMARK: '?';
 
-TK_COMMENT: '//' (.)*? ('\n' | '\r') -> skip;
-TK_MULTICOMMENT: '/*' (.)*? '*/' -> skip;
+//Use non-greedy *? sintax
+TK_COMMENT: '//' .*? ('\n' | '\r') -> skip;
+TK_MULTICOMMENT: '/*' .*? '*/' -> skip;
 
 SPACES: (' ' | '\n' | '\r' | '\t') -> skip;
 
@@ -133,7 +134,7 @@ type_declaration
     |   id=TK_IDENTIFIER TK_COLON tuple_definition
     ;
 
-vector_definition: KW_VECTOR TK_BASETYPE KW_SIZE TK_INTEGER (KW_START TK_INTEGER)? ;
+vector_definition: KW_VECTOR baseType=TK_BASETYPE KW_SIZE size=TK_INTEGER (KW_START TK_INTEGER)? ;
 
 tuple_definition
     :   KW_TUPLE (TK_BASETYPE TK_IDENTIFIER TK_SEMICOLON)+ KW_ENDTUPLE ;
@@ -209,10 +210,10 @@ sentence
 assignment
     :   lval=lvalue TK_ASSIGNMENT e=expr ; //lvalue or expr
 
-lvalue returns[C_TYPE typ, int line, String ident]
-    :   tuple_acces
-    |   vector_acces
-    |   id=TK_IDENTIFIER
+lvalue returns[C_TYPE typ, int line, Long storeInstruction, Long dir]
+    :   tuple_acces         #lvalueTupleAccess
+    |   vector_acces        #lvalueVectorAccess
+    |   id=TK_IDENTIFIER    #lvalueId
     ;
 
 else_sentence //TODO: explore if there's an alternative way to do this (giving a name to each sentence doesn't result in a list...)
@@ -277,7 +278,7 @@ constant_value returns [C_TYPE typ, int line]
 
 tuple_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER ;
 
-vector_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_LBRACK expr /*integer expr*/ TK_RBRACK ;
+vector_acces returns [C_TYPE typ, int line]: vecVar=TK_IDENTIFIER TK_LBRACK expr /*integer expr*/ TK_RBRACK ;
 
 ternary returns [C_TYPE typ, int line] locals [boolean localError]
     :

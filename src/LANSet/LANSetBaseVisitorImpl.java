@@ -47,6 +47,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     public ReturnStruct visitType_declaration(LANSetParser.Type_declarationContext ctx) {
+        ReturnStruct rs = new ReturnStruct();
 
         if(ctx.btype != null) {
             if (!identifierInUse(ctx.id.getText())) {
@@ -58,7 +59,17 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             }
         }
         else if(ctx.vector_definition() != null){
-            System.err.println("TODO: vector definition");
+            //rs = visit(ctx.vector_definition()); //not needed
+            if (!identifierInUse(ctx.id.getText())) {
+                C_TYPE bType = Companion.processBaseType(C_TYPE.fromString(ctx.vector_definition().baseType.getText()));
+                Registre r = new Registre(ctx.id.getText(), C_SUPERTYPE.VECTOR_SUPERTYPE, bType, ctx.id.getLine(),
+                        ctx.id.getCharPositionInLine(), Integer.parseInt(ctx.vector_definition().size.getText()));
+                TS.inserir(ctx.id.getText(), r);
+            }
+            else {
+                errorSemantic = true;
+                Companion.repeatedIdentifierError(ctx.id.getText(), ctx.id.getLine());
+            }
         }
         else if(ctx.tuple_definition() != null){
             System.err.println("TODO: tuple definition");
@@ -68,13 +79,14 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             System.err.println("Type declaration error");
         }
 
-        return new ReturnStruct();
+        return rs;
     }
 
-    @Override
+    /*@Override
     public ReturnStruct visitVector_definition(LANSetParser.Vector_definitionContext ctx) {
-        return visitChildren(ctx);
-    }
+        System.out.println(ctx.baseType.getText());
+        return defaultResult();
+    }*/
 
     @Override
     public ReturnStruct visitTuple_definition(LANSetParser.Tuple_definitionContext ctx) {
@@ -114,15 +126,15 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         }
         else{
             C_TYPE valueType = ctx.value.typ;
-            if (ctx.bt.getText().equals(valueType.toString())){
+            if (ctx.bt.getText().equals(valueType.toString())){ //TODO simplify this
                 Registre r = registerConstant(ctx.id,ctx.bt);
                 Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), ctx.value.text);
-                r.putDir(dir);
+                r.putDir(dir); //TODO fix
             }
             else if (ctx.bt.getText().equals(C_TYPE.FLOAT_TYPE.toString()) && valueType == C_TYPE.INT_TYPE){
                 Registre r = registerConstant(ctx.id,ctx.bt);
                 Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), ctx.value.text);
-                r.putDir(dir);
+                r.putDir(dir); //TODO fix
             }
             else{
                 Companion.typeMismatchError2(ctx.id.getText(), ctx.id.getLine(), valueType.toString(), C_TYPE.fromString(ctx.bt.getText()));
@@ -168,16 +180,42 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     @Override
     public ReturnStruct visitVar_declaration(LANSetParser.Var_declarationContext ctx) {
         ReturnStruct rs = visitChildren(ctx);
-        if(ctx.type().tkType == TK_IDENTIFIER) {
-            System.err.println("TODO: alias, tuple or vector variable detected");
-            if(!identifierInUse(ctx.type().text)){
-                errorSemantic = true;
-                Companion.undefinedTypeError(ctx.type().text, ctx.type().line);
-            }
-        }
-        else if(identifierInUse(ctx.id.getText())){
+
+        if(identifierInUse(ctx.id.getText())){
             errorSemantic = true;
             Companion.repeatedIdentifierError(ctx.id.getText(), ctx.id.getLine());
+        }
+        else if(ctx.type().tkType == TK_IDENTIFIER) { //alias, tuple or vector
+            Registre typeReg = TS.obtenir(ctx.type().getText());
+            if(typeReg == null){
+                errorSemantic = true;
+                Companion.undefinedTypeError(ctx.type().getText(), ctx.type().line);
+            }
+            else if(typeReg.getSupertype() == C_SUPERTYPE.ALIAS_SUPERTYPE){
+                //TODO review this (look for the documentation we wrote some years ago)
+            }
+            else if(typeReg.getSupertype() == C_SUPERTYPE.VECTOR_SUPERTYPE){
+                Registre vecVariable = new Registre(ctx.id.getText(), C_SUPERTYPE.VECTOR_SUPERTYPE,
+                        typeReg.getType(), ctx.id.getLine(), ctx.id.getCharPositionInLine()); //i'm not very confident about the type...
+                vecVariable.putDir(nVar++);
+                TS.inserir(ctx.id.getText(), vecVariable);
+
+                bytecodeWriter.initVector(rs.code, typeReg.getType(), typeReg.vecSize);
+                rs.code.add(program.ASTORE);
+                rs.code.add(vecVariable.getDir());
+            }
+            else if(typeReg.getSupertype() == C_SUPERTYPE.TUPLE_SUPERTYPE){
+                errorSemantic = true;
+                System.err.println("TODO: tuple variable detected");
+            }
+            else if(typeReg.getSupertype() == C_SUPERTYPE.VARIABLE_SUPERTYPE){ //we should handle vectors here
+                errorSemantic = true;
+                System.err.println("WIP");
+            }
+            else{
+                errorSemantic = true;
+                System.err.println("Invalid supertype");
+            }
         }
         else {
             registerBasetypeVariable(C_TYPE.fromString(ctx.type().getText()), ctx.id);
@@ -202,53 +240,70 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         ReturnStruct rsExpr = visit(ctx.e);
         rsLval.code.addAll(rsExpr.code);
 
-        Registre var = TS.obtenir(ctx.lval.ident); //Todo: this is redundant, we could return the register from the lval evaluation and move the error checking appropiately
-        boolean canBePromoted = (ctx.lval.typ == C_TYPE.FLOAT_TYPE && ctx.e.typ == C_TYPE.INT_TYPE);
+        boolean needsPromotion = (ctx.lval.typ == C_TYPE.FLOAT_TYPE && ctx.e.typ == C_TYPE.INT_TYPE);
 
-        if(var == null){
-            errorSemantic = true;
-            Companion.undefinedIdentifierError(ctx.lval.ident, ctx.lval.line);
-        }
-        else if(var.getSupertype() != C_SUPERTYPE.VARIABLE_SUPERTYPE){
-            errorSemantic = true;
-            Companion.identifierIsNotAVariableError(ctx.lval.ident, ctx.lval.line); //no es el mes adient perque pot ser tuple o vector...
-        }
-        else if(ctx.lval.typ != ctx.e.typ && !canBePromoted){
+        if(ctx.lval.typ != ctx.e.typ && !needsPromotion){
             errorSemantic = true;
             Companion.typeMismatchError(ctx.lval.typ, ctx.e.typ, ctx.lval.line);
         }
         else{ //lval es un identificador existent, tipus variable i els tipus casen
-            if(canBePromoted){ //has to be promoted
+            if(needsPromotion)
                 rsLval.code.add(program.I2F);
-            }
-            C_TYPE lvalVarType = var.getType();
+            rsLval.code.add(ctx.lval.storeInstruction);
 
-            if(lvalVarType == C_TYPE.FLOAT_TYPE)
-                rsLval.code.add(program.FSTORE);
-            else
-                rsLval.code.add(program.ISTORE);
-
-            Long lvalVarDir = var.getDir();
-            rsLval.code.add(lvalVarDir); //index (long? hauria de ser byte?)
+            if(ctx.lval.dir != null)
+                rsLval.code.add(ctx.lval.dir);
         }
         return rsLval;
     }
 
     @Override
-    public ReturnStruct visitLvalue(LANSetParser.LvalueContext ctx) {
-        if(ctx.tuple_acces() != null){
-            System.err.println("TODO: tuple as an lvalue");
+    public ReturnStruct visitLvalueTupleAccess(LANSetParser.LvalueTupleAccessContext ctx){
+        ReturnStruct rs = visit(ctx.tuple_acces());
+        errorSemantic = true;
+        System.err.println("TODO: tuple as an lvalue");
+        ctx.storeInstruction = program.PUTFIELD;
+        //ctx.dir = ??
+        return rs;
+    }
+
+    @Override
+    public ReturnStruct visitLvalueVectorAccess(LANSetParser.LvalueVectorAccessContext ctx){
+        ReturnStruct rs = visit(ctx.vector_acces());
+        ctx.typ = ctx.vector_acces().typ;
+        ctx.line = ctx.vector_acces().line;
+
+        if(ctx.typ == C_TYPE.FLOAT_TYPE)
+            ctx.storeInstruction = program.FASTORE;
+        else
+            ctx.storeInstruction = program.IASTORE;
+
+        return rs;
+    }
+
+    @Override
+    public ReturnStruct visitLvalueId(LANSetParser.LvalueIdContext ctx){
+
+        Registre reg = TS.obtenir(ctx.id.getText());
+        if(reg == null){
+            errorSemantic = true;
+            Companion.undefinedIdentifierError(ctx.id.getText(), ctx.id.getLine());
         }
-        else if(ctx.vector_acces() != null){
-            System.err.println("TODO: vector as an lvalue");
+        else if(reg.getSupertype() != C_SUPERTYPE.VARIABLE_SUPERTYPE){
+            errorSemantic = true;
+            Companion.identifierIsNotAVariableError(ctx.id.getText(), ctx.id.getLine()); //no es el mes adient perque pot ser tuple o vector...
         }
         else{
-            Registre r = TS.obtenir(ctx.id.getText());
-            ctx.typ = (r == null) ? C_TYPE.INVALID_TYPE : r.getType();
-            ctx.line = ctx.id.getLine();
-            ctx.ident = ctx.id.getText();
+            if(ctx.typ == C_TYPE.FLOAT_TYPE)
+                ctx.storeInstruction = program.FSTORE;
+            else
+                ctx.storeInstruction = program.ISTORE;
         }
-        return visitChildren(ctx);
+
+        ctx.typ = (reg == null) ? C_TYPE.INVALID_TYPE : reg.getType();
+        ctx.line = ctx.id.getLine();
+        ctx.dir = reg.getDir();
+        return new ReturnStruct();
     }
 
     @Override
@@ -482,6 +537,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         ReturnStruct rs = new ReturnStruct();
         Registre var = TS.obtenir(ctx.id.getText());
 
+        ctx.typ = var.getType(); //TODO SOON, rethink this or otherwise the error won't show up
         ctx.line = ctx.id.getLine();
 
         if(var == null){
@@ -491,30 +547,24 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         }
         else if(var.getSupertype() == C_SUPERTYPE.VARIABLE_SUPERTYPE){
             C_TYPE varType = var.getType();
-
             if(Companion.isBasetype(varType)){
-                ctx.typ = varType;
                 if(varType == C_TYPE.FLOAT_TYPE)
                     rs.code.add(program.FLOAD);
                 else
                     rs.code.add(program.ILOAD);
 
                 Long varDir = var.getDir();
-                rs.code.add(varDir); //index (long? hauria de ser byte?)
+                rs.code.add(varDir);
             }
-            else{ //custom type (alias) (tuples would go here too)
+            else { //custom type (alias)
                 /*Registre t = TS.obtenir(var.getType()); //existence validation is not needed.
                 C_SUPERTYPE st = t.getSupertype();
 
                 if(st == C_SUPERTYPE.ALIAS_SUPERTYPE) ctx.typ = t.getType();
                 else ctx.typ = varType;*/
-
-                ctx.typ = varType;
             }
         }
         else if (var.getSupertype() == C_SUPERTYPE.CONSTANT_SUPERTYPE){
-            ctx.typ = var.getType();
-
             Long constDir = var.getDir();
             rs.code.add(program.LDC_W);
             rs.code.add(program.nByte(constDir,2));
@@ -539,6 +589,11 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     @Override
     public ReturnStruct visitDirectEvaluationVector(LANSetParser.DirectEvaluationVectorContext ctx) {
         ReturnStruct rs = visit(ctx.vector_acces());
+        if(ctx.typ == C_TYPE.FLOAT_TYPE)
+            rs.code.add(program.FALOAD);
+        else
+            rs.code.add(program.IALOAD);
+
         ctx.typ = ctx.vector_acces().typ;
         ctx.line = ctx.vector_acces().line;
         return rs;
@@ -580,7 +635,37 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     public ReturnStruct visitVector_acces(LANSetParser.Vector_accesContext ctx) {
-        return visitChildren(ctx);
+        ReturnStruct rs = new ReturnStruct();
+        Registre vecVarReg = TS.obtenir(ctx.vecVar.getText());
+
+        if(vecVarReg == null){
+            errorSemantic = true;
+            Companion.undefinedIdentifierError(ctx.vecVar.getText(), ctx.vecVar.getLine());
+        }
+        else if(vecVarReg.getSupertype() != C_SUPERTYPE.VECTOR_SUPERTYPE){
+            errorSemantic = true;
+            System.err.println(String.format("Error at line %d. %s was expected to be a vector but was a %s %s instead",
+                    ctx.vecVar.getLine(), ctx.vecVar.getText(), vecVarReg.getType().toString(), vecVarReg.getSupertype()));
+        }
+        else{
+            ReturnStruct rsExpr = visit(ctx.expr());
+
+            if(ctx.expr().typ != C_TYPE.INT_TYPE){
+                errorSemantic = true;
+                Companion.typeMismatchError2("*expression*", ctx.expr().line, ctx.expr().typ.toString(), C_TYPE.INT_TYPE);
+            }
+            else{
+                rs.code.add(program.ALOAD); //push arrayref into operand stack
+                rs.code.add(vecVarReg.getDir());
+                rs.code.addAll(rsExpr.code); //push index of the array
+
+                ctx.typ = vecVarReg.getType();
+                ctx.line = ctx.vecVar.getLine();
+                //do we need to return the identifier?
+            }
+        }
+
+        return rs;
     }
 
     @Override
@@ -1011,7 +1096,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     }
 
     private void registerAlias(Token id, Token type){
-        C_TYPE bType = Companion.processBaseType(C_TYPE.fromString(type.getText()));
+        C_TYPE bType = Companion.processBaseType(C_TYPE.fromString(type.getText())); //We cannot use cTypeFromTokenID here
         Registre r = new Registre(id.getText(), C_SUPERTYPE.ALIAS_SUPERTYPE, bType, id.getLine(), id.getCharPositionInLine());
         TS.inserir(id.getText(), r);
     }
