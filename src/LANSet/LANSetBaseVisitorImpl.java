@@ -59,7 +59,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             }
         }
         else if(ctx.vector_definition() != null){
-            //rs = visit(ctx.vector_definition()); //not needed
             if (!identifierInUse(ctx.id.getText())) {
                 C_TYPE bType = Companion.processBaseType(C_TYPE.fromString(ctx.vector_definition().baseType.getText()));
                 Registre r = new Registre(ctx.id.getText(), C_SUPERTYPE.VECTOR_SUPERTYPE, bType, ctx.id.getLine(),
@@ -81,12 +80,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
         return rs;
     }
-
-    /*@Override
-    public ReturnStruct visitVector_definition(LANSetParser.Vector_definitionContext ctx) {
-        System.out.println(ctx.baseType.getText());
-        return defaultResult();
-    }*/
 
     @Override
     public ReturnStruct visitTuple_definition(LANSetParser.Tuple_definitionContext ctx) {
@@ -259,7 +252,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     public ReturnStruct visitLvalueTupleAccess(LANSetParser.LvalueTupleAccessContext ctx){
-        ReturnStruct rs = visit(ctx.tuple_acces());
+        ReturnStruct rs = visit(ctx.tuple_access());
         errorSemantic = true;
         System.err.println("TODO: tuple as an lvalue");
         ctx.storeInstruction = program.PUTFIELD;
@@ -269,9 +262,9 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     public ReturnStruct visitLvalueVectorAccess(LANSetParser.LvalueVectorAccessContext ctx){
-        ReturnStruct rs = visit(ctx.vector_acces());
-        ctx.typ = ctx.vector_acces().typ;
-        ctx.line = ctx.vector_acces().line;
+        ReturnStruct rs = visit(ctx.vector_access());
+        ctx.typ = ctx.vector_access().typ;
+        ctx.line = ctx.vector_access().line;
 
         if(ctx.typ == C_TYPE.FLOAT_TYPE)
             ctx.storeInstruction = program.FASTORE;
@@ -300,9 +293,9 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 ctx.storeInstruction = program.ISTORE;
         }
 
-        ctx.typ = (reg == null) ? C_TYPE.INVALID_TYPE : reg.getType();
+        ctx.typ = reg == null ? C_TYPE.INVALID_TYPE : reg.getType();
+        ctx.dir = reg == null ? -1L : reg.getDir();
         ctx.line = ctx.id.getLine();
-        ctx.dir = reg.getDir();
         return new ReturnStruct();
     }
 
@@ -322,7 +315,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             Companion.typeMismatchError2("*expressio*", ctx.expr().line, ctx.expr().typ.toString(), C_TYPE.BOOL_TYPE);
         }
         else{ //no error, codegen
-            rs.code.addAll(visit(ctx.expr()).code);
             rs.code.add(program.IFEQ); //if false, jumps to else (c1.size()+6)
 
             Long jump = 2L + c1Code.size() + 3L + 1L; //if condition is false, jump to c2 (6 = ifjump1+ifjump2+goto+goto1+goto2+1)
@@ -537,65 +529,68 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         ReturnStruct rs = new ReturnStruct();
         Registre var = TS.obtenir(ctx.id.getText());
 
-        ctx.typ = var.getType(); //TODO SOON, rethink this or otherwise the error won't show up
-        ctx.line = ctx.id.getLine();
-
         if(var == null){
             Companion.undefinedIdentifierError(ctx.id.getText(), ctx.id.getLine());
             ctx.typ = C_TYPE.INVALID_TYPE;
             errorSemantic = true;
         }
-        else if(var.getSupertype() == C_SUPERTYPE.VARIABLE_SUPERTYPE){
-            C_TYPE varType = var.getType();
-            if(Companion.isBasetype(varType)){
-                if(varType == C_TYPE.FLOAT_TYPE)
-                    rs.code.add(program.FLOAD);
-                else
-                    rs.code.add(program.ILOAD);
-
-                Long varDir = var.getDir();
-                rs.code.add(varDir);
-            }
-            else { //custom type (alias)
-                /*Registre t = TS.obtenir(var.getType()); //existence validation is not needed.
-                C_SUPERTYPE st = t.getSupertype();
-
-                if(st == C_SUPERTYPE.ALIAS_SUPERTYPE) ctx.typ = t.getType();
-                else ctx.typ = varType;*/
-            }
-        }
-        else if (var.getSupertype() == C_SUPERTYPE.CONSTANT_SUPERTYPE){
-            Long constDir = var.getDir();
-            rs.code.add(program.LDC_W);
-            rs.code.add(program.nByte(constDir,2));
-            rs.code.add(program.nByte(constDir,1));
-        }
         else {
-            ctx.typ = C_TYPE.INVALID_TYPE;
-            System.err.println("Error at line: " + ctx.line + ": Use of identifier \'" + ctx.id.getText() +"\' is not allowed here.");
-            errorSemantic = true;
+            ctx.typ = var.getType();
+            if(var.getSupertype() == C_SUPERTYPE.VARIABLE_SUPERTYPE){
+                C_TYPE varType = var.getType();
+                if(Companion.isBasetype(varType)){
+                    if(varType == C_TYPE.FLOAT_TYPE)
+                        rs.code.add(program.FLOAD);
+                    else
+                        rs.code.add(program.ILOAD);
+
+                    Long varDir = var.getDir();
+                    rs.code.add(varDir);
+                }
+                //TODO alias
+                /*else { //custom type (alias)
+                    Registre t = TS.obtenir(var.getType()); //existence validation is not needed.
+                    C_SUPERTYPE st = t.getSupertype();
+
+                    if(st == C_SUPERTYPE.ALIAS_SUPERTYPE) ctx.typ = t.getType();
+                    else ctx.typ = varType;
+                }*/
+            }
+            else if (var.getSupertype() == C_SUPERTYPE.CONSTANT_SUPERTYPE){
+                Long constDir = var.getDir();
+                rs.code.add(program.LDC_W);
+                rs.code.add(program.nByte(constDir,2));
+                rs.code.add(program.nByte(constDir,1));
+            }
+            else {
+                ctx.typ = C_TYPE.INVALID_TYPE;
+                System.err.println("Error at line: " + ctx.line + ": Use of identifier \'" + ctx.id.getText() +"\' is not allowed here.");
+                errorSemantic = true;
+            }
         }
+
+        ctx.line = ctx.id.getLine();
         return rs;
     }
 
     @Override
     public ReturnStruct visitDirectEvaluationTuple(LANSetParser.DirectEvaluationTupleContext ctx) {
-        ReturnStruct rs = visit(ctx.tuple_acces());
-        ctx.typ = ctx.tuple_acces().typ;
-        ctx.line = ctx.tuple_acces().line;
+        ReturnStruct rs = visit(ctx.tuple_access());
+        ctx.typ = ctx.tuple_access().typ;
+        ctx.line = ctx.tuple_access().line;
         return rs;
     }
 
     @Override
     public ReturnStruct visitDirectEvaluationVector(LANSetParser.DirectEvaluationVectorContext ctx) {
-        ReturnStruct rs = visit(ctx.vector_acces());
+        ReturnStruct rs = visit(ctx.vector_access());
         if(ctx.typ == C_TYPE.FLOAT_TYPE)
             rs.code.add(program.FALOAD);
         else
             rs.code.add(program.IALOAD);
 
-        ctx.typ = ctx.vector_acces().typ;
-        ctx.line = ctx.vector_acces().line;
+        ctx.typ = ctx.vector_access().typ;
+        ctx.line = ctx.vector_access().line;
         return rs;
     }
 
@@ -629,12 +624,12 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     }
 
     @Override
-    public ReturnStruct visitTuple_acces(LANSetParser.Tuple_accesContext ctx) {
+    public ReturnStruct visitTuple_access(LANSetParser.Tuple_accessContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public ReturnStruct visitVector_acces(LANSetParser.Vector_accesContext ctx) {
+    public ReturnStruct visitVector_access(LANSetParser.Vector_accessContext ctx) {
         ReturnStruct rs = new ReturnStruct();
         Registre vecVarReg = TS.obtenir(ctx.vecVar.getText());
 
@@ -809,7 +804,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                     bytecodeWriter.compareFloatTypes(rs.code, operator);
                 }
             }
-            else if(leftTerm.typ == rightTerm.typ){
+            else if(leftTerm.typ == rightTerm.typ){ //some day characters and booleans will use more appropiate types
                 bytecodeWriter.compareIntegerTypes(rs.code, operator, rsRightTerm.code);
             }
             else{
@@ -965,11 +960,8 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                     }
                     else leftType = C_TYPE.INT_TYPE;//typing error, propagate less restrictive type in order to continue semantic analysis
                 }
-
             }
-
         }
-        //@after
         ctx.typ = leftType;
         ctx.line = ctx.t1.line;
         return rs;

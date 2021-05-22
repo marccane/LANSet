@@ -208,11 +208,11 @@ sentence
         ;
 
 assignment
-    :   lval=lvalue TK_ASSIGNMENT e=expr ; //lvalue or expr
+    :   lval=lvalue TK_ASSIGNMENT e=expr ;
 
 lvalue returns[C_TYPE typ, int line, Long storeInstruction, Long dir]
-    :   tuple_acces         #lvalueTupleAccess
-    |   vector_acces        #lvalueVectorAccess
+    :   tuple_access        #lvalueTupleAccess
+    |   vector_access        #lvalueVectorAccess
     |   id=TK_IDENTIFIER    #lvalueId
     ;
 
@@ -232,7 +232,7 @@ function_call returns [C_TYPE typ, int line]
     : TK_IDENTIFIER TK_LPAR (expr (TK_COMMA expr)*)? TK_RPAR ;
 
 read_operation
-    : KW_INPUT TK_LPAR id=TK_IDENTIFIER TK_RPAR ;
+    : KW_INPUT TK_LPAR id=TK_IDENTIFIER TK_RPAR ; //TODO lval instead of identifier
 
 write_operation
     : KW_OUTPUT TK_LPAR
@@ -266,8 +266,8 @@ expr returns[C_TYPE typ, int line]
 direct_evaluation_expr returns[C_TYPE typ, int line]
     :   cv=constant_value       #directEvaluationCv
     |   id=TK_IDENTIFIER        #directEvaluationId
-    |   tuple_acces             #directEvaluationTuple
-    |   vector_acces            #directEvaluationVector
+    |   tuple_access             #directEvaluationTuple
+    |   vector_access            #directEvaluationVector
     |   function_call           #directEvaluationFunction
     ;
 
@@ -276,9 +276,9 @@ constant_value returns [C_TYPE typ, int line]
     |   s=TK_STRING
     ;
 
-tuple_acces returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER ;
+tuple_access returns [C_TYPE typ, int line]: TK_IDENTIFIER TK_DOT TK_IDENTIFIER ;
 
-vector_acces returns [C_TYPE typ, int line]: vecVar=TK_IDENTIFIER TK_LBRACK expr /*integer expr*/ TK_RBRACK ;
+vector_access returns [C_TYPE typ, int line]: vecVar=TK_IDENTIFIER TK_LBRACK expr /*integer expr*/ TK_RBRACK ;
 
 ternary returns [C_TYPE typ, int line] locals [boolean localError]
     :
