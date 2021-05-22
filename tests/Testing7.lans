@@ -1,0 +1,39 @@
+tipus
+    integer: enter; 
+    int: enter;
+    char: car;
+    float: real;
+    intArr: vector enter mida 15;
+    carArr: vector car mida 30;
+ftipus
+
+constants
+    enter arr2len = 30;
+fconstants
+
+programa ProgramaTest
+variables
+    intArr arr;
+    carArr arr2; //comentar aixo
+    car c;
+    enter i;
+fvariables
+
+//arr[5] = 7;
+//escriureln(arr[14]);
+
+i = 0;
+c = 'a';
+mentre c != '.' & i < arr2len fer
+    llegir(c);
+    //carArr[i] = c;
+    arr2[i] = c;
+    i = i + 1;
+fmentre
+
+per i de 0 fins arr2len-1 fer
+    escriure(arr2[i]);
+fper
+escriureln();
+
+fprograma

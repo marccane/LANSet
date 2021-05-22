@@ -44,8 +44,8 @@ accio estadistiques(vec_E_1K v, ent enter n, entsor enter min, entsor enter max,
 funcio area(punt2D p1, punt2D p2) retorna real;
 
 constants
-	real PI := 3.14159;
-	real AVOGADRO := 6.022E23;
+	real PI = 3.14159;
+	real AVOGADRO = 6.022E23;
 fconstants
 
 
@@ -68,10 +68,10 @@ variables
 fvariables
 
 
-p1.x := 2;
-p1.y := PI;
-p2.x := 0.1;
-p2.y := 9.8;
+p1.x = 2;
+p1.y = PI;
+p2.x = 0.1;
+p2.y = 9.8;
 escriureln(area(p1,p2));
 
 
@@ -84,8 +84,8 @@ llegir(x);
 escriure("Entra una lletra de NIF: ");
 llegir(c);
 
-nif.numero := x;
-nif.lletra := c;
+nif.numero = x;
+nif.lletra = c;
 
 escriureln("El NIF entrat es ", nif.numero, nif.lletra);
 escriureln();
@@ -104,11 +104,11 @@ escriureln();
 
 escriure("Entra una sequencia de com a molt 1000 nombres majors que 0. Per acabar entra un nombre <= 0");
 llegir(x);
-n:=0;
+n=0;
 mentre no (x <= 0) fer
-	v[n] := x;
+	v[n] = x;
 	llegir(x);
-	n:=n+1;
+	n=n+1;
 fmentre
 
 estadistiques(v,n,min,max,mitjana);
@@ -165,16 +165,16 @@ accio estadistiques(vec_E_1K v, ent enter n, entsor enter min, entsor enter max,
 	fvariables
 	
 	//Inicialitzem els valors abans del recorregut
-	min := v[0];
-	max := v[0];
-	suma := v[0];
+	min = v[0];
+	max = v[0];
+	suma = v[0];
 
 	per i de 1 fins n-1 fer
-		si v[i] < min llavors min := v[i]; fsi
-		si v[i] > max llavors max := v[i]; fsi
-		suma := suma + v[i];
+		si v[i] < min llavors min = v[i]; fsi
+		si v[i] > max llavors max = v[i]; fsi
+		suma = suma + v[i];
 	fper
 	
-	mitjana := suma / n;
+	mitjana = suma / n;
 
 faccio

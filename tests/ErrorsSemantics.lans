@@ -71,11 +71,11 @@ accio a1(ent enter x);
 
 
 constants
-	real r1 := 1.2;
-	real r2 := 1;
-	enter e1 := 3;
-	enter e2 := 3.4;
-	boolea CERT := cert;
+	real r1 = 1.2;
+	real r2 = 1;
+	enter e1 = 3;
+	enter e2 = 3.4;
+	boolea CERT = cert;
 fconstants
 
 
@@ -97,35 +97,35 @@ variables
 fvariables
 
 
-b1 := 4; 
-r1 := 5; 
-e5 := 2+2; 
-e3 := 2*abc*abcde; 
-c1 := e3 ? 'a' : 'b'; 
-b1 := 4 == true; 
-tup1 := tup2; 
+b1 = 4;
+r1 = 5;
+e5 = 2+2;
+e3 = 2*abc*abcde;
+c1 = e3 ? 'a' : 'b';
+b1 = 4 == true;
+tup1 = tup2;
 
 escriure(); 
 escriureln();
 escriure(b1 ? e3 : c1); 
 
-e3:=f3(2,3);
+e3=f3(2,3);
 
-e3:=f1(cert); 
+e3=f1(cert);
 
-tup1.a := fals; 
-e3 := vec[c1];
-e3 := vec[10];
+tup1.a = fals;
+e3 = vec[c1];
+e3 = vec[10];
 
 abc(cert); 
 abc(CERT); 
 
 mentre e3 fer 
-	e3 := e3+1;
+	e3 = e3+1;
 	escriure(e3);
 fmentre
 
-e3:= 4;
+e3= 4;
 
 mentre e3 < 10  fer
 	escriure(e3);

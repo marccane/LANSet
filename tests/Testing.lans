@@ -1,12 +1,12 @@
 constants
-	real PI := 3.1415926535897932384626433832;
-	enter set := 7;
-	car caracteraso := 'O';
-	car charespecial := '_';
-	real testdefinitiu := 123;
-	boolea boolOk := cert;
-	boolea boolFals := fals;
-	enter identificadorRedeclarat := 777;
+	real PI = 3.1415926535897932384626433832;
+	enter set = 7;
+	car caracteraso = 'O';
+	car charespecial = '_';
+	real testdefinitiu = 123;
+	boolea boolOk = cert;
+	boolea boolFals = fals;
+	enter identificadorRedeclarat = 777;
 fconstants
 
 //============= Programa principal ================
@@ -26,15 +26,15 @@ variables
 	enter i;
 fvariables
 
-r1 := 23.0;
-r2 := 4.565;
-r3 := r1 + r2 - (r1/2);
-//r3 := r1 + r2;
+r1 = 23.0;
+r2 = 4.565;
+r3 = r1 + r2 - (r1/2);
+//r3 = r1 + r2;
 escriureln(r3);
 
 escriureln("Han de ser Cert:");
 escriureln(3.0 > 2); //Ok
-n := 23 - 1;
+n = 23 - 1;
 escriureln(n == 23);
 escriureln(~1 == (1-2));
 
@@ -50,10 +50,10 @@ escriureln(2.0 != 2);
 
 //escriureln(2.0 != 2.0);
 
-i := 0;
+i = 0;
 mentre i < 10 fer
     escriureln(i);
-    i := i+1;
+    i = i+1;
 fmentre
 
 escriureln("DEBUGING");
@@ -67,10 +67,10 @@ llegir(r1);
 escriureln(r1 + PI);
 */
 
-c := '#';
-//b := c > 7;
+c = '#';
+//b = c > 7;
 
-b := cert;
+b = cert;
 escriureln(b);
 
 fprograma

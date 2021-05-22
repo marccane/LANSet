@@ -74,7 +74,7 @@ TK_STRING: '"' SINGLE_CHAR* '"';
 
 TK_IDENTIFIER: LETTER ('_' | LETTER | DIGIT)*;
 
-TK_ASSIGNMENT: ':=';
+TK_ASSIGNMENT: '=';
 
 TK_SUM: '+';
 TK_SUB: '-';

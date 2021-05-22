@@ -1,0 +1,24 @@
+programa ProgramaTest
+variables
+	enter e;
+    enter e2;
+    real r;
+    real r2;
+fvariables
+
+e = 7;
+e2 = 10;
+r = 1.234;
+r2 = 5.678;
+
+escriureln(cert ? e : r);
+escriureln(fals ? e : r);
+escriureln(cert ? r : e);
+escriureln(fals ? r : e);
+
+escriureln(cert ? e : e2);
+escriureln(fals ? e : e2);
+escriureln(cert ? r : r2);
+escriureln(fals ? r : r2);
+
+fprograma

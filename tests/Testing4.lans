@@ -1,16 +1,113 @@
 tipus
+    tipusCustom: enter;
 ftipus
-
 constants
+	real PI = 3.14159;
+	enter set = 7;
+	car caracteraso = 'O';
+	car charespecial = '_';
+	real testdefinitiu = 123;
+	boolea boolOk = cert;
+	boolea boolFals = fals;
+	enter bonNum = 777;
 fconstants
 
 programa ProgramaTest
+variables
+	enter i;
+	real r;
+    real r2;
+	boolea b;
+	enter e;
+	car c;
+fvariables
+
+i = 123;
+r = i;
+r = i+1;
+
+//b = 1 == 1.2 == cert;
+
+b = cert;
+escriureln(b);
+b = fals;
+escriureln(b);
+//b = 1 == 1;
+b = no fals;
+escriureln(b);
+b = no cert;
+escriureln(b);
+
+//b = fals & cert | cert & fals
+b = cert | cert & fals;
+//això rn dona Fals, aka la AND no té més prioritat que la OR, maybe arreglar?
+escriureln("resultat boolean operator priority test:", b);
+
+//i = tipusCustom;
+//tipusCustom = bonNum;
+
+i = 1 + 1 + 1;
+escriureln("aixo hauria de donar 3:", i);
+
+escriureln(i+10," ",r," caracter: ", charespecial, b);
+escriureln(PI," ",set,caracteraso,charespecial,testdefinitiu,bonNum);
 
 si cert llavors
-    escriure(2);
-    si fals llavors
-        escriure(1);
-    fsi
+    escriureln("Aixo ha de sortir");
+altrament
+    escriureln("Aixo no ha de sortir");
 fsi
+
+si fals llavors
+    escriureln("Aixo no ha de sortir");
+altrament
+    escriureln("Aixo ha de sortir");
+fsi
+
+per i de 1 fins 10 fer
+    escriureln("i=",i);
+fper
+
+mentre i > 1 fer
+    escriureln("i=",i);
+    i = i -1;
+fmentre
+
+/*mentre no (c == '.') fer
+    escriureln("caracter ", c, " incorrecte");
+    llegir(c);
+fmentre*/
+
+//mentre no (i == 77) fer
+/*
+mentre i > 77 | i < 77 fer
+    escriureln("i ", i, " incorrecte");
+    llegir(i);
+fmentre
+escriureln("correcte");
+*/
+i =  cert ? 1 : 2;
+escriureln(i);
+
+/*
+llegir(i);
+escriureln(i);
+
+llegir(b);
+escriureln(b);
+
+llegir(r);
+escriureln(r);
+
+llegir(c);
+escriureln(c);
+*/
+
+//i = i[ cert ? 1 : 2];
+
+/*si no cert llavors
+    i= ~ 4;
+     i = 5;
+fsi*/
 
 fprograma

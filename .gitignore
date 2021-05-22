@@ -5,3 +5,4 @@ out/
 **/.idea/tasks.xml
 *.class
 /gitignore
+*.ign
