@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Vector;
 
-
 //	Ajuda a la confeccio de codi en Bytecode. Practiques de MEC
 //
 //
@@ -25,32 +24,14 @@ import java.util.Vector;
 //
 //
 
-
 public class Bytecode implements Constants {
 
 //variables auxiliars. Son per inicialitzar el fitxer bytecode
 
-    Long cThis = 0L;
-    Long cObject = 0L;
-    Long cInputStream;
-    Long cInputStreamReader;
-    Long cPrintStream;
-    Long cBufferedReader;
-    Long cFloat;
-    Long cInteger;
-    Long cBoolean;
-    Long cException;
-    Long cSystem;
-    Long cString;
+    private Long cThis;
+    private Long cException;
 
-
-    Long mInitObject;
-    Long mInit;
-    Long mPrintString;
-    Long mPrintLnString;
-    Long mPrintInt;
-    Long mPrintFloat;
-    Long mPrintChar;
+    private Long mInit;
     public Long mPutChar;
     public Long mPutFloat;
     public Long mPutInt;
@@ -61,77 +42,49 @@ public class Bytecode implements Constants {
     public Long mGetFloat;
     public Long mGetChar;
     public Long mGetBoolean;
-    public Long mGetString;
-    Long mMain;
-    Long mInitException;
-    Long mInitFloat;
-    Long mInitInputStreamReader;
-    Long mInitBufferedReader;
-    Long mReadLineBufferedReader;
-    Long mParseInt;
-    Long mParseFloat;
-    Long mValueOfInt;
-    Long mValueOfFloat;
-    Long mRead;
-    Long mCharAt;
+    private Long mGetString;
+    private Long mMain;
 
+    private Long aCode;
+    private Long aExceptions;
+    private Long aConstantValue;
 
-    Long sErrorEnter;
-    Long sErrorReal;
-    Long sCert;
-    Long sFals;
-    Long sEmpty;
+    //Variables del fitxer bytecode
 
-    Long aCode;
-    Long aExceptions;
-    Long aConstantValue;
+    private String fileName;
 
-    Long fIn;
-    Long fOut;
-
-//Variables del fitxer bytecode
-
-    String fileName;
-
-    Long magic;
-    Long minor_version;
-    Long major_version;
-    Long constant_pool_counter;
-    Vector<cp_info> constant_pool = new Vector<cp_info>(50);
-    Long access_flags;
-    Long this_class;
-    Long super_class;
-    Long interface_count;
-    //Vector<Long> interfaces=new Vector<Long>(5);
-    Long field_count;
-    Vector<field_info> fields = new Vector<field_info>(50);
-    Long method_count;
-    Vector<method_info> methods = new Vector<method_info>(50);
-    Long attribute_count;
-    Vector<attribute_info> attributes = new Vector<attribute_info>(50);
-
+    private Long magic;
+    private Long minor_version;
+    private Long major_version;
+    private Long constant_pool_counter;
+    private Vector<cp_info> constant_pool = new Vector<>(50);
+    private Long access_flags;
+    private Long this_class;
+    private Long super_class;
+    private Long interface_count;
+    //private Vector<Long> interfaces=new Vector<>(5);
+    private Long field_count;
+    private Vector<field_info> fields = new Vector<>(50);
+    private Long method_count;
+    private Vector<method_info> methods = new Vector<>(50);
+    private Long attribute_count;
+    private Vector<attribute_info> attributes = new Vector<>(50);
 
     private Long CPCercar(String s) {
-        Long ii = 0L;
-        Long resultat = 0L;
+        long ii = 0L;
+        long resultat = 0L;
 
         Iterator<cp_info> i = constant_pool.iterator();
         while (i.hasNext() && (resultat == 0L)) {
             if (i.next().equal(s)) {
                 resultat = ii + 1;
             }
-            ;
             ii++;
         }
         return resultat;
     }
 
-    ;
-
-
     public Bytecode(String s) {
-
-
         fileName = s;
         magic = 0xCAFEBABEL;
         minor_version = 0L;
@@ -145,27 +98,27 @@ public class Bytecode implements Constants {
 
         cThis = addClassName(s);
         this_class = cThis;
-        cObject = addClassName("java/lang/Object");
+        Long cObject = addClassName("java/lang/Object");
         super_class = cObject;
-        cInputStreamReader = addClassName("java/io/InputStreamReader");
-        cInputStream = addClassName("java/io/InputStream");
-        cPrintStream = addClassName("java/io/PrintStream");
-        cBufferedReader = addClassName("java/io/BufferedReader");
-        cFloat = addClassName("java/lang/Float");
-        cInteger = addClassName("java/lang/Integer");
-        cBoolean = addClassName("java/lang/Boolean");
+        Long cInputStreamReader = addClassName("java/io/InputStreamReader");
+        Long cInputStream = addClassName("java/io/InputStream");
+        Long cPrintStream = addClassName("java/io/PrintStream");
+        Long cBufferedReader = addClassName("java/io/BufferedReader");
+        Long cFloat = addClassName("java/lang/Float");
+        Long cInteger = addClassName("java/lang/Integer");
+        Long cBoolean = addClassName("java/lang/Boolean");
         cException = addClassName("java/lang/Exception");
-        cSystem = addClassName("java/lang/System");
-        cString = addClassName("java/lang/String");
+        Long cSystem = addClassName("java/lang/System");
+        Long cString = addClassName("java/lang/String");
 
-        mInitObject = addMethodName(cObject, "<init>", "()V");
+        Long mInitObject = addMethodName(cObject, "<init>", "()V");
 
         mInit = addMethodName(cThis, "<init>", "()V");
-        mPrintString = addMethodName(cPrintStream, "print", "(Ljava/lang/String;)V");
-        mPrintLnString = addMethodName(cPrintStream, "println", "(Ljava/lang/String;)V");
-        mPrintInt = addMethodName(cPrintStream, "print", "(I)V");
-        mPrintFloat = addMethodName(cPrintStream, "print", "(F)V");
-        mPrintChar = addMethodName(cPrintStream, "print", "(C)V");
+        Long mPrintString = addMethodName(cPrintStream, "print", "(Ljava/lang/String;)V");
+        Long mPrintLnString = addMethodName(cPrintStream, "println", "(Ljava/lang/String;)V");
+        Long mPrintInt = addMethodName(cPrintStream, "print", "(I)V");
+        Long mPrintFloat = addMethodName(cPrintStream, "print", "(F)V");
+        Long mPrintChar = addMethodName(cPrintStream, "print", "(C)V");
         mPutChar = addMethodName(cThis, "put", "(C)V");
         mPutFloat = addMethodName(cThis, "put", "(F)V");
         mPutInt = addMethodName(cThis, "put", "(I)V");
@@ -178,32 +131,30 @@ public class Bytecode implements Constants {
         mGetBoolean = addMethodName(cThis, "getBoolean", "()Z");
         mGetString = addMethodName(cThis, "getString", "()Ljava/lang/String;");
         mMain = addMethodName(cThis, "main", "([Ljava/lang/String;)V");
-        mInitException = addMethodName(cException, "<init>", "(Ljava/lang/String;)V");
-        mInitFloat = addMethodName(cFloat, "<init>", "(Ljava/lang/String;)V");
-        mInitInputStreamReader = addMethodName(cInputStreamReader, "<init>", "(Ljava/io/InputStream;)V");
-        mInitBufferedReader = addMethodName(cBufferedReader, "<init>", "(Ljava/io/Reader;)V");
-        mReadLineBufferedReader = addMethodName(cBufferedReader, "readLine", "()Ljava/lang/String;");
-        mParseInt = addMethodName(cInteger, "parseInt", "(Ljava/lang/String;)I");
-        mParseFloat = addMethodName(cFloat, "parseFloat", "(Ljava/lang/String;)F");
-        mValueOfInt = addMethodName(cInteger, "valueOf", "(I)Ljava/lang/Integer;");
-        mValueOfFloat = addMethodName(cFloat, "valueOf", "(F)Ljava/lang/Float;");
-        mRead = addMethodName(cInputStream, "read", "()I");
-        mCharAt = addMethodName(cString, "charAt", "(I)C");
+        Long mInitException = addMethodName(cException, "<init>", "(Ljava/lang/String;)V");
+        Long mInitFloat = addMethodName(cFloat, "<init>", "(Ljava/lang/String;)V");
+        Long mInitInputStreamReader = addMethodName(cInputStreamReader, "<init>", "(Ljava/io/InputStream;)V");
+        Long mInitBufferedReader = addMethodName(cBufferedReader, "<init>", "(Ljava/io/Reader;)V");
+        Long mReadLineBufferedReader = addMethodName(cBufferedReader, "readLine", "()Ljava/lang/String;");
+        Long mParseInt = addMethodName(cInteger, "parseInt", "(Ljava/lang/String;)I");
+        Long mParseFloat = addMethodName(cFloat, "parseFloat", "(Ljava/lang/String;)F");
+        Long mValueOfInt = addMethodName(cInteger, "valueOf", "(I)Ljava/lang/Integer;");
+        Long mValueOfFloat = addMethodName(cFloat, "valueOf", "(F)Ljava/lang/Float;");
+        Long mRead = addMethodName(cInputStream, "read", "()I");
+        Long mCharAt = addMethodName(cString, "charAt", "(I)C");
 
-
-        sCert = addConstant("S", "Cert");
-        sFals = addConstant("S", "Fals");
-        sEmpty = addConstant("S", "");
+        Long sCert = addConstant("S", "Cert");
+        Long sFals = addConstant("S", "Fals");
+        Long sEmpty = addConstant("S", "");
 
         aCode = addAttributeName("Code");
         aExceptions = addAttributeName("Exceptions");
         aConstantValue = addAttributeName("ConstantValue");
 
-        fIn = addFieldName(cSystem, "in", "Ljava/io/InputStream;");
-        fOut = addFieldName(cSystem, "out", "Ljava/io/PrintStream;");
+        Long fIn = addFieldName(cSystem, "in", "Ljava/io/InputStream;");
+        Long fOut = addFieldName(cSystem, "out", "Ljava/io/PrintStream;");
 
-
-        Vector<Long> codePutInt = new Vector<Long>(8);
+        Vector<Long> codePutInt = new Vector<>(8);
         codePutInt.add(GETSTATIC);
         codePutInt.add(0L);
         codePutInt.add(fOut);
@@ -212,10 +163,10 @@ public class Bytecode implements Constants {
         codePutInt.add(0L);
         codePutInt.add(mPrintInt);
         codePutInt.add(RETURN);
-        addFunctionCode(mPutInt, 2l, 1l, codePutInt);
+        addFunctionCode(mPutInt, 2L, 1L, codePutInt);
 
 
-        Vector<Long> codePutFloat = new Vector<Long>(8);
+        Vector<Long> codePutFloat = new Vector<>(8);
         codePutFloat.add(GETSTATIC);
         codePutFloat.add(0L);
         codePutFloat.add(fOut);
@@ -224,10 +175,10 @@ public class Bytecode implements Constants {
         codePutFloat.add(0L);
         codePutFloat.add(mPrintFloat);
         codePutFloat.add(RETURN);
-        addFunctionCode(mPutFloat, 2l, 1l, codePutFloat);
+        addFunctionCode(mPutFloat, 2L, 1L, codePutFloat);
 
 
-        Vector<Long> codePutChar = new Vector<Long>(8);
+        Vector<Long> codePutChar = new Vector<>(8);
         codePutChar.add(GETSTATIC);
         codePutChar.add(0L);
         codePutChar.add(fOut);
@@ -236,10 +187,10 @@ public class Bytecode implements Constants {
         codePutChar.add(0L);
         codePutChar.add(mPrintChar);
         codePutChar.add(RETURN);
-        addFunctionCode(mPutChar, 2l, 1l, codePutChar);
+        addFunctionCode(mPutChar, 2L, 1L, codePutChar);
 
 
-        Vector<Long> codePutBoolean = new Vector<Long>(18);
+        Vector<Long> codePutBoolean = new Vector<>(18);
         codePutBoolean.add(GETSTATIC);
         codePutBoolean.add(0L);
         codePutBoolean.add(fOut);
@@ -258,10 +209,10 @@ public class Bytecode implements Constants {
         codePutBoolean.add(0L);
         codePutBoolean.add(mPrintString);
         codePutBoolean.add(RETURN);
-        addFunctionCode(mPutBoolean, 2l, 1l, codePutBoolean);
+        addFunctionCode(mPutBoolean, 2L, 1L, codePutBoolean);
 
 
-        Vector<Long> codePutString = new Vector<Long>(8);
+        Vector<Long> codePutString = new Vector<>(8);
         codePutString.add(GETSTATIC);
         codePutString.add(0L);
         codePutString.add(fOut);
@@ -270,10 +221,10 @@ public class Bytecode implements Constants {
         codePutString.add(0L);
         codePutString.add(mPrintString);
         codePutString.add(RETURN);
-        addFunctionCode(mPutString, 2l, 1l, codePutString);
+        addFunctionCode(mPutString, 2L, 1L, codePutString);
 
 
-        Vector<Long> codePutLnString = new Vector<Long>(8);
+        Vector<Long> codePutLnString = new Vector<>(8);
         codePutLnString.add(GETSTATIC);
         codePutLnString.add(0L);
         codePutLnString.add(fOut);
@@ -282,10 +233,10 @@ public class Bytecode implements Constants {
         codePutLnString.add(0L);
         codePutLnString.add(mPrintLnString);
         codePutLnString.add(RETURN);
-        addFunctionCode(mPutLnString, 2l, 1l, codePutLnString);
+        addFunctionCode(mPutLnString, 2L, 1L, codePutLnString);
 
 
-        Vector<Long> codeGetInt = new Vector<Long>(28);
+        Vector<Long> codeGetInt = new Vector<>(28);
         codeGetInt.add(ICONST_0);
         codeGetInt.add(ISTORE_0);
         codeGetInt.add(NEW);
@@ -320,10 +271,10 @@ public class Bytecode implements Constants {
         codeGetInt.add(ISTORE_0);
         codeGetInt.add(ILOAD_0);
         codeGetInt.add(IRETURN);
-        addFunctionCode(mGetInt, 3l, 4l, codeGetInt);
+        addFunctionCode(mGetInt, 3L, 4L, codeGetInt);
 
 
-        Vector<Long> codeGetFloat = new Vector<Long>(28);
+        Vector<Long> codeGetFloat = new Vector<>(28);
         codeGetFloat.add(FCONST_0);
         codeGetFloat.add(FSTORE_0);
         codeGetFloat.add(NEW);
@@ -358,10 +309,10 @@ public class Bytecode implements Constants {
         codeGetFloat.add(FSTORE_0);
         codeGetFloat.add(FLOAD_0);
         codeGetFloat.add(FRETURN);
-        addFunctionCode(mGetFloat, 3l, 4l, codeGetFloat);
+        addFunctionCode(mGetFloat, 3L, 4L, codeGetFloat);
 
 
-        Vector<Long> codeGetChar = new Vector<Long>(28);
+        Vector<Long> codeGetChar = new Vector<>(28);
         codeGetChar.add(ICONST_0);
         codeGetChar.add(ISTORE_0);
         codeGetChar.add(NEW);
@@ -397,10 +348,10 @@ public class Bytecode implements Constants {
         codeGetChar.add(ISTORE_0);
         codeGetChar.add(ILOAD_0);
         codeGetChar.add(IRETURN);
-        addFunctionCode(mGetChar, 3l, 4l, codeGetChar);
+        addFunctionCode(mGetChar, 3L, 4L, codeGetChar);
 
 
-        Vector<Long> codeGetString = new Vector<Long>(28);
+        Vector<Long> codeGetString = new Vector<>(28);
         codeGetString.add(LDC);
         codeGetString.add(sEmpty);
         codeGetString.add(ASTORE_0);
@@ -433,10 +384,10 @@ public class Bytecode implements Constants {
         codeGetString.add(ASTORE_0);
         codeGetString.add(ALOAD_0);
         codeGetString.add(ARETURN);
-        addFunctionCode(mGetString, 3l, 4l, codeGetString);
+        addFunctionCode(mGetString, 3L, 4L, codeGetString);
 
 
-        Vector<Long> codeGetBoolean = new Vector<Long>(8);
+        Vector<Long> codeGetBoolean = new Vector<>(8);
         codeGetBoolean.add(INVOKESTATIC);
         codeGetBoolean.add(0L);
         codeGetBoolean.add(mGetString);
@@ -460,7 +411,7 @@ public class Bytecode implements Constants {
         codeGetBoolean.add(ISTORE_0);
         codeGetBoolean.add(ILOAD_0);
         codeGetBoolean.add(IRETURN);
-        addFunctionCode(mGetBoolean, 3l, 2l, codeGetBoolean);
+        addFunctionCode(mGetBoolean, 3L, 2L, codeGetBoolean);
 /*
 
 	Vector<Long> codeGetBoolean=new Vector<Long>(8);
@@ -483,37 +434,30 @@ public class Bytecode implements Constants {
   	codeGetBoolean.add(ISTORE_0);
    	codeGetBoolean.add(ILOAD_0);
    	codeGetBoolean.add(IRETURN);
-	addFunctionCode(mGetBoolean,2l,2l,codeGetBoolean);
+	addFunctionCode(mGetBoolean,2L,2L,codeGetBoolean);
 
 */
 
-        Vector<Long> codeInit = new Vector<Long>(8);
+        Vector<Long> codeInit = new Vector<>(8);
         codeInit.add(ALOAD_0);
         codeInit.add(INVOKESPECIAL);
         codeInit.add(0L);
         codeInit.add(mInitObject);
         codeInit.add(RETURN);
-        addFunctionCode(mInit, 1l, 1l, codeInit);
+        addFunctionCode(mInit, 1L, 1L, codeInit);
     }
-
-    ;
 
     public void write() {
         try {
             FileOutputStream f = new FileOutputStream(fileName + ".class");
 
-            Integer aux;
-            int i, aa;
-
-
             f.write(this.toByte(magic, 4));
             f.write(this.toByte(minor_version, 2));
             f.write(this.toByte(major_version, 2));
-            constant_pool_counter = new Long(constant_pool.size() + 1);
+            constant_pool_counter = (long) (constant_pool.size() + 1);
             f.write(this.toByte(constant_pool_counter, 2));
-            Iterator<cp_info> itercp = constant_pool.iterator();
-            while (itercp.hasNext()) {
-                itercp.next().write(f);
+            for (LANSet.Bytecode.cp_info cp_info : constant_pool) {
+                cp_info.write(f);
             }
             f.write(this.toByte(access_flags, 2));
             f.write(this.toByte(this_class, 2));
@@ -521,32 +465,25 @@ public class Bytecode implements Constants {
             //interface_count=new Long(interfaces.size());
             interface_count = 0L;
             f.write(this.toByte(interface_count, 2));
-            field_count = new Long(fields.size());
+            field_count = (long) fields.size();
             f.write(this.toByte(field_count, 2));
-            Iterator<field_info> iterf = fields.iterator();
-            while (iterf.hasNext()) {
-                iterf.next().write(f);
+            for (field_info field : fields) {
+                field.write(f);
             }
-            method_count = new Long(methods.size());
+            method_count = (long) methods.size();
             f.write(this.toByte(method_count, 2));
-            Iterator<method_info> iterm = methods.iterator();
-            while (iterm.hasNext()) {
-                iterm.next().write(f);
+            for (method_info method : methods) {
+                method.write(f);
             }
-            attribute_count = new Long(attributes.size());
+            attribute_count = (long) attributes.size();
             f.write(this.toByte(attribute_count, 2));
 
-            Iterator<attribute_info> itera = attributes.iterator();
-            while (itera.hasNext()) {
-                itera.next().write(f);
+            for (attribute_info attribute : attributes) {
+                attribute.write(f);
             }
-        } catch (IOException s) {
-        }
+        } catch (IOException ignored) {}
 
     }
-
-    ;
-
 
     public void show() {
 
@@ -556,7 +493,7 @@ public class Bytecode implements Constants {
         //System.out.println("Minor_version : "+minor_version);
         //System.out.println("Major_version : "+major_version);
         System.out.println("-----------------------------------------------------------------");
-        constant_pool_counter = new Long(constant_pool.size() + 1);
+        constant_pool_counter = (long) (constant_pool.size() + 1);
         System.out.print("CONSTANT POOL");
         System.out.println("         Elements : " + (constant_pool_counter - 1));
         System.out.println("-----------------------------------------------------------------");
@@ -581,15 +518,14 @@ public class Bytecode implements Constants {
 	}
 */
         System.out.println("-----------------------------------------------------------------");
-        method_count = new Long(methods.size());
+        method_count = (long) methods.size();
         System.out.print("METHODS       ");
         System.out.println("         Elements : " + method_count);
         System.out.println("-----------------------------------------------------------------");
         i = 1;
-        Iterator<method_info> iterm = methods.iterator();
-        while (iterm.hasNext()) {
+        for (method_info method : methods) {
             System.out.print("   " + i + "	: ");
-            iterm.next().show();
+            method.show();
             System.out.println();
             i++;
         }
@@ -607,8 +543,6 @@ public class Bytecode implements Constants {
 */
     }
 
-    ;
-
     private Long addClassName(String s) {
         CONSTANT_Class_info x;
         CONSTANT_Utf8_info y;
@@ -616,14 +550,12 @@ public class Bytecode implements Constants {
 
         y = new CONSTANT_Utf8_info(s);
         constant_pool.add(y);
-        i = new Long(constant_pool.size());
+        i = constant_pool.size();
         x = new CONSTANT_Class_info(i);
         constant_pool.add(x);
-        i = new Long(constant_pool.size());
+        i = constant_pool.size();
         return (i);
     }
-
-    ;
 
     private Long addMethodName(Long class_idx, String name, String desc) {
         CONSTANT_Utf8_info n, d;
@@ -635,26 +567,23 @@ public class Bytecode implements Constants {
         if (i == 0L) {
             n = new CONSTANT_Utf8_info(name);
             constant_pool.add(n);
-            i = new Long(constant_pool.size());
+            i = constant_pool.size();
         }
         j = CPCercar(desc);
         if (j == 0L) {
             d = new CONSTANT_Utf8_info(desc);
             constant_pool.add(d);
-            j = new Long(constant_pool.size());
+            j = constant_pool.size();
         }
         x = new CONSTANT_NameAndType_info(i, j);
         constant_pool.add(x);
-        k = new Long(constant_pool.size());
+        k = constant_pool.size();
         y = new CONSTANT_Methodref_info(class_idx, k);
         constant_pool.add(y);
-        l = new Long(constant_pool.size());
+        l = constant_pool.size();
 
         return (l);
     }
-
-    ;
-
 
     private Long addFieldName(Long class_idx, String name, String desc) {
         CONSTANT_Utf8_info n, d;
@@ -666,26 +595,23 @@ public class Bytecode implements Constants {
         if (i == 0L) {
             n = new CONSTANT_Utf8_info(name);
             constant_pool.add(n);
-            i = new Long(constant_pool.size());
+            i = constant_pool.size();
         }
         j = CPCercar(desc);
         if (j == 0L) {
             d = new CONSTANT_Utf8_info(desc);
             constant_pool.add(d);
-            j = new Long(constant_pool.size());
+            j = constant_pool.size();
         }
         x = new CONSTANT_NameAndType_info(i, j);
         constant_pool.add(x);
-        k = new Long(constant_pool.size());
+        k = constant_pool.size();
         y = new CONSTANT_Fieldref_info(class_idx, k);
         constant_pool.add(y);
-        l = new Long(constant_pool.size());
+        l = constant_pool.size();
 
-        return (l);
+        return l;
     }
-
-    ;
-
 
     private Long addAttributeName(String val10) {
         CONSTANT_Utf8_info n;
@@ -693,25 +619,18 @@ public class Bytecode implements Constants {
 
         n = new CONSTANT_Utf8_info(val10);
         constant_pool.add(n);
-        i = new Long(constant_pool.size());
+        i = constant_pool.size();
         return i;
     }
-
-    ;
-
 
     public Long addFunctionDef(String name, String desc) {
         return addMethodName(cThis, name, desc);
     }
 
-    ;
-
-
     public void addFunctionCode(Long ref, Long maxStack, Long nLocals, Vector<Long> code) {
         CONSTANT_Methodref_info x;
         CONSTANT_NameAndType_info y;
         method_info z;
-
 
         x = (CONSTANT_Methodref_info) constant_pool.elementAt(new Integer(ref.toString()) - 1);
         y = (CONSTANT_NameAndType_info) constant_pool.get(new Integer(x.name_and_type_index.toString()) - 1);
@@ -719,20 +638,14 @@ public class Bytecode implements Constants {
         if (ref == mInit) {
             acc = ACC_PUBLIC;
         }
-        ;
         z = new method_info(aCode, aExceptions, cException, acc, y.name_index, y.descriptor_index, maxStack, nLocals, code);
         methods.add(z);
-
     }
-
-    ;
-
 
     public void addMainCode(Long maxStack, Long nLocals, Vector<Long> code) {
         CONSTANT_Methodref_info x;
         CONSTANT_NameAndType_info y;
         method_info z;
-        Long x1, x2;
 
         x = (CONSTANT_Methodref_info) constant_pool.get(new Integer(mMain.toString()) - 1);
         y = (CONSTANT_NameAndType_info) constant_pool.get(new Integer(x.name_and_type_index.toString()) - 1);
@@ -741,9 +654,6 @@ public class Bytecode implements Constants {
         methods.add(z);
 
     }
-
-    ;
-
 
     public Long addConstName(String name, String desc, String val) {
         CONSTANT_Utf8_info n, d;
@@ -754,55 +664,45 @@ public class Bytecode implements Constants {
         if (i == 0L) {
             n = new CONSTANT_Utf8_info(name);
             constant_pool.add(n);
-            i = new Long(constant_pool.size());
+            i = constant_pool.size();
         }
         j = CPCercar(desc);
         if (j == 0L) {
             d = new CONSTANT_Utf8_info(desc);
             constant_pool.add(d);
-            j = new Long(constant_pool.size());
+            j = constant_pool.size();
         }
         k = addConstant(desc, val);
         Long acc = ACC_FINAL | ACC_STATIC;
         z = new field_info(aConstantValue, acc, i, j, k);
         fields.add(z);
-        return (k);
-
+        return k;
     }
 
-    ;
-
-
     public Long addConstant(String desc, String val) {
-        Long ret;
+        long ret;
 
-        ret = 99999l;
+        ret = 99999L;
         switch (desc.charAt(0)) {
             case 'I': {
                 Integer i = new Integer(val);
                 CONSTANT_Integer_info x = new CONSTANT_Integer_info(new Long(i));
                 constant_pool.add(x);
-                ret = new Long(constant_pool.size());
+                ret = constant_pool.size();
             }
             break;
             case 'Z': {
-                Integer i;
-                if (val == "Cert") {
-                    i = 1;
-                } else {
-                    i = 0;
-                }
-                ;
+                Integer i = val == "Cert" ? 1 : 0; //WARNING is this correct?
                 CONSTANT_Integer_info x = new CONSTANT_Integer_info(new Long(i));
                 constant_pool.add(x);
-                ret = new Long(constant_pool.size());
+                ret = constant_pool.size();
             }
             break;
             case 'C': {
                 Integer i = (int) (val.charAt(0));
                 CONSTANT_Integer_info x = new CONSTANT_Integer_info(new Long(i));
                 constant_pool.add(x);
-                ret = new Long(constant_pool.size());
+                ret = constant_pool.size();
             }
             break;
             case 'F': {
@@ -810,23 +710,20 @@ public class Bytecode implements Constants {
                 r = Float.parseFloat(val);
                 CONSTANT_Float_info x = new CONSTANT_Float_info(r);
                 constant_pool.add(x);
-                ret = new Long(constant_pool.size());
+                ret = constant_pool.size();
             }
             break;
             case 'S': {
                 CONSTANT_Utf8_info x = new CONSTANT_Utf8_info(val);
                 constant_pool.add(x);
-                Long i = new Long(constant_pool.size());
+                Long i = (long) constant_pool.size();
                 CONSTANT_String_info y = new CONSTANT_String_info(i);
                 constant_pool.add(y);
-                ret = new Long(constant_pool.size());
+                ret = constant_pool.size();
             }
         }
         return ret;
     }
-
-    ;
-
 
     public Long addArrayDef(int dimensions, String desc) {
         String s;
@@ -838,9 +735,6 @@ public class Bytecode implements Constants {
         return addClassName(s);
     }
 
-    ;
-
-
     private byte[] toByte(Long num, int t) {
         int i;
         Long aux;
@@ -850,12 +744,11 @@ public class Bytecode implements Constants {
         i = t - 1;
         while (i >= 0) {
             bytes[i] = aux.byteValue();
-            aux = (Long) aux.rotateRight(aux, 8);
+            aux = Long.rotateRight(aux, 8);
             i--;
         }
         return bytes;
     }
-
 
     public Long nByte(Long num, int t) {
         int i, j;
@@ -866,12 +759,11 @@ public class Bytecode implements Constants {
         i = 3;
         while (i >= 0) {
             bytes[i] = aux.byteValue();
-            aux = (Long) aux.rotateRight(aux, 8);
+            aux = Long.rotateRight(aux, 8);
             i--;
         }
         j = bytes[4 - t];
-        return (new Long(j));
+        return ((long) j);
     }
-
 
 }
