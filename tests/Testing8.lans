@@ -1,0 +1,24 @@
+tipus
+    floatArr: vector real mida 7;
+ftipus
+
+constants
+    enter arrlen = 7;
+    real PI = 3.141592653;
+fconstants
+
+programa Testing8
+variables
+    floatArr arr;
+    enter i;
+fvariables
+
+arr[0]=1.234; arr[1]=~0.7534; arr[2]=PI; arr[3]=~99999.999;
+arr[4]=0.0;arr[5]=~0.0; arr[6]=0.0005;
+
+per i de 0 fins arrlen-1 fer
+    escriureln(arr[i]);
+fper
+escriureln();
+
+fprograma

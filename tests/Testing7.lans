@@ -1,38 +1,27 @@
 tipus
-    integer: enter; 
-    int: enter;
-    char: car;
-    float: real;
-    intArr: vector enter mida 15;
-    carArr: vector car mida 30;
+    carArr: vector car mida 31;
 ftipus
 
 constants
-    enter arr2len = 30;
+    enter arrlen = 31;
 fconstants
 
-programa ProgramaTest
+programa Testing7
 variables
-    intArr arr;
-    carArr arr2; //comentar aixo
-    car c;
+    carArr arr;
     enter i;
 fvariables
 
-//arr[5] = 7;
-//escriureln(arr[14]);
+//Generated with: "".join(map(lambda x: "arr[{}]='{}';".format(str(x[0]),str(x[1])),zip(range(999), "YourString")))
+arr[0]='T';arr[1]='e';arr[2]='s';arr[3]='t';arr[4]='i';arr[5]='n';
+arr[6]='g';arr[7]=' ';arr[8]='c';arr[9]='h';arr[10]='a';arr[11]='r';
+arr[12]='a';arr[13]='c';arr[14]='t';arr[15]='e';arr[16]='r';
+arr[17]=' ';arr[18]='v';arr[19]='e';arr[20]='c';arr[21]='t';
+arr[22]='o';arr[23]='r';arr[24]=' ';arr[25]='o';arr[26]='u';
+arr[27]='t';arr[28]='p';arr[29]='u';arr[30]='t';
 
-i = 0;
-c = 'a';
-mentre c != '.' & i < arr2len fer
-    llegir(c);
-    //carArr[i] = c;
-    arr2[i] = c;
-    i = i + 1;
-fmentre
-
-per i de 0 fins arr2len-1 fer
-    escriure(arr2[i]);
+per i de 0 fins arrlen-1 fer
+    escriure(arr[i]);
 fper
 escriureln();
 

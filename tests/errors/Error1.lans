@@ -1,0 +1,29 @@
+tipus
+    carArr: vector car mida 30;
+ftipus
+
+constants
+    enter arr2len = 30;
+fconstants
+
+programa Error1
+variables
+    //carArr arr2; //comentar aixo
+    car c;
+    enter i;
+fvariables
+
+i = 0;
+c = 'a';
+mentre c != '.' & i < arr2len fer
+    llegir(c);
+    carArr[i] = c; //cagada col..
+    i = i + 1;
+fmentre
+
+per i de 0 fins arr2len-1 fer
+    escriure(arr2[i]);
+fper
+escriureln();
+
+fprograma

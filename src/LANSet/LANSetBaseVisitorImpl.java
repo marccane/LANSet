@@ -111,7 +111,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     public ReturnStruct visitConst_declaration(LANSetParser.Const_declarationContext ctx) {
-        ReturnStruct rs = visit(ctx.value);
+        visit(ctx.value); //Visiting the const creates the code to push it in the stack but we discard it here
 
         if(identifierInUse(ctx.id.getText())){
             Companion.repeatedIdentifierError(ctx.id.getText(), ctx.id.getLine());
@@ -121,12 +121,14 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             C_TYPE valueType = ctx.value.typ;
             if (ctx.bt.getText().equals(valueType.toString())){ //TODO simplify this
                 Registre r = registerConstant(ctx.id,ctx.bt);
-                Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), ctx.value.text);
+                //Extract the character between the quotes
+                String strValue = ctx.value.typ == C_TYPE.CHAR_TYPE ? ctx.value.text.substring(1,2) : ctx.value.text;
+                Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), strValue); //TODO reuse constants
                 r.putDir(dir); //TODO fix
             }
-            else if (ctx.bt.getText().equals(C_TYPE.FLOAT_TYPE.toString()) && valueType == C_TYPE.INT_TYPE){
+            else if (valueType == C_TYPE.INT_TYPE && ctx.bt.getText().equals(C_TYPE.FLOAT_TYPE.toString())){
                 Registre r = registerConstant(ctx.id,ctx.bt);
-                Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), ctx.value.text);
+                Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), ctx.value.text); //TODO reuse constants
                 r.putDir(dir); //TODO fix
             }
             else{
@@ -134,7 +136,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 errorSemantic=true;
             }
         }
-        return rs;
+        return new ReturnStruct();
     }
 
     @Override
@@ -189,7 +191,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             }
             else if(typeReg.getSupertype() == C_SUPERTYPE.VECTOR_SUPERTYPE){
                 Registre vecVariable = new Registre(ctx.id.getText(), C_SUPERTYPE.VECTOR_SUPERTYPE,
-                        typeReg.getType(), ctx.id.getLine(), ctx.id.getCharPositionInLine()); //i'm not very confident about the type...
+                        typeReg.getType(), ctx.id.getLine(), ctx.id.getCharPositionInLine());
                 vecVariable.putDir(nVar++);
                 TS.inserir(ctx.id.getText(), vecVariable);
 
@@ -242,6 +244,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         else{ //lval es un identificador existent, tipus variable i els tipus casen
             if(needsPromotion)
                 rsLval.code.add(program.I2F);
+
             rsLval.code.add(ctx.lval.storeInstruction);
 
             if(ctx.lval.dir != null)
@@ -278,6 +281,9 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     public ReturnStruct visitLvalueId(LANSetParser.LvalueIdContext ctx){
 
         Registre reg = TS.obtenir(ctx.id.getText());
+        ctx.dir = reg == null ? -1L : reg.getDir();
+        ctx.typ = reg == null ? C_TYPE.INVALID_TYPE : reg.getType();
+
         if(reg == null){
             errorSemantic = true;
             Companion.undefinedIdentifierError(ctx.id.getText(), ctx.id.getLine());
@@ -293,8 +299,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 ctx.storeInstruction = program.ISTORE;
         }
 
-        ctx.typ = reg == null ? C_TYPE.INVALID_TYPE : reg.getType();
-        ctx.dir = reg == null ? -1L : reg.getDir();
         ctx.line = ctx.id.getLine();
         return new ReturnStruct();
     }
@@ -341,18 +345,18 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         ReturnStruct expr1Rs = visit(ctx.expr1);
         ReturnStruct expr2Rs = visit(ctx.expr2);
 
-        Registre var_iter = TS.obtenir(ctx.id.getText());
-        if(var_iter == null){
+        Registre iterVarReg = TS.obtenir(ctx.id.getText());
+        if(iterVarReg == null){
             errorSemantic = true;
             Companion.undefinedIdentifierError(ctx.id.getText(), ctx.id.getLine());
         }
-        else if(var_iter.getSupertype() != C_SUPERTYPE.VARIABLE_SUPERTYPE){
+        else if(iterVarReg.getSupertype() != C_SUPERTYPE.VARIABLE_SUPERTYPE){
             errorSemantic = true;
             Companion.identifierIsNotAVariableError(ctx.id.getText(), ctx.id.getLine());
         }
-        else if(var_iter.getType() != C_TYPE.INT_TYPE){
+        else if(iterVarReg.getType() != C_TYPE.INT_TYPE){
             errorSemantic = true;
-            Companion.typeMismatchError2(ctx.id.getText(), ctx.id.getLine(), var_iter.getType().toString(), C_TYPE.INT_TYPE);
+            Companion.typeMismatchError2(ctx.id.getText(), ctx.id.getLine(), iterVarReg.getType().toString(), C_TYPE.INT_TYPE);
         }
 
         if(ctx.expr1.typ != C_TYPE.INT_TYPE){
@@ -371,8 +375,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         }
 
         if(!errorSemantic){
-            Registre varIndex = TS.obtenir(ctx.id.getText());
-            Long indexPos = varIndex.getDir();
+            Long indexPos = iterVarReg.getDir();
 
             forExpr.add(program.ILOAD);
             forExpr.add(indexPos);
@@ -584,13 +587,13 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     @Override
     public ReturnStruct visitDirectEvaluationVector(LANSetParser.DirectEvaluationVectorContext ctx) {
         ReturnStruct rs = visit(ctx.vector_access());
+        ctx.typ = ctx.vector_access().typ;
+        ctx.line = ctx.vector_access().line;
         if(ctx.typ == C_TYPE.FLOAT_TYPE)
             rs.code.add(program.FALOAD);
         else
             rs.code.add(program.IALOAD);
 
-        ctx.typ = ctx.vector_access().typ;
-        ctx.line = ctx.vector_access().line;
         return rs;
     }
 
@@ -632,6 +635,8 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     public ReturnStruct visitVector_access(LANSetParser.Vector_accessContext ctx) {
         ReturnStruct rs = new ReturnStruct();
         Registre vecVarReg = TS.obtenir(ctx.vecVar.getText());
+        ctx.typ = vecVarReg == null ? C_TYPE.INVALID_TYPE : vecVarReg.getType();
+        ctx.line = ctx.vecVar.getLine();
 
         if(vecVarReg == null){
             errorSemantic = true;
@@ -653,10 +658,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 rs.code.add(program.ALOAD); //push arrayref into operand stack
                 rs.code.add(vecVarReg.getDir());
                 rs.code.addAll(rsExpr.code); //push index of the array
-
-                ctx.typ = vecVarReg.getType();
-                ctx.line = ctx.vecVar.getLine();
-                //do we need to return the identifier?
             }
         }
 

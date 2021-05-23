@@ -26,7 +26,7 @@ fvariables
 INT_MIN_VALUE = ~INT_MAX_VALUE -1;
 arrLenM1 = arrLen-1;
 
-//generated with:  "".join(map(lambda x: "arr[{}]={};".format(str(x[0]),str(x[1])),zip(range(30), map(lambda _:random.randint(1,100), range(30)))))
+//generated with: import random;"".join(map(lambda x: "arr[{}]={};".format(str(x[0]),str(x[1])),zip(range(30), map(lambda _:random.randint(1,100), range(30)))))
 arr[0]=40;arr[1]=56;arr[2]=34;arr[3]=6;arr[4]=89;arr[5]=64;
 arr[6]=93;arr[7]=19;arr[8]=58;arr[9]=38;arr[10]=8;arr[11]=5;
 arr[12]=10;arr[13]=58;arr[14]=47;arr[15]=76;arr[16]=84;arr[17]=9;

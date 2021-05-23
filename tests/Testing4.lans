@@ -12,7 +12,7 @@ constants
 	enter bonNum = 777;
 fconstants
 
-programa ProgramaTest
+programa Testing4
 variables
 	enter i;
 	real r;

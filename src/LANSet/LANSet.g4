@@ -212,7 +212,7 @@ assignment
 
 lvalue returns[C_TYPE typ, int line, Long storeInstruction, Long dir]
     :   tuple_access        #lvalueTupleAccess
-    |   vector_access        #lvalueVectorAccess
+    |   vector_access       #lvalueVectorAccess
     |   id=TK_IDENTIFIER    #lvalueId
     ;
 
@@ -266,8 +266,8 @@ expr returns[C_TYPE typ, int line]
 direct_evaluation_expr returns[C_TYPE typ, int line]
     :   cv=constant_value       #directEvaluationCv
     |   id=TK_IDENTIFIER        #directEvaluationId
-    |   tuple_access             #directEvaluationTuple
-    |   vector_access            #directEvaluationVector
+    |   tuple_access            #directEvaluationTuple
+    |   vector_access           #directEvaluationVector
     |   function_call           #directEvaluationFunction
     ;
 

@@ -11,7 +11,7 @@ fconstants
 
 //============= Programa principal ================
 
-programa ProgramaTest
+programa Testing
 variables
 	car c;
 	enter n;
