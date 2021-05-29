@@ -58,7 +58,7 @@ class method_info{
 				i.next().write(f);
 			}
 		}
-		catch (IOException s) {}
+		catch (IOException s) {s.printStackTrace();}
 	};
 	void show(){
 		System.out.println("Metode        : "+name_index+"."+descriptor_index);
@@ -80,14 +80,12 @@ class method_info{
 		i=t-1;
 		while (i>=0) { 
 			bytes[i]=aux.byteValue(); 
-			aux=(Long)aux.rotateRight(aux,8); 
+			aux=(Long)aux.rotateRight(aux,8);
 			i--;
 		}
 		return bytes;
 	} 
 }
-
-
 
 class attribute_info {
 
@@ -150,7 +148,7 @@ class Code_attribute extends attribute_info {
 			f.write(toByte(exception_table_length,2));
 			f.write(toByte(attributes_count,2));		
 		}
-		catch (IOException s) {}		
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.println("          Pila          : "+max_stack);
@@ -207,7 +205,7 @@ class Exceptions_attribute extends attribute_info {
 			f.write(toByte(number_of_exceptions,2));
 			f.write(toByte(exception_index,2));
 		}
-		catch (IOException s) {}		
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show() {};
 
@@ -234,16 +232,12 @@ class ConstantValue_attribute extends attribute_info {
 			f.write(toByte(attribute_length,4));
 			f.write(toByte(constantvalue_index,2));
 		}
-		catch (IOException s) {}		
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show() {};
 
 
 }
-
-
-
-
 
 class field_info {
 
@@ -260,8 +254,14 @@ class field_info {
 		name_index=name_index0;
 		descriptor_index=descriptor_index0;
 		attributes.add(new ConstantValue_attribute(entConstantValue,constantvalue_index0));
-		attributes_count=new Long(attributes.size());
 	};
+
+	field_info(Long access_flags0,Long name_index0,Long descriptor_index0) {
+		access_flags=access_flags0;
+		name_index=name_index0;
+		descriptor_index=descriptor_index0;
+	};
+
 	void write(FileOutputStream f) {
 		try {
 			f.write(toByte(access_flags,2));
@@ -274,8 +274,9 @@ class field_info {
 				i.next().write(f);
 			}
 		}
-		catch (IOException s) {}
+		catch (IOException s){s.printStackTrace();}
 	};
+
 	void show() {
 	};
 

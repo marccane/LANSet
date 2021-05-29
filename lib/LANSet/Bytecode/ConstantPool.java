@@ -76,7 +76,7 @@ class CONSTANT_Class_info extends cp_info  {
 		f.write(this.toByte(tag,1));
 		f.write(this.toByte(name_index,2));
 		}
-		catch (IOException s){}
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.print("Classe        : "+name_index);
@@ -98,7 +98,7 @@ class CONSTANT_Fieldref_info extends cp_info  {
 		f.write(this.toByte(class_index,2));
 		f.write(this.toByte(name_and_type_index,2));
 		}
-		catch (IOException s){}
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.print("Ref. Field    : "+class_index+"."+name_and_type_index);
@@ -121,7 +121,7 @@ class CONSTANT_Methodref_info extends cp_info {
 		f.write(this.toByte(class_index,2));
 		f.write(this.toByte(name_and_type_index,2));
 		}
-		catch (IOException s){}
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.print("Metode Inf.   : "+class_index+"."+name_and_type_index);
@@ -143,7 +143,7 @@ class CONSTANT_InterfaceMethodref_info extends cp_info {
 		f.write(this.toByte(class_index,2));
 		f.write(this.toByte(name_and_type_index,2));
 		}
-		catch (IOException s){}
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.print("Int Metode Inf: "+class_index+"."+name_and_type_index);
@@ -165,7 +165,7 @@ class CONSTANT_NameAndType_info extends cp_info {
 		f.write(this.toByte(name_index,2));
 		f.write(this.toByte(descriptor_index,2));
 		}
-		catch (IOException s){}
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.print("Name and Type : "+name_index+"."+descriptor_index);
@@ -184,7 +184,7 @@ class CONSTANT_String_info extends cp_info {
 		f.write(this.toByte(tag,1));
 		f.write(this.toByte(string_index,2));
 		}
-		catch (IOException s){}
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.print("String        : "+string_index);
@@ -203,7 +203,7 @@ class CONSTANT_Integer_info extends cp_info {
 		f.write(this.toByte(tag,1));
 		f.write(this.toByte(bytes,4));
 		}
-		catch (IOException s){}
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.print("Integer       : "+bytes);
@@ -224,7 +224,7 @@ class CONSTANT_Float_info extends cp_info {
 		Long i=new Long(bytes.floatToIntBits(bytes));
 		f.write(this.toByte(i,4));
 		}
-		catch (IOException s){}
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.print("Float         : "+bytes);
@@ -258,7 +258,7 @@ class CONSTANT_Utf8_info extends cp_info {
 			i++;
 			};
 		}
-		catch (IOException s){}
+		catch (IOException s){s.printStackTrace();}
 	};
 	void show(){
 		System.out.print("Ascii         : "+bytes);

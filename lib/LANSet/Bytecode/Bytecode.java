@@ -44,6 +44,7 @@ public class Bytecode implements Constants {
     public Long mGetBoolean;
     private Long mGetString;
     private Long mMain;
+    public Long mInitStatic;
 
     private Long aCode;
     private Long aExceptions;
@@ -131,6 +132,8 @@ public class Bytecode implements Constants {
         mGetBoolean = addMethodName(cThis, "getBoolean", "()Z");
         mGetString = addMethodName(cThis, "getString", "()Ljava/lang/String;");
         mMain = addMethodName(cThis, "main", "([Ljava/lang/String;)V");
+        mInitStatic = addMethodName(cThis, "mInitStatic", "()V");
+
         Long mInitException = addMethodName(cException, "<init>", "(Ljava/lang/String;)V");
         Long mInitFloat = addMethodName(cFloat, "<init>", "(Ljava/lang/String;)V");
         Long mInitInputStreamReader = addMethodName(cInputStreamReader, "<init>", "(Ljava/io/InputStream;)V");
@@ -151,8 +154,48 @@ public class Bytecode implements Constants {
         aExceptions = addAttributeName("Exceptions");
         aConstantValue = addAttributeName("ConstantValue");
 
+        //Static fields
+        Long fGlobalBufferedReader = addStaticFieldName(cThis,"$globalBufferedReader", "Ljava/io/BufferedReader;");
+
+        //Constant fields
         Long fIn = addFieldName(cSystem, "in", "Ljava/io/InputStream;");
         Long fOut = addFieldName(cSystem, "out", "Ljava/io/PrintStream;");
+
+        Vector<Long> codeInitStatic = new Vector<>(30);
+        codeInitStatic.add(NEW);
+        codeInitStatic.add(0L);
+        codeInitStatic.add(cInputStreamReader);
+
+        codeInitStatic.add(DUP); //par1 inputStreamReader ref
+
+        codeInitStatic.add(GETSTATIC); //par2 System.in
+        codeInitStatic.add(0L);
+        codeInitStatic.add(fIn);
+
+        codeInitStatic.add(INVOKESPECIAL); //init
+        codeInitStatic.add(0L);
+        codeInitStatic.add(mInitInputStreamReader);
+
+        codeInitStatic.add(ASTORE_0);  //store inputStreamReader ref
+
+        codeInitStatic.add(NEW);
+        codeInitStatic.add(0L);
+        codeInitStatic.add(cBufferedReader);
+
+        codeInitStatic.add(DUP);  //par 1 cBuff ref
+
+        codeInitStatic.add(ALOAD_0); //par 2 inputStreamReader ref
+
+        codeInitStatic.add(INVOKESPECIAL);
+        codeInitStatic.add(0L);
+        codeInitStatic.add(mInitBufferedReader);
+
+        codeInitStatic.add(PUTSTATIC);
+        codeInitStatic.add(0L);
+        codeInitStatic.add(fGlobalBufferedReader);
+
+        codeInitStatic.add(RETURN);
+        addFunctionCode(mInitStatic, 77L, 7L, codeInitStatic);
 
         Vector<Long> codePutInt = new Vector<>(8);
         codePutInt.add(GETSTATIC);
@@ -237,41 +280,17 @@ public class Bytecode implements Constants {
 
 
         Vector<Long> codeGetInt = new Vector<>(28);
-        codeGetInt.add(ICONST_0);
-        codeGetInt.add(ISTORE_0);
-        codeGetInt.add(NEW);
-        codeGetInt.add(0L);
-        codeGetInt.add(cInputStreamReader);
-        codeGetInt.add(DUP);
         codeGetInt.add(GETSTATIC);
         codeGetInt.add(0L);
-        codeGetInt.add(fIn);
-        codeGetInt.add(INVOKESPECIAL);
-        codeGetInt.add(0L);
-        codeGetInt.add(mInitInputStreamReader);
-        codeGetInt.add(ASTORE_1);
-        codeGetInt.add(NEW);
-        codeGetInt.add(0L);
-        codeGetInt.add(cBufferedReader);
-        codeGetInt.add(DUP);
-        codeGetInt.add(ALOAD_1);
-        codeGetInt.add(INVOKESPECIAL);
-        codeGetInt.add(0L);
-        codeGetInt.add(mInitBufferedReader);
-        codeGetInt.add(ASTORE_2);
-        codeGetInt.add(ALOAD_2);
+        codeGetInt.add(fGlobalBufferedReader);
         codeGetInt.add(INVOKEVIRTUAL);
         codeGetInt.add(0L);
         codeGetInt.add(mReadLineBufferedReader);
-        codeGetInt.add(ASTORE_3);
-        codeGetInt.add(ALOAD_3);
         codeGetInt.add(INVOKESTATIC);
         codeGetInt.add(0L);
         codeGetInt.add(mParseInt);
-        codeGetInt.add(ISTORE_0);
-        codeGetInt.add(ILOAD_0);
         codeGetInt.add(IRETURN);
-        addFunctionCode(mGetInt, 3L, 4L, codeGetInt);
+        addFunctionCode(mGetInt, 77L, 7L, codeGetInt);
 
 
         Vector<Long> codeGetFloat = new Vector<>(28);
@@ -465,11 +484,13 @@ public class Bytecode implements Constants {
             //interface_count=new Long(interfaces.size());
             interface_count = 0L;
             f.write(this.toByte(interface_count, 2));
+
             field_count = (long) fields.size();
             f.write(this.toByte(field_count, 2));
             for (field_info field : fields) {
                 field.write(f);
             }
+
             method_count = (long) methods.size();
             f.write(this.toByte(method_count, 2));
             for (method_info method : methods) {
@@ -481,7 +502,7 @@ public class Bytecode implements Constants {
             for (attribute_info attribute : attributes) {
                 attribute.write(f);
             }
-        } catch (IOException ignored) {}
+        } catch (IOException s) {s.printStackTrace();}
 
     }
 
@@ -609,6 +630,39 @@ public class Bytecode implements Constants {
         y = new CONSTANT_Fieldref_info(class_idx, k);
         constant_pool.add(y);
         l = constant_pool.size();
+
+        return l;
+    }
+
+    private Long addStaticFieldName(Long class_idx, String name, String desc) {
+        CONSTANT_Utf8_info n, d;
+        CONSTANT_NameAndType_info x;
+        CONSTANT_Fieldref_info y;
+        long idx_name, idx_desc, k, l;
+
+        idx_name = CPCercar(name);
+        if (idx_name == 0L) {
+            n = new CONSTANT_Utf8_info(name);
+            constant_pool.add(n);
+            idx_name = constant_pool.size();
+        }
+        idx_desc = CPCercar(desc);
+        if (idx_desc == 0L) {
+            d = new CONSTANT_Utf8_info(desc);
+            constant_pool.add(d);
+            idx_desc = constant_pool.size();
+        }
+        x = new CONSTANT_NameAndType_info(idx_name, idx_desc);
+        constant_pool.add(x);
+        k = constant_pool.size();
+
+        y = new CONSTANT_Fieldref_info(class_idx, k);
+        constant_pool.add(y);
+        l = constant_pool.size();
+
+        Long access_flags = ACC_STATIC;
+        field_info z = new field_info(access_flags, idx_name, idx_desc);
+        fields.add(z);
 
         return l;
     }

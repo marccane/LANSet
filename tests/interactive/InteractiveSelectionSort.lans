@@ -1,0 +1,55 @@
+tipus
+    intArr: vector enter mida 30;
+ftipus
+
+constants
+    enter arrLen = 30;
+    enter INT_MAX_VALUE = 2147483647;
+    //enter INT_MIN_VALUE= -2147483648; //nope for the moment
+fconstants
+
+//shuf -i 0-5000 -n 30 | java InteractiveSelectionSort
+programa InteractiveSelectionSort
+variables
+    enter INT_MIN_VALUE;
+
+    intArr arr;
+    boolea stopInput;
+    enter i;
+    enter numValorsEntrats;
+    enter arrLenM1;
+    enter j;
+    enter i_inversa;
+    enter valor_maxim;
+    enter idx_maxim;
+    enter tmp;
+fvariables
+INT_MIN_VALUE = ~INT_MAX_VALUE -1;
+arrLenM1 = arrLen-1;
+
+per i de 0 fins arrLenM1 fer
+    llegir(tmp);
+    arr[i] = tmp;
+fper
+
+per i de 0 fins arrLenM1 fer
+    i_inversa = arrLenM1-i;
+    idx_maxim = ~1; //si trec això la jvm es queixa pero no entenc perquè...
+    valor_maxim = INT_MIN_VALUE;
+    per j de 0 fins i_inversa fer
+        si arr[j] > valor_maxim llavors
+            valor_maxim = arr[j];
+            idx_maxim = j;
+        fsi
+    fper
+    tmp = arr[i_inversa];
+    arr[i_inversa] = arr[idx_maxim];
+    arr[idx_maxim] = tmp;
+fper
+
+per i de 0 fins arrLenM1 fer
+    escriure(arr[i], i != arrLenM1 ? ',' : ' ');
+fper
+escriureln();
+
+fprograma
