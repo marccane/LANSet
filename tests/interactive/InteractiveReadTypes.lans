@@ -1,0 +1,26 @@
+
+programa InteractiveReadTypes
+variables
+	enter e;
+	real r;
+	car c;
+	boolea b;
+fvariables
+
+escriure("Entra un enter: ");
+llegir(e);
+escriureln(e);
+
+escriure("Entra un real: ");
+llegir(r);
+escriureln(r);
+
+escriure("Entra un caracter: ");
+llegir(c);
+escriureln(c);
+
+escriure("Entra un boolea: ");
+llegir(b);
+escriureln(b);
+
+fprograma

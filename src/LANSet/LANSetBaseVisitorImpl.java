@@ -117,7 +117,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
 
     @Override
     public ReturnStruct visitConst_declaration(LANSetParser.Const_declarationContext ctx) {
-        visit(ctx.value); //Visiting the const creates the code to push it in the stack but we discard it here
+        visit(ctx.value); //Visiting the const creates the code to push it to the stack but we discard it here
 
         if(identifierInUse(ctx.id.getText())){
             Companion.repeatedIdentifierError(ctx.id.getText(), ctx.id.getLine());
@@ -1083,7 +1083,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     private Bytecode program;
     private BytecodeWriter bytecodeWriter;
     private Long lineBreak;
-    private Long nVar = 0L;
+    private Long nVar = 1L;
     private boolean errorSemantic;
 
     //constants
