@@ -161,41 +161,31 @@ public class Bytecode implements Constants {
         Long fIn = addFieldName(cSystem, "in", "Ljava/io/InputStream;");
         Long fOut = addFieldName(cSystem, "out", "Ljava/io/PrintStream;");
 
-        Vector<Long> codeInitStatic = new Vector<>(30);
-        codeInitStatic.add(NEW);
-        codeInitStatic.add(0L);
-        codeInitStatic.add(cInputStreamReader);
 
-        codeInitStatic.add(DUP); //par1 inputStreamReader ref
-
-        codeInitStatic.add(GETSTATIC); //par2 System.in
-        codeInitStatic.add(0L);
-        codeInitStatic.add(fIn);
-
-        codeInitStatic.add(INVOKESPECIAL); //init
-        codeInitStatic.add(0L);
-        codeInitStatic.add(mInitInputStreamReader);
-
-        codeInitStatic.add(ASTORE_0);  //store inputStreamReader ref
-
+        Vector<Long> codeInitStatic = new Vector<>(21);
         codeInitStatic.add(NEW);
         codeInitStatic.add(0L);
         codeInitStatic.add(cBufferedReader);
-
-        codeInitStatic.add(DUP);  //par 1 cBuff ref
-
-        codeInitStatic.add(ALOAD_0); //par 2 inputStreamReader ref
-
+        codeInitStatic.add(DUP);
+        codeInitStatic.add(NEW);
+        codeInitStatic.add(0L);
+        codeInitStatic.add(cInputStreamReader);
+        codeInitStatic.add(DUP);
+        codeInitStatic.add(GETSTATIC);
+        codeInitStatic.add(0L);
+        codeInitStatic.add(fIn);
+        codeInitStatic.add(INVOKESPECIAL);
+        codeInitStatic.add(0L);
+        codeInitStatic.add(mInitInputStreamReader);
         codeInitStatic.add(INVOKESPECIAL);
         codeInitStatic.add(0L);
         codeInitStatic.add(mInitBufferedReader);
-
         codeInitStatic.add(PUTSTATIC);
         codeInitStatic.add(0L);
         codeInitStatic.add(fGlobalBufferedReader);
-
         codeInitStatic.add(RETURN);
-        addFunctionCode(mInitStatic, 77L, 7L, codeInitStatic);
+        addFunctionCode(mInitStatic, 5L, 0L, codeInitStatic);
+
 
         Vector<Long> codePutInt = new Vector<>(8);
         codePutInt.add(GETSTATIC);
@@ -279,7 +269,7 @@ public class Bytecode implements Constants {
         addFunctionCode(mPutLnString, 2L, 1L, codePutLnString);
 
 
-        Vector<Long> codeGetInt = new Vector<>(28);
+        Vector<Long> codeGetInt = new Vector<>(9);
         codeGetInt.add(GETSTATIC);
         codeGetInt.add(0L);
         codeGetInt.add(fGlobalBufferedReader);
@@ -290,128 +280,53 @@ public class Bytecode implements Constants {
         codeGetInt.add(0L);
         codeGetInt.add(mParseInt);
         codeGetInt.add(IRETURN);
-        addFunctionCode(mGetInt, 77L, 7L, codeGetInt);
+        addFunctionCode(mGetInt, 1L, 0L, codeGetInt);
 
 
-        Vector<Long> codeGetFloat = new Vector<>(28);
-        codeGetFloat.add(FCONST_0);
-        codeGetFloat.add(FSTORE_0);
-        codeGetFloat.add(NEW);
-        codeGetFloat.add(0L);
-        codeGetFloat.add(cInputStreamReader);
-        codeGetFloat.add(DUP);
+        Vector<Long> codeGetFloat = new Vector<>(10);
         codeGetFloat.add(GETSTATIC);
         codeGetFloat.add(0L);
-        codeGetFloat.add(fIn);
-        codeGetFloat.add(INVOKESPECIAL);
-        codeGetFloat.add(0L);
-        codeGetFloat.add(mInitInputStreamReader);
-        codeGetFloat.add(ASTORE_1);
-        codeGetFloat.add(NEW);
-        codeGetFloat.add(0L);
-        codeGetFloat.add(cBufferedReader);
-        codeGetFloat.add(DUP);
-        codeGetFloat.add(ALOAD_1);
-        codeGetFloat.add(INVOKESPECIAL);
-        codeGetFloat.add(0L);
-        codeGetFloat.add(mInitBufferedReader);
-        codeGetFloat.add(ASTORE_2);
-        codeGetFloat.add(ALOAD_2);
+        codeGetFloat.add(fGlobalBufferedReader);
         codeGetFloat.add(INVOKEVIRTUAL);
         codeGetFloat.add(0L);
         codeGetFloat.add(mReadLineBufferedReader);
-        codeGetFloat.add(ASTORE_3);
-        codeGetFloat.add(ALOAD_3);
         codeGetFloat.add(INVOKESTATIC);
         codeGetFloat.add(0L);
         codeGetFloat.add(mParseFloat);
-        codeGetFloat.add(FSTORE_0);
-        codeGetFloat.add(FLOAD_0);
         codeGetFloat.add(FRETURN);
-        addFunctionCode(mGetFloat, 3L, 4L, codeGetFloat);
+        addFunctionCode(mGetFloat, 1L, 0L, codeGetFloat);
 
 
-        Vector<Long> codeGetChar = new Vector<>(28);
-        codeGetChar.add(ICONST_0);
-        codeGetChar.add(ISTORE_0);
-        codeGetChar.add(NEW);
-        codeGetChar.add(0L);
-        codeGetChar.add(cInputStreamReader);
-        codeGetChar.add(DUP);
+        Vector<Long> codeGetChar = new Vector<>(11);
         codeGetChar.add(GETSTATIC);
         codeGetChar.add(0L);
-        codeGetChar.add(fIn);
-        codeGetChar.add(INVOKESPECIAL);
-        codeGetChar.add(0L);
-        codeGetChar.add(mInitInputStreamReader);
-        codeGetChar.add(ASTORE_1);
-        codeGetChar.add(NEW);
-        codeGetChar.add(0L);
-        codeGetChar.add(cBufferedReader);
-        codeGetChar.add(DUP);
-        codeGetChar.add(ALOAD_1);
-        codeGetChar.add(INVOKESPECIAL);
-        codeGetChar.add(0L);
-        codeGetChar.add(mInitBufferedReader);
-        codeGetChar.add(ASTORE_2);
-        codeGetChar.add(ALOAD_2);
+        codeGetChar.add(fGlobalBufferedReader);
         codeGetChar.add(INVOKEVIRTUAL);
         codeGetChar.add(0L);
         codeGetChar.add(mReadLineBufferedReader);
-        codeGetChar.add(ASTORE_3);
-        codeGetChar.add(ALOAD_3);
         codeGetChar.add(ICONST_0);
         codeGetChar.add(INVOKEVIRTUAL);
         codeGetChar.add(0L);
         codeGetChar.add(mCharAt);
-        codeGetChar.add(ISTORE_0);
-        codeGetChar.add(ILOAD_0);
         codeGetChar.add(IRETURN);
-        addFunctionCode(mGetChar, 3L, 4L, codeGetChar);
+        addFunctionCode(mGetChar, 2L, 0L, codeGetChar);
 
 
-        Vector<Long> codeGetString = new Vector<>(28);
-        codeGetString.add(LDC);
-        codeGetString.add(sEmpty);
-        codeGetString.add(ASTORE_0);
-        codeGetString.add(NEW);
-        codeGetString.add(0L);
-        codeGetString.add(cInputStreamReader);
-        codeGetString.add(DUP);
+        Vector<Long> codeGetString = new Vector<>(7);
         codeGetString.add(GETSTATIC);
         codeGetString.add(0L);
-        codeGetString.add(fIn);
-        codeGetString.add(INVOKESPECIAL);
-        codeGetString.add(0L);
-        codeGetString.add(mInitInputStreamReader);
-        codeGetString.add(ASTORE_1);
-        codeGetString.add(NEW);
-        codeGetString.add(0L);
-        codeGetString.add(cBufferedReader);
-        codeGetString.add(DUP);
-        codeGetString.add(ALOAD_1);
-        codeGetString.add(INVOKESPECIAL);
-        codeGetString.add(0L);
-        codeGetString.add(mInitBufferedReader);
-        codeGetString.add(ASTORE_2);
-        codeGetString.add(ALOAD_2);
+        codeGetString.add(fGlobalBufferedReader);
         codeGetString.add(INVOKEVIRTUAL);
         codeGetString.add(0L);
         codeGetString.add(mReadLineBufferedReader);
-        codeGetString.add(ASTORE_3);
-        codeGetString.add(ALOAD_3);
-        codeGetString.add(ASTORE_0);
-        codeGetString.add(ALOAD_0);
         codeGetString.add(ARETURN);
-        addFunctionCode(mGetString, 3L, 4L, codeGetString);
+        addFunctionCode(mGetString, 1L, 0L, codeGetString);
 
 
-        Vector<Long> codeGetBoolean = new Vector<>(8);
+        Vector<Long> codeGetBoolean = new Vector<>(18);
         codeGetBoolean.add(INVOKESTATIC);
         codeGetBoolean.add(0L);
         codeGetBoolean.add(mGetString);
-        codeGetBoolean.add(ASTORE_1);
-        codeGetBoolean.add(ALOAD_1);
         codeGetBoolean.add(ICONST_0);
         codeGetBoolean.add(INVOKEVIRTUAL);
         codeGetBoolean.add(0L);
@@ -420,43 +335,17 @@ public class Bytecode implements Constants {
         codeGetBoolean.add(67L);
         codeGetBoolean.add(IF_ICMPNE);
         codeGetBoolean.add(0L);
-        codeGetBoolean.add(8L);
+        codeGetBoolean.add(7L);
         codeGetBoolean.add(ICONST_1);
-        codeGetBoolean.add(ISTORE_0);
         codeGetBoolean.add(GOTO);
         codeGetBoolean.add(0L);
-        codeGetBoolean.add(5L);
+        codeGetBoolean.add(4L);
         codeGetBoolean.add(ICONST_0);
-        codeGetBoolean.add(ISTORE_0);
-        codeGetBoolean.add(ILOAD_0);
         codeGetBoolean.add(IRETURN);
-        addFunctionCode(mGetBoolean, 3L, 2L, codeGetBoolean);
-/*
+        addFunctionCode(mGetBoolean, 2L, 0L, codeGetBoolean);
 
-	Vector<Long> codeGetBoolean=new Vector<Long>(8);
-  	codeGetBoolean.add(INVOKESTATIC);
-   	codeGetBoolean.add(0L);
-   	codeGetBoolean.add(mGetString);
-   	codeGetBoolean.add(ASTORE_1);
-   	codeGetBoolean.add(ALOAD_1);
-   	codeGetBoolean.add(LDC);
-   	codeGetBoolean.add(sCert);	
-   	codeGetBoolean.add(IF_ACMPNE);
-   	codeGetBoolean.add(0L);
-   	codeGetBoolean.add(8L);
-  	codeGetBoolean.add(ICONST_1);
-  	codeGetBoolean.add(ISTORE_0);
-   	codeGetBoolean.add(GOTO);
-   	codeGetBoolean.add(0L);
-   	codeGetBoolean.add(5L);
-  	codeGetBoolean.add(ICONST_0);
-  	codeGetBoolean.add(ISTORE_0);
-   	codeGetBoolean.add(ILOAD_0);
-   	codeGetBoolean.add(IRETURN);
-	addFunctionCode(mGetBoolean,2L,2L,codeGetBoolean);
 
-*/
-
+        //This has to be done just to pass the jvm checks but it doesn't even get executed rn
         Vector<Long> codeInit = new Vector<>(8);
         codeInit.add(ALOAD_0);
         codeInit.add(INVOKESPECIAL);
@@ -484,13 +373,11 @@ public class Bytecode implements Constants {
             //interface_count=new Long(interfaces.size());
             interface_count = 0L;
             f.write(this.toByte(interface_count, 2));
-
             field_count = (long) fields.size();
             f.write(this.toByte(field_count, 2));
             for (field_info field : fields) {
                 field.write(f);
             }
-
             method_count = (long) methods.size();
             f.write(this.toByte(method_count, 2));
             for (method_info method : methods) {

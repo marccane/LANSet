@@ -15,6 +15,7 @@ variables
 
     intArr arr;
     boolea stopInput;
+    boolea sortError;
     enter i;
     enter numValorsEntrats;
     enter arrLenM1;
@@ -51,5 +52,20 @@ per i de 0 fins arrLenM1 fer
     escriure(arr[i], i != arrLenM1 ? ',' : ' ');
 fper
 escriureln();
+
+si arrLen > 1 llavors
+    sortError = fals;
+    tmp = arr[0];
+    per i de 0 fins arrLenM1 fer
+        si tmp > arr[i] llavors
+            escriureln("SORTING ERROR");
+            sortError = cert;
+        fsi
+        tmp = arr[i];
+    fper
+    si no sortError llavors
+        escriureln("Ok");
+    fsi
+fsi    
 
 fprograma

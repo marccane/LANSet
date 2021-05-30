@@ -21,7 +21,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         String programID = ctx.prog_id.getText();
         System.out.println("Hola, " +  programID);
 
-        Vector<Long> initCode = new Vector<>();
         program = new Bytecode(programID);
         bytecodeWriter = new BytecodeWriter(program);
         lineBreak = program.addConstant(BYTECODE_STRINGTYPE, "\n");
@@ -33,12 +32,12 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         {
             rs.code.add(program.RETURN);
 
-            initCode.add(program.INVOKESTATIC);
-            bytecodeWriter.addLong(initCode,program.mInitStatic);
+            Vector<Long> mainCode = new Vector<>();
+            mainCode.add(program.INVOKESTATIC);
+            bytecodeWriter.addLong(mainCode,program.mInitStatic);
+            mainCode.addAll(rs.code);
 
-            initCode.addAll(rs.code);
-
-            program.addMainCode(mainStackSize,nVar,initCode);
+            program.addMainCode(mainStackSize,nVar,mainCode);
             program.write();
             System.out.println("Generated " + programID + ".class");
         }
