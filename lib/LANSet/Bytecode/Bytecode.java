@@ -2,8 +2,7 @@ package LANSet.Bytecode;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.*;
 
 //	Ajuda a la confeccio de codi en Bytecode. Practiques de MEC
 //
@@ -70,6 +69,27 @@ public class Bytecode implements Constants {
     private Vector<method_info> methods = new Vector<>(50);
     private Long attribute_count;
     private Vector<attribute_info> attributes = new Vector<>(50);
+
+    //Holy shit this language is a piece of garbage
+    private class tuple1{
+        public tuple1(long index, CONSTANT_Integer_info info) {
+            this.index = index;
+            this.info = info;
+        }
+        public long index;
+        public CONSTANT_Integer_info info;
+    }
+    private class tuple2{
+        public tuple2(long index, CONSTANT_Float_info info) {
+            this.index = index;
+            this.info = info;
+        }
+        public long index;
+        public CONSTANT_Float_info info;
+    }
+
+    private Map<Integer, tuple1> intCache = new HashMap<>(100);
+    private Map<Float, tuple2> floatCache = new HashMap<>(20);
 
     private Long CPCercar(String s) {
         long ii = 0L;
@@ -621,49 +641,48 @@ public class Bytecode implements Constants {
     }
 
     public Long addConstant(String desc, String val) {
-        long ret;
-
-        ret = 99999L;
-        switch (desc.charAt(0)) {
-            case 'I': {
-                Integer i = new Integer(val);
-                CONSTANT_Integer_info x = new CONSTANT_Integer_info(new Long(i));
-                constant_pool.add(x);
-                ret = constant_pool.size();
-            }
-            break;
-            case 'Z': {
-                Integer i = val == "Cert" ? 1 : 0; //WARNING is this correct?
-                CONSTANT_Integer_info x = new CONSTANT_Integer_info(new Long(i));
-                constant_pool.add(x);
-                ret = constant_pool.size();
-            }
-            break;
-            case 'C': {
-                Integer i = (int) (val.charAt(0));
-                CONSTANT_Integer_info x = new CONSTANT_Integer_info(new Long(i));
-                constant_pool.add(x);
-                ret = constant_pool.size();
-            }
-            break;
-            case 'F': {
-                Float r;
-                r = Float.parseFloat(val);
-                CONSTANT_Float_info x = new CONSTANT_Float_info(r);
-                constant_pool.add(x);
-                ret = constant_pool.size();
-            }
-            break;
-            case 'S': {
-                CONSTANT_Utf8_info x = new CONSTANT_Utf8_info(val);
-                constant_pool.add(x);
-                Long i = (long) constant_pool.size();
-                CONSTANT_String_info y = new CONSTANT_String_info(i);
-                constant_pool.add(y);
-                ret = constant_pool.size();
-            }
+        long constPoolIdx;
+        char type = desc.charAt(0);
+        if(type == 'S'){
+            CONSTANT_Utf8_info x = new CONSTANT_Utf8_info(val);
+            constant_pool.add(x);
+            Long i = (long) constant_pool.size();
+            CONSTANT_String_info y = new CONSTANT_String_info(i);
+            constant_pool.add(y);
+            constPoolIdx = constant_pool.size();
         }
-        return ret;
+        else if (type == 'F'){
+            Float f;
+            f = Float.parseFloat(val);
+            tuple2 t = floatCache.get(f);
+            if(t == null){
+                CONSTANT_Float_info info = new CONSTANT_Float_info(f);
+                constant_pool.add(info);
+                constPoolIdx = constant_pool.size();
+                floatCache.put(f, new tuple2(constPoolIdx, info));
+            }
+            else return t.index;
+        }
+        else{
+            int i = Integer.MIN_VALUE;
+            if(type == 'I')
+                i = new Integer(val);
+            else if(type == 'Z')
+                i = val == "Cert" ? 1 : 0; //WARNING is this correct?
+            else if(type == 'C')
+                i = val.charAt(0);
+            else System.err.println("INVALID TYPE IN Bytecode.java addConstant");
+
+            tuple1 t = intCache.get(i);
+            if(t == null){
+                CONSTANT_Integer_info info = new CONSTANT_Integer_info((long) i);
+                constant_pool.add(info);
+                constPoolIdx = constant_pool.size();
+                intCache.put(i, new tuple1(constPoolIdx, info));
+            }
+            else return t.index;
+        }
+        return constPoolIdx;
     }
 
     public Long addArrayDef(int dimensions, String desc) {

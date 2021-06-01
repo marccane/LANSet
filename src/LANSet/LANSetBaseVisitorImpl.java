@@ -154,7 +154,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         ctx.typ = Companion.cTypeFromTokenID(ctx.tk.getType());
         ctx.line = ctx.tk.getLine();
 
-        switch(ctx.tk.getType()){
+        switch(ctx.tk.getType()){ //TODO are we adding unnecessary constants when visiting constant_declaration?
             case TK_INTEGER:
                 value = program.addConstant(BYTECODE_INTTYPE, ctx.tk.getText());
                 break;
