@@ -152,7 +152,7 @@ function_declaration: KW_FUNCTION TK_IDENTIFIER TK_LPAR formal_parameters? TK_RP
 
 formal_parameters: (KW_IN | KW_INOUT)? type TK_IDENTIFIER (TK_COMMA (KW_IN | KW_INOUT)? type TK_IDENTIFIER)* ;
 
-type returns [int tkType, String text, int line]
+type returns [int tkType, int line]
     :   typ=(TK_BASETYPE | TK_IDENTIFIER) ;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ type returns [int tkType, String text, int line]
 
 const_declaration_block: KW_CONSTBLOCK (const_declaration TK_SEMICOLON)* KW_ENDCONSTBLOCK ;
 
-const_declaration: bt=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT value=basetype_value ;
+const_declaration: basetype=TK_BASETYPE id=TK_IDENTIFIER TK_ASSIGNMENT value=basetype_value ;
 
 basetype_value returns [String text, C_TYPE typ, int line]
     :   tk=(TK_INTEGER | TK_BOOLEAN | TK_CHARACTER | TK_REAL) ;

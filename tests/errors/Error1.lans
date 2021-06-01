@@ -8,7 +8,7 @@ fconstants
 
 programa Error1
 variables
-    //carArr arr2; //comentar aixo
+    carArr arr2;
     car c;
     enter i;
 fvariables
@@ -17,7 +17,9 @@ i = 0;
 c = 'a';
 mentre c != '.' & i < arr2len fer
     llegir(c);
-    carArr[i] = c; //cagada col..
+    carArr[i] = c; //error 1
+    arr2len[i] = c; //error 2
+    i[i] = c; //error 3
     i = i + 1;
 fmentre
 

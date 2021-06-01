@@ -68,7 +68,8 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             if (!identifierInUse(ctx.id.getText())) {
                 C_TYPE bType = Companion.processBaseType(C_TYPE.fromString(ctx.vector_definition().baseType.getText()));
                 Registre r = new Registre(ctx.id.getText(), C_SUPERTYPE.VECTOR_SUPERTYPE, bType, ctx.id.getLine(),
-                        ctx.id.getCharPositionInLine(), Integer.parseInt(ctx.vector_definition().size.getText()));
+                        ctx.id.getCharPositionInLine());
+                r.setVecSize(Integer.parseInt(ctx.vector_definition().size.getText()));
                 TS.inserir(ctx.id.getText(), r);
             }
             else {
@@ -110,7 +111,6 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     @Override
     public ReturnStruct visitType(LANSetParser.TypeContext ctx) {
         ctx.tkType = ctx.typ.getType();
-        ctx.text = ctx.typ.getText();
         ctx.line = ctx.typ.getLine();
         return visitChildren(ctx);
     }
@@ -125,20 +125,21 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         }
         else{
             C_TYPE valueType = ctx.value.typ;
-            if (ctx.bt.getText().equals(valueType.toString())){ //TODO simplify this
-                Registre r = registerConstant(ctx.id,ctx.bt);
+            if (ctx.basetype.getText().equals(valueType.toString())){ //TODO simplify this
+                Registre r = registerConstant(ctx.id,ctx.basetype);
                 //Extract the character between the quotes
                 String strValue = ctx.value.typ == C_TYPE.CHAR_TYPE ? ctx.value.text.substring(1,2) : ctx.value.text;
                 Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), strValue); //TODO reuse constants
-                r.putDir(dir); //TODO fix
+                r.setIndex(dir);
             }
-            else if (valueType == C_TYPE.INT_TYPE && ctx.bt.getText().equals(C_TYPE.FLOAT_TYPE.toString())){
-                Registre r = registerConstant(ctx.id,ctx.bt);
+            else if (valueType == C_TYPE.INT_TYPE && ctx.basetype.getText().equals(C_TYPE.FLOAT_TYPE.toString())){
+                Registre r = registerConstant(ctx.id,ctx.basetype);
                 Long dir = program.addConstName(r.getText(), Companion.bytecodeType(r.getType()), ctx.value.text); //TODO reuse constants
-                r.putDir(dir); //TODO fix
+                r.setIndex(dir);
             }
             else{
-                Companion.typeMismatchError2(ctx.id.getText(), ctx.id.getLine(), valueType.toString(), C_TYPE.fromString(ctx.bt.getText()));
+                Companion.typeMismatchError2(ctx.id.getText(), ctx.id.getLine(), valueType.toString(),
+                        C_TYPE.fromString(ctx.basetype.getText()));
                 errorSemantic=true;
             }
         }
@@ -196,14 +197,15 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 //TODO review this (look for the documentation we wrote some years ago)
             }
             else if(typeReg.getSupertype() == C_SUPERTYPE.VECTOR_SUPERTYPE){
-                Registre vecVariable = new Registre(ctx.id.getText(), C_SUPERTYPE.VECTOR_SUPERTYPE,
+                Registre vecVariable = new Registre(ctx.id.getText(), C_SUPERTYPE.VARIABLE_SUPERTYPE,
                         typeReg.getType(), ctx.id.getLine(), ctx.id.getCharPositionInLine());
-                vecVariable.putDir(nVar++);
+                vecVariable.setParent(typeReg);
+                vecVariable.setIndex(nVar++);
                 TS.inserir(ctx.id.getText(), vecVariable);
 
-                bytecodeWriter.initVector(rs.code, typeReg.getType(), typeReg.vecSize);
+                bytecodeWriter.initVector(rs.code, typeReg.getType(), typeReg.getVecSize());
                 rs.code.add(program.ASTORE);
-                rs.code.add(vecVariable.getDir());
+                rs.code.add(vecVariable.getIndex());
             }
             else if(typeReg.getSupertype() == C_SUPERTYPE.TUPLE_SUPERTYPE){
                 errorSemantic = true;
@@ -220,7 +222,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         }
         else {
             registerBasetypeVariable(C_TYPE.fromString(ctx.type().getText()), ctx.id);
-            TS.obtenir(ctx.id.getText()).putDir(nVar++);
+            TS.obtenir(ctx.id.getText()).setIndex(nVar++);
         }
         return rs;
     }
@@ -287,7 +289,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
     public ReturnStruct visitLvalueId(LANSetParser.LvalueIdContext ctx){
 
         Registre reg = TS.obtenir(ctx.id.getText());
-        ctx.dir = reg == null ? -1L : reg.getDir();
+        ctx.dir = reg == null ? -1L : reg.getIndex();
         ctx.typ = reg == null ? C_TYPE.INVALID_TYPE : reg.getType();
 
         if(reg == null){
@@ -381,7 +383,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
         }
 
         if(!errorSemantic){
-            Long indexPos = iterVarReg.getDir();
+            Long indexPos = iterVarReg.getIndex();
 
             forExpr.add(program.ILOAD);
             forExpr.add(indexPos);
@@ -472,7 +474,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             Companion.nonBasetypeReadingError(ctx.id.getText(), var.getType(), ctx.id.getLine());
         }
         else{ // no error, codegen
-            rs.code.addAll(bytecodeWriter.generateReadCode(var.getType(), var.getDir()));
+            rs.code.addAll(bytecodeWriter.generateReadCode(var.getType(), var.getIndex()));
         }
 
         return rs;
@@ -553,7 +555,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                     else
                         rs.code.add(program.ILOAD);
 
-                    Long varDir = var.getDir();
+                    Long varDir = var.getIndex();
                     rs.code.add(varDir);
                 }
                 //TODO alias
@@ -566,7 +568,7 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
                 }*/
             }
             else if (var.getSupertype() == C_SUPERTYPE.CONSTANT_SUPERTYPE){
-                Long constDir = var.getDir();
+                Long constDir = var.getIndex();
                 rs.code.add(program.LDC_W);
                 rs.code.add(program.nByte(constDir,2));
                 rs.code.add(program.nByte(constDir,1));
@@ -648,21 +650,27 @@ public class LANSetBaseVisitorImpl extends LANSetBaseVisitor<ReturnStruct>{
             errorSemantic = true;
             Companion.undefinedIdentifierError(ctx.vecVar.getText(), ctx.vecVar.getLine());
         }
-        else if(vecVarReg.getSupertype() != C_SUPERTYPE.VECTOR_SUPERTYPE){
+        else if(vecVarReg.getSupertype() != C_SUPERTYPE.VARIABLE_SUPERTYPE || vecVarReg.getParent() == null){
             errorSemantic = true;
-            System.err.println(String.format("Error at line %d. %s was expected to be a vector but was a %s %s instead",
-                    ctx.vecVar.getLine(), ctx.vecVar.getText(), vecVarReg.getType().toString(), vecVarReg.getSupertype()));
+            System.err.println(String.format("Error at line %d. %s was expected to be a vector variable but was a %s %s",
+                    ctx.vecVar.getLine(), ctx.vecVar.getText(), vecVarReg.getType(), vecVarReg.getSupertype()));
+        }
+        else if(vecVarReg.getParent().getSupertype() != C_SUPERTYPE.VECTOR_SUPERTYPE){
+            errorSemantic = true;
+            System.err.println(String.format("Error at line %d. %s was expected to be a vector variable but was a %s variable",
+                    ctx.vecVar.getLine(), ctx.vecVar.getText(), vecVarReg.getParent().getSupertype()));
         }
         else{
             ReturnStruct rsExpr = visit(ctx.expr());
 
             if(ctx.expr().typ != C_TYPE.INT_TYPE){
                 errorSemantic = true;
-                Companion.typeMismatchError2("*expression*", ctx.expr().line, ctx.expr().typ.toString(), C_TYPE.INT_TYPE);
+                System.err.println(String.format("Error at line %d. Index expression of vector access must be of type integer but was %s",
+                        ctx.expr().line, ctx.expr().typ.toString()));
             }
             else{
                 rs.code.add(program.ALOAD); //push arrayref into operand stack
-                rs.code.add(vecVarReg.getDir());
+                rs.code.add(vecVarReg.getIndex());
                 rs.code.addAll(rsExpr.code); //push index of the array
             }
         }

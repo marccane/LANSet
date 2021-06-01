@@ -3,55 +3,21 @@ package LANSet;
 //TODO this could just be a java "struct"
 class Registre {
 
-    private String text;  //isn't this completely useless? It's always the key of the dictionary
     private C_SUPERTYPE supertype;
     private C_TYPE type;
+    private Long index = Long.MAX_VALUE; //local variable index
+    private int vecSize = -1;
+    private Registre parent;
 
-    private int line;
-    private int pos;
-    private int intval;
-    private Long dir = Long.MAX_VALUE;
-    int vecSize; //i'm not making more getter/setters
-    Registre parent;
-
-    Registre() {
-        text = "";
-        supertype = C_SUPERTYPE.INVALID_SUPERTYPE;
-        type = C_TYPE.INVALID_TYPE;
-        line = -1;
-        pos = -1;
-    }
-
-    Registre(String te) {
-        text = te;
-		supertype = C_SUPERTYPE.INVALID_SUPERTYPE;
-		type = C_TYPE.INVALID_TYPE;
-        line = -1;
-        pos = -1;
-    }
-
-    Registre(String te, C_SUPERTYPE st) {
-        text = te;
-        supertype = st;
-		type = C_TYPE.INVALID_TYPE;
-        line = -1;
-        pos = -1;
-    }
-
-    Registre(String te, C_SUPERTYPE st, C_TYPE t) {
-        text = te;
-        supertype = st;
-        type = t;
-        line = -1;
-        pos = -1;
-    }
+    private String text;
+    private int line = -1;
+    private int pos = -1;
 
     Registre(String te, C_SUPERTYPE st, C_TYPE t, int l) {
         text = te;
         supertype = st;
         type = t;
         line = l;
-        pos = -1;
     }
 
     Registre(String te, C_SUPERTYPE st, C_TYPE t, int l, int p) {
@@ -62,71 +28,50 @@ class Registre {
         pos = p;
     }
 
-    Registre(String te, C_SUPERTYPE st, C_TYPE t, int l, int p, int vecSize) {
-        text = te;
-        supertype = st;
-        type = t;
-        line = l;
-        pos = p;
+    int getVecSize() {
+        return vecSize;
+    }
+
+    void setVecSize(int vecSize) {
         this.vecSize = vecSize;
     }
 
+    Registre getParent() {
+        return parent;
+    }
+
+    void setParent(Registre parent) {
+        this.parent = parent;
+    }
+
     String getText() {
-        return (text);
+        return text;
     }
 
 	C_SUPERTYPE getSupertype() {
-        return (supertype);
+        return supertype;
     }
 
     C_TYPE getType() {
-        return (type);
+        return type;
     }
 
     Integer getLine() {
-        return (line);
+        return line;
     }
 
     Integer getPos() {
-        return (pos);
+        return pos;
     }
 
-    Integer getIntval() {
-        return (intval);
-    }
-
-    Long getDir() {
-        if(dir == Long.MAX_VALUE) //not pretty but should ease development
+    Long getIndex() {
+        if(index == Long.MAX_VALUE) //not pretty but should ease development
             //TODO errorSemantic = true;
             System.err.println("Get of uninitialized direction");
-        return dir;
+        return index;
     }
 
-    void putText(String te) {
-        text = te;
-    }
-
-    void putType(C_TYPE t) {
-        type = t;
-    }
-
-    void putLine(int l) {
-        line = l;
-    }
-
-    void putPos(int p) {
-        pos = p;
-    }
-
-    void putIntval(int i) {
-        intval = i;
-    }
-
-    void putSupertype(C_SUPERTYPE st) {
-        supertype = st;
-    }
-
-    void putDir(Long d) {
-        dir = d;
+    void setIndex(Long index) {
+        this.index = index;
     }
 }
