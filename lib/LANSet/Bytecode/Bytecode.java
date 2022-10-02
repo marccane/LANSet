@@ -71,21 +71,21 @@ public class Bytecode implements Constants {
     private Vector<attribute_info> attributes = new Vector<>(50);
 
     //Holy shit this language is a piece of garbage
-    private class tuple1{
-        public tuple1(long index, CONSTANT_Integer_info info) {
+    private static class tuple1{
+        tuple1(long index, CONSTANT_Integer_info info) {
             this.index = index;
             this.info = info;
         }
-        public long index;
-        public CONSTANT_Integer_info info;
+        long index;
+        CONSTANT_Integer_info info;
     }
-    private class tuple2{
-        public tuple2(long index, CONSTANT_Float_info info) {
+    private static class tuple2{
+        tuple2(long index, CONSTANT_Float_info info) {
             this.index = index;
             this.info = info;
         }
-        public long index;
-        public CONSTANT_Float_info info;
+        long index;
+        CONSTANT_Float_info info;
     }
 
     private Map<Integer, tuple1> intCache = new HashMap<>(100);
@@ -593,8 +593,8 @@ public class Bytecode implements Constants {
         CONSTANT_NameAndType_info y;
         method_info z;
 
-        x = (CONSTANT_Methodref_info) constant_pool.elementAt(new Integer(ref.toString()) - 1);
-        y = (CONSTANT_NameAndType_info) constant_pool.get(new Integer(x.name_and_type_index.toString()) - 1);
+        x = (CONSTANT_Methodref_info) constant_pool.elementAt((int)(long)ref - 1);
+        y = (CONSTANT_NameAndType_info) constant_pool.get((int)(long)x.name_and_type_index - 1);
         Long acc = ACC_PUBLIC | ACC_STATIC;
         if (ref == mInit) {
             acc = ACC_PUBLIC;
@@ -608,8 +608,8 @@ public class Bytecode implements Constants {
         CONSTANT_NameAndType_info y;
         method_info z;
 
-        x = (CONSTANT_Methodref_info) constant_pool.get(new Integer(mMain.toString()) - 1);
-        y = (CONSTANT_NameAndType_info) constant_pool.get(new Integer(x.name_and_type_index.toString()) - 1);
+        x = (CONSTANT_Methodref_info) constant_pool.get((int)(long)mMain - 1);
+        y = (CONSTANT_NameAndType_info) constant_pool.get((int)(long)x.name_and_type_index - 1);
         Long acc = ACC_PUBLIC | ACC_STATIC;
         z = new method_info(aCode, aExceptions, cException, acc, y.name_index, y.descriptor_index, maxStack, nLocals, code);
         methods.add(z);
@@ -666,7 +666,7 @@ public class Bytecode implements Constants {
         else{
             int i = Integer.MIN_VALUE;
             if(type == 'I')
-                i = new Integer(val);
+                i = Integer.parseInt(val);
             else if(type == 'Z')
                 i = val == "Cert" ? 1 : 0; //WARNING is this correct?
             else if(type == 'C')

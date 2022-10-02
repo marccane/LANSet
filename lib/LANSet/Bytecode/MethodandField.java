@@ -28,11 +28,11 @@ import java.util.*;
 
 class method_info{
 
-	Long access_flags;
-	Long name_index;
-	Long descriptor_index;
-	Long attributes_count;
-	Vector<attribute_info> attributes=new Vector<attribute_info>(2);
+	private Long access_flags;
+	private Long name_index;
+	private Long descriptor_index;
+	private Long attributes_count;
+	private Vector<attribute_info> attributes=new Vector<attribute_info>(2);
 
 	method_info() {};
 	// entCode= entrada Code de la TS
@@ -44,19 +44,18 @@ class method_info{
 		descriptor_index=descriptor_index0;
 		attributes.add(new Code_attribute(entCode,max_stack0,max_locals0,code0));
 		attributes.add(new Exceptions_attribute(entException,exception_index0));
-		attributes_count=new Long(attributes.size());
+		attributes_count= (long) attributes.size();
 	};
 	void write(FileOutputStream f) {
 		try {
 			f.write(toByte(access_flags,2));
 			f.write(toByte(name_index,2));
 			f.write(toByte(descriptor_index,2));
-			attributes_count=new Long(attributes.size());
+			attributes_count= (long) attributes.size();
 			f.write(toByte(attributes_count,2));
-			Iterator<attribute_info> i=attributes.iterator();
-			while (i.hasNext()){
-				i.next().write(f);
-			}
+            for (attribute_info attribute : attributes) {
+                attribute.write(f);
+            }
 		}
 		catch (IOException s) {s.printStackTrace();}
 	};
@@ -71,7 +70,7 @@ class method_info{
 		}
 	};
 
- 	byte[] toByte(Long num, int t) {
+ 	private byte[] toByte(Long num, int t) {
 		int i;
 		Long aux;
 
@@ -114,29 +113,29 @@ class attribute_info {
 
 class Code_attribute extends attribute_info {
 
-	Long max_stack;
-	Long max_locals;
-	Long code_length;
-	Vector<Long> code=new Vector<Long>(50);
-	Long exception_table_length;
-	Long attributes_count;
+	private Long max_stack;
+	private Long max_locals;
+	private Long code_length;
+	private Vector<Long> code=new Vector<Long>(50);
+	private Long exception_table_length;
+	private Long attributes_count;
 
 
 	Code_attribute() {};
 	Code_attribute(Long ent, Long max_stack0,Long max_locals0,Vector<Long> code0) {
 		attribute_name_index=ent; //Correspont a l'entrada Code de la taula de simbols
-		attribute_length=new Long(12+code0.size()); // 2(max_stack)+2(max_locals)+4(code_length)+2(exception_table_length)+2(attributes_count)+code.size
+		attribute_length= (long) (12 + code0.size()); // 2(max_stack)+2(max_locals)+4(code_length)+2(exception_table_length)+2(attributes_count)+code.size
 		max_stack=max_stack0;
 		max_locals=max_locals0;
 		code=code0;
-		code_length=new Long(code.size());
+		code_length= (long) code.size();
 		exception_table_length=0L;
 		attributes_count=0L;
 	};
 	void write(FileOutputStream f) {
 		try {
 			f.write(toByte(attribute_name_index,2));
-			attribute_length=new Long(12+code.size()); // 2(max_stack)+2(max_locals)+4(code_length)+2(exception_table_length)+2(attributes_count)+code.size
+			attribute_length= (long) (12 + code.size()); // 2(max_stack)+2(max_locals)+4(code_length)+2(exception_table_length)+2(attributes_count)+code.size
 			f.write(toByte(attribute_length,4));
 			f.write(toByte(max_stack,2));
 			f.write(toByte(max_locals,2));
@@ -158,9 +157,9 @@ class Code_attribute extends attribute_info {
 		Iterator<Long> i=code.iterator();
 		Long v=0l;
 		CMethod c=new CMethod();
-		Integer a;
+		int a;
 		while (i.hasNext()){
-			a=new Integer(i.next().toString());
+			a=(int)(long)i.next();
 			if (v==0l) {
 				System.out.println();
 				System.out.print("		 "+j+"	: ");
@@ -186,8 +185,8 @@ class Code_attribute extends attribute_info {
 
 class Exceptions_attribute extends attribute_info {
 
-	Long number_of_exceptions;
-	Long exception_index;
+	private Long number_of_exceptions;
+	private Long exception_index;
 
 
 	Exceptions_attribute() {};
@@ -216,7 +215,7 @@ class Exceptions_attribute extends attribute_info {
 
 class ConstantValue_attribute extends attribute_info {
 
-	Long constantvalue_index;
+	private Long constantvalue_index;
 
 
 	ConstantValue_attribute() {};
@@ -241,11 +240,11 @@ class ConstantValue_attribute extends attribute_info {
 
 class field_info {
 
-	Long access_flags;
-	Long name_index;
-	Long descriptor_index;
-	Long attributes_count;
-	Vector<attribute_info> attributes=new Vector<attribute_info>(2);
+	private Long access_flags;
+	private Long name_index;
+	private Long descriptor_index;
+	private Long attributes_count;
+	private Vector<attribute_info> attributes= new Vector<>(2);
 
 	field_info() {};
 	// entConstantValue= entrada ConstantValue de la TS
@@ -267,11 +266,10 @@ class field_info {
 			f.write(toByte(access_flags,2));
 			f.write(toByte(name_index,2));
 			f.write(toByte(descriptor_index,2));
-			attributes_count=new Long(attributes.size());
+			attributes_count= (long) attributes.size();
 			f.write(toByte(attributes_count,2));
-			Iterator<attribute_info> i=attributes.iterator();
-			while (i.hasNext()){
-				i.next().write(f);
+			for (attribute_info attribute : attributes) {
+				attribute.write(f);
 			}
 		}
 		catch (IOException s){s.printStackTrace();}
@@ -280,7 +278,7 @@ class field_info {
 	void show() {
 	};
 
- 	byte[] toByte(Long num, int t) {
+ 	private byte[] toByte(Long num, int t) {
 		int i;
 		Long aux;
 

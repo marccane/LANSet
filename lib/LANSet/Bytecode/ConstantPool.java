@@ -40,7 +40,7 @@ class cp_info {
 
 
 
-	public Long tag;
+	Long tag;
 
 	cp_info() {tag=0L;};
 	void write(FileOutputStream f) {};
@@ -65,7 +65,7 @@ class cp_info {
 }
 
 class CONSTANT_Class_info extends cp_info  {
-	Long name_index;
+	private Long name_index;
 
 	CONSTANT_Class_info(Long name_index0) {
 		tag=CONSTANT_Class;
@@ -84,8 +84,8 @@ class CONSTANT_Class_info extends cp_info  {
 }
 
 class CONSTANT_Fieldref_info extends cp_info  {
-	Long class_index;
-	Long name_and_type_index;
+	private Long class_index;
+	private Long name_and_type_index;
 
 	CONSTANT_Fieldref_info(Long class_index0, Long name_and_type_index0) {
 		tag=CONSTANT_Fieldref;
@@ -107,7 +107,7 @@ class CONSTANT_Fieldref_info extends cp_info  {
 }
 
 class CONSTANT_Methodref_info extends cp_info {
-	Long class_index;
+	private Long class_index;
 	Long name_and_type_index;
 
 	CONSTANT_Methodref_info(Long class_index0, Long name_and_type_index0) {
@@ -129,8 +129,8 @@ class CONSTANT_Methodref_info extends cp_info {
 }
 
 class CONSTANT_InterfaceMethodref_info extends cp_info {
-	Long class_index;
-	Long name_and_type_index;
+	private Long class_index;
+	private Long name_and_type_index;
 
 	CONSTANT_InterfaceMethodref_info(Long class_index0, Long name_and_type_index0) {
 		tag=CONSTANT_InterfaceMethodref;
@@ -173,7 +173,7 @@ class CONSTANT_NameAndType_info extends cp_info {
 }
 
 class CONSTANT_String_info extends cp_info {
-	Long string_index;
+	private Long string_index;
 
 	CONSTANT_String_info(Long string_index0) {
 		tag=CONSTANT_String;
@@ -192,7 +192,7 @@ class CONSTANT_String_info extends cp_info {
 }
 
 class CONSTANT_Integer_info extends cp_info {
-	Long bytes;
+	private Long bytes;
 
 	CONSTANT_Integer_info(Long bytes0) {
 		tag=CONSTANT_Integer;
@@ -212,7 +212,7 @@ class CONSTANT_Integer_info extends cp_info {
 
 
 class CONSTANT_Float_info extends cp_info {
-	Float bytes;
+	private Float bytes;
 
 	CONSTANT_Float_info(Float bytes0) {
 		tag=CONSTANT_Float;
@@ -221,7 +221,7 @@ class CONSTANT_Float_info extends cp_info {
 	void write(FileOutputStream f) {
 		try {
 		f.write(this.toByte(tag,1));
-		Long i=new Long(bytes.floatToIntBits(bytes));
+		Long i= (long) Float.floatToIntBits(bytes);
 		f.write(this.toByte(i,4));
 		}
 		catch (IOException s){s.printStackTrace();}
@@ -232,10 +232,8 @@ class CONSTANT_Float_info extends cp_info {
 }
 
 class CONSTANT_Utf8_info extends cp_info {
-	Long length;
-	String bytes;
-	
-	
+	private Long length;
+	private String bytes;
 
 	CONSTANT_Utf8_info(String s) {
 		tag=CONSTANT_Utf8;
@@ -250,11 +248,11 @@ class CONSTANT_Utf8_info extends cp_info {
 		try {
 		f.write(this.toByte(tag,1));
 		t=bytes.length();
-		length=new Long(t);
+		length= (long) t;
 		f.write(this.toByte(length,2));
 		i=0;
 		while (i<t) {
-			f.write(this.toByte(new Long(bytes.codePointAt(i)),1));
+			f.write(this.toByte((long) bytes.codePointAt(i),1));
 			i++;
 			};
 		}
