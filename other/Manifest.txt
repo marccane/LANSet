@@ -1,0 +1,3 @@
+Main-Class: LANSet.LANSet
+Class-Path: lib/antlr-4.9.2-complete.jar
+

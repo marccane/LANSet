@@ -4,17 +4,18 @@ lansetDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 testDir="$lansetDir/tests"
 interactiveTestDir="$lansetDir/tests/interactive"
 outputDir="$lansetDir/out/tests"
-jarFile="$lansetDir/out/artifacts/lansetc_jar/lansetc.jar"
+jarFile="$lansetDir/lansetc.jar"
 expectedOutDir="$lansetDir/tests/results/expectedOut"
 tmpAcceptanceFile="/tmp/acceptance.sh"
 interactiveInputDir="$lansetDir/tests/interactiveInput"
 
+mkdir -p $outputDir
 cd $outputDir
 echo "#####Cleaning#####"
 rm -f $tmpAcceptanceFile
-rm -v *.class
-rm -v *.out
-rm -v *.err
+rm -f *.class
+rm -f *.out
+rm -f *.err
 echo
 
 #Build
@@ -105,7 +106,7 @@ done
 if [ -f $tmpAcceptanceFile ]
 then
 	chmod 755 $tmpAcceptanceFile
-	echo "To accept al differences as good run $tmpAcceptanceFile"
+	echo "To accept all differences as good run $tmpAcceptanceFile"
 fi
 
 cd $ogDir

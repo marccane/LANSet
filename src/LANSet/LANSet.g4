@@ -4,6 +4,10 @@
 
 grammar LANSet;
 
+@header {
+package LANSet;
+}
+
 //////////////////// FRAGMENTS ////////////////////
 
 fragment DIGIT: '0'..'9';
